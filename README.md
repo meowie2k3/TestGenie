@@ -1,33 +1,100 @@
-A System for Automatically Generating High-Quality Test Cases
+# TestGenie
 
-# Overview
+TestGenie is an intelligent testing automation tool designed for Flutter (Dart) projects. It generates unit test and integration test files based on the business logic of your project. With TestGenie, you can automate and streamline the testing process with minimal effort.
 
-TestGenie is a cutting-edge test generator system that leverages the power of Artificial Intelligence (AI) to create high-quality, robust tests with ease. Built on top of industry-leading frameworks and libraries, TestGenie enables developers to automate the process of generating test cases, reducing manual effort and improving test coverage.
+---
 
-# What's in this package?
+## Key Features
 
-Test Case Generator: A proprietary AI algorithm that generates test cases based on a specified set of requirements, using natural language processing (NLP) techniques.
-Code Generation: A module that uses code generation tools to create test code in various programming languages, including Java, Python, and C#.
-Profiling and Optimization: Integration with profiling tools to analyze test coverage, identifying areas for improvement and optimizing the test suite as needed.
-How does it work?
+- **Automated Analysis**: Analyzes the business logic of your Flutter codebase by understanding function relationships, naming conventions, and comments within the code.
+- **User Validation**: Provides a summarized understanding of the business rules for user confirmation and adjustment.
+- **Test File Generation**: Creates runnable unit and integration test files without depending on the internal logic of functions, ensuring unbiased and reusable tests.
+- **Embedded Testing Environment**: Runs the generated test files using an embedded Flutter SDK to verify their validity.
 
-Define your requirements: Specify the domain, features, and behavior you want to test.
-Provide input data: Share relevant information, such as code snippets or documentation.
-Train the AI model: Pass in the input data and train the AI algorithm using a dataset of existing test cases.
-Generate test cases: The AI engine produces high-quality test cases based on your inputs.
-Refine and optimize: Use profiling tools to analyze test coverage, identify areas for improvement, and adjust the test suite as needed.
-Benefits
+---
 
-- Increased productivity: Automate the process of generating tests, freeing up development time for more critical tasks.
-- Improved code quality: Reduce manual effort and errors associated with testing, resulting in better code quality and reduced defects.
-- Enhanced test coverage: Generate high-quality test cases that cover a wide range of scenarios, ensuring comprehensive testing.
-# Example Use Case
+## Workflow
 
-Suppose we want to generate unit tests for a popular library. We define the requirements as follows:
+### 1. Input
+Provide the source code of your Flutter project along with specific testing requirements. For example:
+- Specify which parts of the project need testing.
+- Highlight key functionalities to focus on during the test generation process.
 
-Domain: Web Development
-Features: API usage, logging, and error handling
-Behavior: Expected behavior in various scenarios
-We provide input data, including documentation and code snippets from similar libraries.
+### 2. Business Logic Analysis
+TestGenie uses advanced language models to analyze the business logic:
+- **Function Analysis**: Identifies relationships and interactions between functions.
+- **Comment Parsing**: Leverages comments in the code to understand intended functionality.
+- **Logic Extraction**: Derives business rules and operational logic based on the analyzed information.
 
-The TestGenie engine trains its AI model using this dataset and generates high-quality unit tests. These tests cover all aspects of the library's functionality, ensuring comprehensive testing and improved code quality.
+### 3. User Validation
+Before proceeding with test generation, TestGenie:
+- Summarizes the analyzed business logic.
+- Requests user confirmation or adjustments to ensure accuracy.
+- Refines the logic based on user input.
+
+### 4. Test File Generation
+TestGenie generates test files by:
+- Mapping business logic to relevant test cases.
+- Using function names and logic relationships to create robust test scenarios.
+- Avoiding reliance on internal function implementations to prevent biases.
+- Combining Retrieval-Augmented Generation (RAG) techniques for advanced test methodologies.
+
+### 5. Test Execution
+- The generated test files are executed using an embedded Flutter SDK.
+- Ensures the test files are runnable without focusing on the test outcomes.
+
+---
+
+## Prerequisites
+
+To use TestGenie, ensure the following:
+- Flutter SDK is installed and accessible.
+- Your project follows standard Flutter/Dart conventions.
+- Sufficient comments and clear function names in the codebase for effective analysis.
+
+---
+
+## Usage
+
+1. **Provide Input**:
+   - Upload the source code of your Flutter project.
+   - Specify the testing requirements.
+
+2. **Review Analyzed Logic**:
+   - Confirm or modify the business rules derived by TestGenie.
+
+3. **Generate Tests**:
+   - Allow TestGenie to create unit and integration test files.
+
+4. **Run Tests**:
+   - TestGenie automatically executes the test files using the embedded Flutter SDK.
+
+---
+
+## Limitations
+
+- TestGenie does not analyze internal function implementations to avoid biases.
+- The quality of test generation is influenced by the clarity of function names and code comments.
+- TestGenie focuses on generating runnable tests, not their outcomes or debugging.
+
+---
+
+## Feedback and Support
+
+We value your feedback! If you encounter issues or have suggestions for improvement, please contact our support team or open an issue in our repository.
+
+---
+
+## License
+
+TestGenie is licensed under [MIT License](LICENSE).
+
+---
+
+## Contribution
+
+Contributions are welcome! Feel free to fork this repository, create a branch, and submit a pull request. For major changes, please discuss them with the project maintainers first.
+
+---
+
+Thank you for using TestGenie! Happy testing!
