@@ -1,3 +1,5 @@
 .env
 RAG/db/
 .venv/
+ProjectManager/__pycache__/
+ProjectManager/Projects/
