@@ -5,6 +5,9 @@ load_dotenv(dotenv_path='.env', override=True)
 base_url = os.getenv('BASE_URL')
 embed_model = os.getenv('EMBED_MODEL')
 
+# print(base_url)
+# print(embed_model)
+
 from langchain.text_splitter import (
     CharacterTextSplitter,
     RecursiveCharacterTextSplitter,
@@ -79,9 +82,11 @@ def query_vector_store(store_name, query, docs_num=1) -> List[Document]:
         )
         retriever = db.as_retriever(
             # search_type="similarity",
-            # search_kwargs={"k": k},
-            search_type="mmr",
-            search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
+            # search_kwargs={"k": docs_num},
+            # search_type="mmr",
+            # search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
+            search_type="similarity_score_threshold",
+            search_kwargs={'score_threshold': 0.4}
         )
         relevant_docs = retriever.invoke(query)
         return relevant_docs
@@ -93,11 +98,11 @@ def query_vector_store(store_name, query, docs_num=1) -> List[Document]:
         
 if __name__ == "__main__":
     # Load the documents
-    # docs = _load_document("Documents/romeo_and_juliet.txt")
+    docs = _load_document("Documents/romeo_and_juliet.txt")
     # # Split the documents into chunks
-    # chunks = _split_document(docs)
+    chunks = _split_document(docs)
     # # Create and persist the vector store
-    # _create_vector_store(chunks, "romeo_and_juliet", is_overwrite=True)
+    _create_vector_store(chunks, "romeo_and_juliet", is_overwrite=True)
     # Query the vector store
     store_name = "romeo_and_juliet"
     query = "How did Juliet die?"
