@@ -17,8 +17,7 @@ def testFramework():
     if framework in frameworkMap:
         project = frameworkMap[framework](git_url)
     
-    print(project)
+    # print(project)
     pass
-
 if __name__ == '__main__':
     testFramework()
