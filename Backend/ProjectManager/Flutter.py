@@ -9,6 +9,22 @@ class Flutter(Project): # Inherit from Project class
         self._setFramework('Flutter')
         self._checkSDK()
         self._flutterPubGet()
+        
+    def _runFlutterCLI(self, args):
+        prjDir = os.path.join(projectDir, self.getName())
+        flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
+        
+        cmd = [flutterBatDir]
+        # args handling
+        if isinstance(args, list):
+            cmd.extend(args)
+        
+        try:
+            result = subprocess.check_output(cmd, cwd=prjDir, universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(f'Error running flutter command: {e}')
+        
+        return result
     
     def _checkSDK(self):
         # Check if flutter sdk is installed
@@ -17,24 +33,27 @@ class Flutter(Project): # Inherit from Project class
             return
         # run sdk from sdkDir
         try:
-            result = subprocess.check_output([os.path.join(sdkDir, 'bin', 'flutter.bat'), '--version'], universal_newlines=True)
+            result = self._runFlutterCLI('--version')
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error checking flutter sdk: {e}')
         
         # print(result)
-        pass
     
     def _flutterPubGet(self):
-        # run flutter pub get for the project
-        prjDir = os.path.join(projectDir, self.getName())
-        flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
+        # prjDir = os.path.join(projectDir, self.getName())
+        # flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
         
         try:
-            result = subprocess.check_output([flutterBatDir, 'pub', 'get'], cwd=prjDir, universal_newlines=True)
+            # result = subprocess.check_output([flutterBatDir, 'pub', 'get'], cwd=prjDir, universal_newlines=True)
+            result = self._runFlutterCLI(['pub', 'get'])
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error running flutter pub get: {e}')
         
         print(result)
+        
+    def run_test(self):
+        pass
+    
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'
