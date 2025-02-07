@@ -5,11 +5,11 @@ frameworkMap = {
     'flutter': Flutter
 }
 
-def testProject():
+def testProject(): # passed
     project = Project('https://github.com/meowie2k3/luckyroll')
     print(project)
     
-def testFramework():
+def testFramework(): # passed
     git_url = 'https://github.com/meowie2k3/sample' # trick my own code lol :v
     project = Project(git_url)
     framework = project.recognizeProjectFramework()
@@ -18,14 +18,11 @@ def testFramework():
         project = frameworkMap[framework](git_url)
     
     # print(project)
-    testResult, testError = project.run_test('widget_test.dart')
-    
-    print("Test result:" )
-    print(testResult)
-    print("Test error:")
-    print(testError)
-    
-    pass
+    testError = project.validate()
+    if testError:
+        print("Test error:")
+        print(testError)
+    else: print("All tests dont have error")
 
 if __name__ == '__main__':
     testFramework()

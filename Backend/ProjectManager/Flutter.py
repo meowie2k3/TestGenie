@@ -25,7 +25,7 @@ class Flutter(Project): # Inherit from Project class
             cmd.extend(args)
 
         try:
-            process = subprocess.Popen(cmd, cwd=prjDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            process = subprocess.Popen(cmd, cwd=prjDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8')
             stdout, stderr = process.communicate()
             if process.returncode != 0 and isRaiseException:
                 raise Exception(f'Error running flutter command: {stderr}')
@@ -42,7 +42,7 @@ class Flutter(Project): # Inherit from Project class
             return
         # run sdk from sdkDir
         try:
-            result = self._runFlutterCLI('--version', isRaiseException=True)
+            self._runFlutterCLI('--version', isRaiseException=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error checking flutter sdk: {e}')
         
@@ -62,7 +62,7 @@ class Flutter(Project): # Inherit from Project class
         
         try:
             # result = subprocess.check_output([flutterBatDir, 'pub', 'get'], cwd=prjDir, universal_newlines=True)
-            result = self._runFlutterCLI(['pub', 'get'], isRaiseException=True)
+            self._runFlutterCLI(['pub', 'get'], isRaiseException=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error running flutter pub get: {e}')
         
@@ -80,7 +80,14 @@ class Flutter(Project): # Inherit from Project class
     
     def validate(self) -> str:
         # run all tests in the test directory
-        pass
+        testDir = os.path.join(projectDir, self.getName(), 'test')
+        for file in os.listdir(testDir):
+            if file.endswith('.dart'):
+                result, err = self.run_test(file)
+                if err:
+                    return err
+                
+        return None
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'

@@ -55,6 +55,12 @@ class Project:
         # this is abtract method
         # if run in this class, it will raise error
         raise NotImplementedError('This is an abstract method')
+    
+    def getListSourceFiles(self) -> list:
+        # this is abtract method
+        # if run in this class, it will raise error
+        # logic: sort files by dependency
+        raise NotImplementedError('This is an abstract method')
         
     
     def __str__(self) -> str:
