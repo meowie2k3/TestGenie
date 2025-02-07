@@ -11,6 +11,7 @@ class Project:
     
     _framework = None
     
+    
     def __init__(self, git_url):
         self._git_url = git_url
         self._name = git_url.split('/')[-1]
@@ -36,7 +37,7 @@ class Project:
         return 'flutter'
         pass
     
-    def _setFramework(self, framework):
+    def _setFramework(self, framework) -> None:
         self._framework = framework
         
     def getFramework(self) -> str:
@@ -45,10 +46,16 @@ class Project:
     def getName(self) -> str:
         return self._name
     
-    def run_test(self):
+    def run_test(self, filename) -> str:
         # this is abtract method
         # if run in this class, it will raise error
         raise NotImplementedError('This is an abstract method')
+    
+    def validate(self) -> str:
+        # this is abtract method
+        # if run in this class, it will raise error
+        raise NotImplementedError('This is an abstract method')
+        
     
     def __str__(self) -> str:
         return f'Project {self._name} created from {self._git_url}'

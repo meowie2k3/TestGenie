@@ -9,51 +9,78 @@ class Flutter(Project): # Inherit from Project class
         self._setFramework('Flutter')
         self._checkSDK()
         self._flutterPubGet()
+        # self._createSampleProject('sample')
         
-    def _runFlutterCLI(self, args):
+    def _runFlutterCLI(self, args, isRaiseException=False) -> str:
         prjDir = os.path.join(projectDir, self.getName())
         flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
-        
+
         cmd = [flutterBatDir]
         # args handling
+        # if args is a string that have space, convert it to list
+        if isinstance(args, str) and ' ' in args:
+            args = args.split()
+
         if isinstance(args, list):
             cmd.extend(args)
-        
+
         try:
-            result = subprocess.check_output(cmd, cwd=prjDir, universal_newlines=True)
+            process = subprocess.Popen(cmd, cwd=prjDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            stdout, stderr = process.communicate()
+            if process.returncode != 0 and isRaiseException:
+                raise Exception(f'Error running flutter command: {stderr}')
+            return stdout, stderr
         except subprocess.CalledProcessError as e:
-            raise Exception(f'Error running flutter command: {e}')
-        
-        return result
+            if isRaiseException:
+                raise Exception(f'Error running flutter command: {e}')
+            return e.__dict__
     
-    def _checkSDK(self):
+    def _checkSDK(self) -> None:
         # Check if flutter sdk is installed
         if not os.path.exists(sdkDir):
             print('Flutter SDK not found')
             return
         # run sdk from sdkDir
         try:
-            result = self._runFlutterCLI('--version')
+            result = self._runFlutterCLI('--version', isRaiseException=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error checking flutter sdk: {e}')
         
         # print(result)
     
-    def _flutterPubGet(self):
+    # function for testing only. Do not use in production
+    def _createSampleProject(self, prjName) -> None:
+        try:
+            result = self._runFlutterCLI(['create', prjName], isRaiseException=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(f'Error creating flutter project: {e}')
+        return result
+    
+    def _flutterPubGet(self) -> None:
         # prjDir = os.path.join(projectDir, self.getName())
         # flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
         
         try:
             # result = subprocess.check_output([flutterBatDir, 'pub', 'get'], cwd=prjDir, universal_newlines=True)
-            result = self._runFlutterCLI(['pub', 'get'])
+            result = self._runFlutterCLI(['pub', 'get'], isRaiseException=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error running flutter pub get: {e}')
         
-        print(result)
+        # print(result)
         
-    def run_test(self):
+    # return tuple (result, error)
+    def run_test(self, filename) -> str:
+        fileDir = os.path.join('test', filename)
+        try:
+            result = self._runFlutterCLI(['test', fileDir])
+        except subprocess.CalledProcessError as e:
+            raise Exception(f'Error running flutter test: {e}')
+        return result
         pass
     
+    def validate(self) -> str:
+        # run all tests in the test directory
+        pass
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'
