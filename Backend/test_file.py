@@ -19,10 +19,12 @@ def testFramework(): # passed
     
     # print(project)
     testError = project.validate()
-    if testError:
+    if testError != '':
         print("Test error:")
         print(testError)
     else: print("All tests dont have error")
 
 if __name__ == '__main__':
+    # testProject()
     testFramework()
+    pass

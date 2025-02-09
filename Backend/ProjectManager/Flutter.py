@@ -11,7 +11,7 @@ class Flutter(Project): # Inherit from Project class
         self._flutterPubGet()
         # self._createSampleProject('sample')
         
-    def _runFlutterCLI(self, args, isRaiseException=False) -> str:
+    def _runFlutterCLI(self, args, isRaiseException=False) -> tuple:
         prjDir = os.path.join(projectDir, self.getName())
         flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
 
@@ -33,7 +33,7 @@ class Flutter(Project): # Inherit from Project class
         except subprocess.CalledProcessError as e:
             if isRaiseException:
                 raise Exception(f'Error running flutter command: {e}')
-            return e.__dict__
+            return e.__dict__, e.args
     
     def _checkSDK(self) -> None:
         # Check if flutter sdk is installed
@@ -49,9 +49,12 @@ class Flutter(Project): # Inherit from Project class
         # print(result)
     
     # function for testing only. Do not use in production
-    def _createSampleProject(self, prjName) -> None:
+    def _createSampleProject(self, prjName) -> str:
         try:
-            result = self._runFlutterCLI(['create', prjName], isRaiseException=True)
+            # cannot use _runFlutterCLI because no project directory yet
+            # result = self._runFlutterCLI(['create', prjName], isRaiseException=True)
+            result = subprocess.check_output([os.path.join(sdkDir, 'bin', 'flutter.bat'), 'create', prjName],cwd=projectDir, universal_newlines=True, encoding='utf-8')
+            
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error creating flutter project: {e}')
         return result
@@ -69,7 +72,7 @@ class Flutter(Project): # Inherit from Project class
         # print(result)
         
     # return tuple (result, error)
-    def run_test(self, filename) -> str:
+    def run_test(self, filename) -> tuple:
         fileDir = os.path.join('test', filename)
         try:
             result = self._runFlutterCLI(['test', fileDir])
@@ -87,7 +90,7 @@ class Flutter(Project): # Inherit from Project class
                 if err:
                     return err
                 
-        return None
+        return ''
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'

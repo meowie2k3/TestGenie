@@ -14,6 +14,8 @@ def hello_name(name):
 # Post git project url
 @app.route('/createProject', methods=['POST'])
 def createProject():
+    if not request.json or not 'git_url' in request.json:
+        return jsonify({'message': 'Invalid request'})
     git_url = request.json['git_url']
     project = Project(git_url)
     # print(project)

@@ -9,7 +9,7 @@ sdkDir = os.path.join(os.path.dirname(__file__), 'SDKs')
 
 class Project:
     
-    _framework = None
+    _framework = ''
     
     
     def __init__(self, git_url):
@@ -22,12 +22,15 @@ class Project:
         # check if project already cloned
         if os.path.exists(projectDir + '/' + self._name):
             return
-        else:
-            print(self._clone(git_url))
+        # else:
+        #     print(self._clone(git_url))
     
     def _clone(self, git_url):
         # clone the git repository to the project directory
         try:
+            # if Project folder not exist, create it
+            if not os.path.exists(projectDir):
+                os.makedirs(projectDir)
             return subprocess.check_output(['git', 'clone', git_url, projectDir + '/' + self._name], universal_newlines=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error cloning project: {e}')
@@ -46,7 +49,7 @@ class Project:
     def getName(self) -> str:
         return self._name
     
-    def run_test(self, filename) -> str:
+    def run_test(self, filename) -> tuple:
         # this is abtract method
         # if run in this class, it will raise error
         raise NotImplementedError('This is an abstract method')

@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "BugSweeper"
+name = "TestGenie"
 version = "0.1.0"
-description = "Everything you need to know to get started with LangChain"
+description = "A Unit Test Generator"
 authors = ["meowie2k3"]
 
 [tool.poetry.dependencies]
