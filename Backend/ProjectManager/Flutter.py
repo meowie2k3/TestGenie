@@ -102,11 +102,15 @@ class Flutter(Project): # Inherit from Project class
             libDir = os.path.join(prjDir, 'lib') 
             sourceFiles = []
             
+            # find main.dart first
+            if os.path.exists(os.path.join(libDir, 'main.dart')):
+                sourceFiles.append(os.path.relpath(os.path.join(libDir, 'main.dart'), prjDir))
+            
             for root, dirs, files in os.walk(libDir):
                 for file in files:
-                    if file.endswith('.dart'):
+                    if file.endswith('.dart') and os.path.relpath(os.path.join(root, file), prjDir) not in sourceFiles:
                         sourceFiles.append(os.path.relpath(os.path.join(root, file), prjDir))
-            
+                        
             return sourceFiles
     
     def __str__(self) -> str:

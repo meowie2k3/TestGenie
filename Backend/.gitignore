@@ -3,5 +3,7 @@
 ProjectManager/__pycache__/
 ProjectManager/Projects/
 ProjectManager/SDKs/
+BusinessLogicAnalyzer/__pycache__/
+BusinessLogicAnalyzer/Diagram/__pycache__/
 TestGenerator/__pycache__/
 TestGenerator/RAG/db/

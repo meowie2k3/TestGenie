@@ -1,5 +1,6 @@
 from ProjectManager import Project
 from ProjectManager.Flutter import Flutter
+from BusinessLogicAnalyzer import DependencyDiagram
 
 frameworkMap = {
     'flutter': Flutter
@@ -24,7 +25,7 @@ def testFramework(): # passed
         print(testError)
     else: print("All tests dont have error")
     
-def testFiles():
+def testFiles(): # passed
     git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
     framework = project.recognizeProjectFramework()
@@ -35,12 +36,25 @@ def testFiles():
     sourceFiles = project.getListSourceFiles()
     for file in sourceFiles:
         print(file)
+    # print("==========File content==========")
+    # file0Content = project.getFileContent(sourceFiles[0])
+    # print(file0Content)
+    # print("==========File content==========")
+    
+def testDiagram():
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
+    
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
         
-    file0Content = project.getFileContent(sourceFiles[0])
-    print(file0Content)
+    diagram = DependencyDiagram(project)
+    # print(diagram)
 
 if __name__ == '__main__':
     # testProject()
     # testFramework()
-    testFiles()
+    # testFiles()
+    testDiagram()
     pass
