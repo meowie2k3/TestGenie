@@ -1,7 +1,7 @@
 .env
-RAG/db/
 .venv/
 ProjectManager/__pycache__/
 ProjectManager/Projects/
 ProjectManager/SDKs/
 TestGenerator/__pycache__/
+TestGenerator/RAG/db/

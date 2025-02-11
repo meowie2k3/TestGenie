@@ -8,8 +8,8 @@ class Flutter(Project): # Inherit from Project class
         super().__init__(git_url)
         self._setFramework('Flutter')
         self._checkSDK()
-        self._flutterPubGet()
-        # self._createSampleProject('sample')
+        # self._flutterPubGet()
+        self._createSampleProject('sample')
         
     def _runFlutterCLI(self, args, isRaiseException=False) -> tuple:
         prjDir = os.path.join(projectDir, self.getName())
@@ -91,6 +91,9 @@ class Flutter(Project): # Inherit from Project class
                     return err
                 
         return ''
+    
+    def getListSourceFiles(self) -> list[str]:
+        pass
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'

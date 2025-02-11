@@ -15,7 +15,7 @@ class Project:
     def __init__(self, git_url):
         self._git_url = git_url
         self._name = git_url.split('/')[-1]
-        # print('Project name: ', self._name)
+        print('Project name: ', self._name)
         if self._name.endswith('.git'):
             self._name = self._name[:-4]
         
