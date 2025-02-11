@@ -15,7 +15,7 @@ class Project:
     def __init__(self, git_url):
         self._git_url = git_url
         self._name = git_url.split('/')[-1]
-        print('Project name: ', self._name)
+        # print('Project name: ', self._name)
         if self._name.endswith('.git'):
             self._name = self._name[:-4]
         
@@ -65,6 +65,17 @@ class Project:
         # logic: sort files by dependency
         raise NotImplementedError('This is an abstract method')
         
+    def getFileContent(self, fileDir: str) -> str:
+        """_summary_
+
+        Args:
+            fileDir (str): file directory relative to project directory
+
+        Returns:
+            str: file content
+        """
+        with open(os.path.join(projectDir, self.getName(), fileDir), 'r') as f:
+            return f.read()
     
     def __str__(self) -> str:
         return f'Project {self._name} created from {self._git_url}'

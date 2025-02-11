@@ -8,24 +8,24 @@ class Flutter(Project): # Inherit from Project class
         super().__init__(git_url)
         self._setFramework('Flutter')
         self._checkSDK()
-        # self._flutterPubGet()
-        self._createSampleProject('sample')
+        self._flutterPubGet()
+        # self._createSampleProject('sample')
         
     def _runFlutterCLI(self, args, isRaiseException=False) -> tuple:
         prjDir = os.path.join(projectDir, self.getName())
-        flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter.bat')
+        flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter')
 
         cmd = [flutterBatDir]
         # args handling
         # if args is a string that have space, convert it to list
         if isinstance(args, str) and ' ' in args:
             args = args.split()
-
         if isinstance(args, list):
             cmd.extend(args)
-
+            
+        # run cmd via subprocess
         try:
-            process = subprocess.Popen(cmd, cwd=prjDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8')
+            process = subprocess.Popen(cmd, cwd=prjDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', shell=True)
             stdout, stderr = process.communicate()
             if process.returncode != 0 and isRaiseException:
                 raise Exception(f'Error running flutter command: {stderr}')
@@ -53,7 +53,7 @@ class Flutter(Project): # Inherit from Project class
         try:
             # cannot use _runFlutterCLI because no project directory yet
             # result = self._runFlutterCLI(['create', prjName], isRaiseException=True)
-            result = subprocess.check_output([os.path.join(sdkDir, 'bin', 'flutter.bat'), 'create', prjName],cwd=projectDir, universal_newlines=True, encoding='utf-8')
+            result = subprocess.check_output([os.path.join(sdkDir, 'bin', 'flutter'), 'create', prjName],cwd=projectDir, universal_newlines=True, encoding='utf-8',  shell=True)
             
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error creating flutter project: {e}')
@@ -65,7 +65,7 @@ class Flutter(Project): # Inherit from Project class
         
         try:
             # result = subprocess.check_output([flutterBatDir, 'pub', 'get'], cwd=prjDir, universal_newlines=True)
-            self._runFlutterCLI(['pub', 'get'], isRaiseException=True)
+            self._runFlutterCLI(['pub', 'get', '--no-example'], isRaiseException=True)
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error running flutter pub get: {e}')
         
@@ -93,7 +93,21 @@ class Flutter(Project): # Inherit from Project class
         return ''
     
     def getListSourceFiles(self) -> list[str]:
-        pass
+            """_summary_
+
+            Returns:
+                list[str]: list of source files in the project relative to project directory
+            """
+            prjDir = os.path.join(projectDir, self.getName())
+            libDir = os.path.join(prjDir, 'lib') 
+            sourceFiles = []
+            
+            for root, dirs, files in os.walk(libDir):
+                for file in files:
+                    if file.endswith('.dart'):
+                        sourceFiles.append(os.path.relpath(os.path.join(root, file), prjDir))
+            
+            return sourceFiles
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'

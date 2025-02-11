@@ -23,8 +23,24 @@ def testFramework(): # passed
         print("Test error:")
         print(testError)
     else: print("All tests dont have error")
+    
+def testFiles():
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
+    
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
+        
+    sourceFiles = project.getListSourceFiles()
+    for file in sourceFiles:
+        print(file)
+        
+    file0Content = project.getFileContent(sourceFiles[0])
+    print(file0Content)
 
 if __name__ == '__main__':
     # testProject()
-    testFramework()
+    # testFramework()
+    testFiles()
     pass
