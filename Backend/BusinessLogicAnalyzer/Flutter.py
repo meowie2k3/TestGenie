@@ -1,5 +1,6 @@
 from .Diagram.Block import Block
 from .Diagram.Connection import Connection
+from LLMService import LLM
 
 def FlutterAnalyzeStrategy(diagram) -> None:
     # print('Flutter analyze strategy')
@@ -7,9 +8,17 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     fileList = diagram.project.getListSourceFiles()
     # print(fileList)
     # create a block for main first
-    mainfile = fileList[0]
-    mainBlock = Block(mainfile, diagram.project.getFileContent(mainfile))
+    mainfileDir = fileList[0]
+    mainFileContent = diagram.project.getFileContent(mainfileDir)
+    mainBlock = Block(mainfileDir, mainFileContent)
     # print(mainBlock)
+    
+    # llm = LLM(model='deepseek-r1-distill-llama-8b', purpose='Analyzing Flutter project into dependency diagram')
+    # question = "What are the imports in the main file?\n" + mainFileContent
+    # res = llm.invoke(question)
+    # F word to the LLM
+    
+    
     _ImportAnalyzer(diagram, mainBlock)
     pass
 
@@ -27,5 +36,12 @@ def _ImportAnalyzer(diagram, block):
         for line in importLines:
             # print(line)
             directory = line.split(' ')[1].replace(';', '')
+            # delete first and last character => delete quotes
+            directory = directory[1:-1]
             print(directory)
+            # 3 cases: import from other package, import from project, import as relative path
+            if directory.startswith('package:'):
+                # import from other package, import from project
+                prjName = diagram.project.getName()
+                pass
             
