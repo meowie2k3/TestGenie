@@ -14,6 +14,6 @@ class Connection:
         self.tail = tail
         self.type = self.__getConnectionType()
         
-    def __getConnectionType(self) -> _ConnectionType:
+    def __getConnectionType(self) -> str:
         # TODO: Implement the logic to determine the type of the connection
         return _ConnectionType.CALL
