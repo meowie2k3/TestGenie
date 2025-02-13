@@ -1,0 +1,1 @@
+lineContent += line[i]

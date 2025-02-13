@@ -1,7 +1,7 @@
 from .Diagram.Block import Block, BlockType
 
 from .FlutterStrats.ImportAnalyzer import ImportAnalyzer
-from .FlutterStrats.FileToClassAnalyzer import FileToClassAnalyzer
+from .FlutterStrats.ContainAnalyzer import ContainAnalyzer
 
 # from LLMService import LLM
 
@@ -24,7 +24,7 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     ImportAnalyzer(diagram, diagram.blocks[0])
     
-    FileToClassAnalyzer(diagram, diagram.blocks[0])
+    ContainAnalyzer(diagram, diagram.blocks[0])
     
     print("===============Analyzing result===============")
     for block in diagram.blocks:
