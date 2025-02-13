@@ -1,4 +1,4 @@
-from ..Diagram.Block import Block
+from ..Diagram.Block import Block, BlockType
 from ..Diagram.Connection import Connection, ConnectionType
 import os
 
@@ -9,7 +9,7 @@ def ImportAnalyzer(diagram, block):
     # print("Current type: ", currentType)
     
     # analyze imports
-    if (currType == 'file'):
+    if (currType == 'File'):
         importLines = [line.strip() for line in currContent.split('\n') if line.strip().startswith('import')]
         # print(importLines)
         blocks = []
@@ -31,7 +31,7 @@ def ImportAnalyzer(diagram, block):
                     fileContent = diagram.project.getFileContent(fileDir)
                     # if fileDir is not in Diagram.blocks
                     if not any(block.name == fileDir for block in diagram.blocks):
-                        blocks.append(Block(fileDir, fileContent))
+                        blocks.append(Block(fileDir, fileContent, BlockType.FILE))
                     else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == fileDir][0], ConnectionType.IMPORT))
             else:
                 # import as relative path
@@ -43,7 +43,7 @@ def ImportAnalyzer(diagram, block):
                 # print(combineDir)
                 fileContent = diagram.project.getFileContent(combineDir)
                 if combineDir not in [block.name for block in diagram.blocks]:
-                    blocks.append(Block(combineDir, fileContent))
+                    blocks.append(Block(combineDir, fileContent, BlockType.FILE))
                 else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == combineDir][0], ConnectionType.IMPORT))
         
         for b in blocks:

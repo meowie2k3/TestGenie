@@ -1,24 +1,21 @@
 
-BlockType = {
-    "FILE": "file",
-    "CLASS": "class",
-    "FUNCTION": "function",
-}
+class BlockType:
+    FILE = 'File'
+    CLASS = 'Class'
+    FUNCTION = 'Function'
     
 class Block:
     
-    def __init__(self, name: str, content: str):
+    def __init__(self, name: str, content: str, type:str):
         self.name = name
         self.content = content
-        self.type = self.__getBlockType()
-        self.prediction = self.__predict()
+        self.type = type
         
-    def __getBlockType(self) -> str:
-        # TODO: Implement the logic to determine the type of the block
-        return BlockType["FILE"]
-    
     def __predict(self):
         return ''
+    
+    def predict(self):
+        self.prediction = self.__predict()
     
     def getPrediction(self):
         return self.prediction
