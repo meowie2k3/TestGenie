@@ -1,10 +1,6 @@
 .env
 .venv/
-ProjectManager/__pycache__/
+**/__pycache__/
 ProjectManager/Projects/
 ProjectManager/SDKs/
-BusinessLogicAnalyzer/__pycache__/
-BusinessLogicAnalyzer/Diagram/__pycache__/
-TestGenerator/__pycache__/
 TestGenerator/RAG/db/
-LLMService/__pycache__/

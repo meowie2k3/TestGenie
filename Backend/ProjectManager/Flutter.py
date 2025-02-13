@@ -9,6 +9,7 @@ class Flutter(Project): # Inherit from Project class
         self._setFramework('Flutter')
         self._checkSDK()
         self._flutterPubGet()
+        self.yaml_name = self._getYamlName()
         # self._createSampleProject('sample')
         
     def _runFlutterCLI(self, args, isRaiseException=False) -> tuple:
@@ -48,6 +49,14 @@ class Flutter(Project): # Inherit from Project class
         
         # print(result)
     
+    def _getYamlName(self) -> str:
+
+        yamlContent = self.getFileContent('pubspec.yaml')
+        # print(yamlContent)
+        # first line should define the name of the project: "name: ....."
+        return yamlContent.split('\n')[0].split('name: ')[1].strip()
+
+    
     # function for testing only. Do not use in production
     def _createSampleProject(self, prjName) -> str:
         try:
@@ -70,7 +79,7 @@ class Flutter(Project): # Inherit from Project class
             raise Exception(f'Error running flutter pub get: {e}')
         
         # print(result)
-        
+    
     # return tuple (result, error)
     def run_test(self, filename) -> tuple:
         fileDir = os.path.join('test', filename)

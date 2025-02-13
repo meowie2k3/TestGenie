@@ -18,7 +18,7 @@ def testFramework(): # passed
     if framework in frameworkMap:
         project = frameworkMap[framework](git_url)
     
-    # print(project)
+    # print(project.yaml_name)
     testError = project.validate()
     if testError != '':
         print("Test error:")

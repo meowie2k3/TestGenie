@@ -24,4 +24,4 @@ class Block:
         return self.prediction
     
     def __str__(self):
-        return f'{self.name} - {self.type} \n {self.content}'
+        return f'{self.name} - {self.type}'

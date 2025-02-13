@@ -1,19 +1,20 @@
 from .Block import Block
 
-class _ConnectionType:
+class ConnectionType:
     EXTEND = 'Extend'
     IMPLEMENT = 'Implement'
     CONTAIN = 'Contain'
     USE = 'Use'
     CALL = 'Call'
+    IMPORT = 'Import'
     
 
 class Connection:
-    def __init__(self, head: Block, tail: Block):
+    def __init__(self, head: Block, tail: Block, type: str):
         self.head = head
         self.tail = tail
-        self.type = self.__getConnectionType()
+        self.type = type
         
-    def __getConnectionType(self) -> str:
-        # TODO: Implement the logic to determine the type of the connection
-        return _ConnectionType.CALL
+    def __str__(self):
+        return f'{self.head.name} -> {self.tail.name} - {self.type}'
+        
