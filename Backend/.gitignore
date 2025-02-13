@@ -7,3 +7,4 @@ BusinessLogicAnalyzer/__pycache__/
 BusinessLogicAnalyzer/Diagram/__pycache__/
 TestGenerator/__pycache__/
 TestGenerator/RAG/db/
+LLMService/__pycache__/
