@@ -3,6 +3,7 @@ class BlockType:
     FILE = 'File'
     CLASS = 'Class'
     ABSTRACT_CLASS = 'AbstractClass'
+    GLOBAL_VAR = 'GlobalVar'
     ENUM = 'Enum'
     FUNCTION = 'Function'
     

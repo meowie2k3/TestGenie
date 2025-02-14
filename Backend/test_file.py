@@ -36,10 +36,10 @@ def testFiles(): # passed
     sourceFiles = project.getListSourceFiles()
     for file in sourceFiles:
         print(file)
-    # print("==========File content==========")
-    # file0Content = project.getFileContent(sourceFiles[0])
-    # print(file0Content)
-    # print("==========File content==========")
+    print("==========File content==========")
+    file0Content = project.getFileContent(sourceFiles[0])
+    print(file0Content)
+    print("==========File content==========")
     
 def testDiagram():
     git_url = 'https://github.com/meowie2k3/sample'
