@@ -132,9 +132,9 @@ def ContainAnalyzer(diagram, block, visited = []):
             leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if not line.strip().startswith('import')])
             # remove empty lines
             leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if line.strip() != ''])
-            print("========Leftover content========")
-            print(block.name)
-            print(leftoverContent)
+            # print("========Leftover content========")
+            # print(block.name)
+            # print(leftoverContent)
             
             # two case of function: difined return type or not (dynamic)
             # variable must have a type
@@ -146,9 +146,9 @@ def ContainAnalyzer(diagram, block, visited = []):
         if (currType == BlockType.CLASS):
             # two cases: class function and class attribute
             content = block.getContentNoComment() # should be no difference between content and contentNoComment
-            print(content)
-            # classContentBlock = extract_class_content(content)
-            # blocks.extend(classContentBlock)
+            # print(content)
+            classContentBlock = extract_class_content(content)
+            blocks.extend(classContentBlock)
             
         
         
@@ -169,8 +169,8 @@ def ContainAnalyzer(diagram, block, visited = []):
 def extract_functions_and_globals(dart_code):
     function_pattern = re.compile(r'^\s*([\w<>]+)\s+(\w+)\s*\(([^)]*)\)\s*\{', re.MULTILINE)
     global_var_pattern = re.compile(
-        r'^\s*(final|const|var|[\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*=\s*(\{.*?\}|[^;]+);',
-        re.MULTILINE | re.DOTALL
+       r'\b(final|const)?\s*(var|(?:\w+<[^<>]+>)|\w+(?:<[^<>]+>)?)?\s+(\w+)\s*(?:=\s*([\s\S]*?));',
+        re.MULTILINE
     )
 
     blocks = []
@@ -203,9 +203,9 @@ def extract_functions_and_globals(dart_code):
 
    # Extract global variables
     for match in global_var_pattern.finditer(dart_code):
-        full_line = match.group(0).strip()  # Capture the entire line including type and name
-        var_type, name = match.groups()[:2]  # Extract type and name only
-        signature = f"{var_type} {name}"  # Full variable declaration (type + name)
+        qualifier, var_type, var_name, var_value = match.groups()
+        signature =  f"{(qualifier or '').strip()} {(var_type or '').strip()} {var_name}".strip()
+        full_line = match.group(0).strip()
         blocks.append(Block(signature, full_line, BlockType.GLOBAL_VAR))
 
     return blocks
@@ -215,81 +215,92 @@ def extract_class_content(class_body):
 
     # Regular expression patterns
     function_pattern = re.compile(
-        r'^\s*(?:@override\s*)?([\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)\s*\{', re.MULTILINE
+    r'^\s*(?:@override\s*)?([\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)\s*(?:\{|\=\>)', 
+    re.MULTILINE
     )
     constructor_pattern = re.compile(
-        r'^\s*(\w+)\s*\(([^)]*)\)\s*\{', re.MULTILINE
+    r'^\s*(const\s+)?(\w+)\s*\(([^)]*)\)\s*({|;)', re.MULTILINE
     )
     attribute_pattern = re.compile(
-        r'^\s*(final|var|const|[\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*(=.*)?;', re.MULTILINE
+        r'\b(final|const)?\s*(var|(?:\w+<[^<>]+>)|\w+(?:<[^<>]+>)?)?\s+(\w+)\s*(?:=\s*([\s\S]*?));',
+        re.MULTILINE
     )
 
     blocks = []
-    temp_class_body = class_body  # Temporary body to remove extracted elements
 
     # Step 1: Extract functions first
-    function_contents = []
-    for func_match in function_pattern.finditer(temp_class_body):
+    for func_match in function_pattern.finditer(class_body):
         return_type, func_name, params = func_match.groups()
         signature = f"{return_type} {func_name}({params})"
         func_start = func_match.start()
 
-        # Find full function body
-        bracket_count = 0
+        # Determine function body type: standard `{}` or arrow `=>`
         func_end = func_start
-        while func_end < len(temp_class_body):
-            if temp_class_body[func_end] == '{':
-                bracket_count += 1
-            elif temp_class_body[func_end] == '}':
-                bracket_count -= 1
-                if bracket_count == 0:
-                    func_end += 1
-                    break
-            func_end += 1
+        if '=>' in class_body[func_start:]:  # Check if arrow function exists after function declaration
+            func_end = class_body.find(';', func_start) + 1  # Extract until semicolon
+        else:
+            # Extract full function body using balanced bracket approach
+            bracket_count = 0
+            while func_end < len(class_body):
+                if class_body[func_end] == '{':
+                    bracket_count += 1
+                elif class_body[func_end] == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        func_end += 1
+                        break
+                func_end += 1
 
-        func_content = temp_class_body[func_start:func_end].strip()
-        function_contents.append((func_content, func_start, func_end))
+        func_content = class_body[func_start:func_end].strip()
         blocks.append(Block(signature, func_content, BlockType.CLASS_FUNCTION))
 
     # Remove extracted functions from temp_class_body
     for block in blocks:
-        temp_class_body = temp_class_body.replace(block.content, '')
-
-    print(temp_class_body)
+        class_body = class_body.replace(block.content, '')
+    print("========Class body after function extraction========")
+    print(class_body)
     
     # Step 2: Extract constructors
-    constructor_contents = []
-    for constructor_match in constructor_pattern.finditer(temp_class_body):
-        constructor_name, params = constructor_match.groups()
-        signature = f"{constructor_name}({params})"
+    for constructor_match in constructor_pattern.finditer(class_body):
+        const_modifier, constructor_name, params, body_start = constructor_match.groups()
+        
+        # Preserve 'const' if present
+        signature = f"{(const_modifier or '').strip()} {constructor_name}".strip()
+
         constructor_start = constructor_match.start()
-
-        # Find full constructor body
-        bracket_count = 0
         constructor_end = constructor_start
-        while constructor_end < len(temp_class_body):
-            if temp_class_body[constructor_end] == '{':
-                bracket_count += 1
-            elif temp_class_body[constructor_end] == '}':
-                bracket_count -= 1
-                if bracket_count == 0:
-                    constructor_end += 1
-                    break
-            constructor_end += 1
 
-        constructor_content = temp_class_body[constructor_start:constructor_end].strip()
-        constructor_contents.append((constructor_content, constructor_start, constructor_end))
+        if body_start == '{':  # If constructor has a body
+            bracket_count = 0
+            while constructor_end < len(class_body):
+                if class_body[constructor_end] == '{':
+                    bracket_count += 1
+                elif class_body[constructor_end] == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        constructor_end += 1  # Include final '}'
+                        break
+                constructor_end += 1
+        else:  # Constructor ends with ';'
+            constructor_end = class_body.find(';', constructor_start) + 1  # Capture until `;`
+
+        constructor_content = class_body[constructor_start:constructor_end].strip()
         blocks.append(Block(signature, constructor_content, BlockType.CLASS_CONSTRUCTOR))
 
     # Remove extracted constructors from temp_class_body
-    for constructor_content, start, end in sorted(constructor_contents, key=lambda x: x[1], reverse=True):
-        temp_class_body = temp_class_body[:start] + temp_class_body[end:]
+    for block in blocks:
+        class_body = class_body.replace(block.content, '')
 
+    print("========Class body after constructor extraction========")
+    print(class_body)
     # Step 3: Extract attributes from the modified class body
-    for attr_match in attribute_pattern.finditer(temp_class_body):
-        attr_type, attr_name, attr_value = attr_match.groups()
-        signature = f"{attr_type} {attr_name}"
-        attr_content = attr_match.group(0).strip()  # Capture full line
-        blocks.append(Block(signature, attr_content, BlockType.CLASS_ATTRIBUTE))
-
+    for attr_match in attribute_pattern.finditer(class_body):
+        # print("matching group: ", attr_match.groups())
+        qualifier, attr_type, attr_name, attr_value = attr_match.groups()
+        full_name = f"{(qualifier or '').strip()} {(attr_type or '').strip()} {attr_name}".strip()
+        attr_content = attr_match.group(0).strip()
+        
+        blocks.append(Block(full_name, attr_content, BlockType.CLASS_ATTRIBUTE))
+        
+        
     return blocks
