@@ -16,5 +16,5 @@ class Connection:
         self.type = type
         
     def __str__(self):
-        return f'{self.head.name} - {self.head.type} --> {self.tail.name} - {self.tail.type} --- {self.type}'
+        return f'{self.head} --> {self.tail} --- {self.type}'
         

@@ -257,8 +257,8 @@ def extract_class_content(class_body):
     # Remove extracted functions from temp_class_body
     for block in blocks:
         class_body = class_body.replace(block.content, '')
-    print("========Class body after function extraction========")
-    print(class_body)
+    # print("========Class body after function extraction========")
+    # print(class_body)
     
     # Step 2: Extract constructors
     for constructor_match in constructor_pattern.finditer(class_body):
@@ -291,8 +291,8 @@ def extract_class_content(class_body):
     for block in blocks:
         class_body = class_body.replace(block.content, '')
 
-    print("========Class body after constructor extraction========")
-    print(class_body)
+    # print("========Class body after constructor extraction========")
+    # print(class_body)
     # Step 3: Extract attributes from the modified class body
     for attr_match in attribute_pattern.finditer(class_body):
         # print("matching group: ", attr_match.groups())
