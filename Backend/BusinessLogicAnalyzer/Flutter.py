@@ -2,7 +2,7 @@ from .Diagram.Block import Block, BlockType
 
 from .FlutterStrats.ImportAnalyzer import ImportAnalyzer
 from .FlutterStrats.ContainAnalyzer import ContainAnalyzer
-
+from .FlutterStrats.CallAnalyzer import CallAnalyzer
 # from LLMService import LLM
 
 def FlutterAnalyzeStrategy(diagram) -> None:
@@ -26,15 +26,18 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     ContainAnalyzer(diagram, diagram.blocks[0])
     
+    CallAnalyzer(diagram, diagram.blocks[0])
+    
     print("===============Analyzing result===============")
     for block in diagram.blocks:
         print(block)
-        if block.type != BlockType.FILE:
-            print(block.getContentNoComment())
-        print("=========================")
+        # if block.type != BlockType.FILE:
+        #     print(block.getContentNoComment())
+        # print("=========================")
         
     for connection in diagram.connections:
         print(connection)
+        
 
 
 

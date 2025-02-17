@@ -167,7 +167,10 @@ def ContainAnalyzer(diagram, block, visited = []):
     
     
 def extract_functions_and_globals(dart_code):
-    function_pattern = re.compile(r'^\s*([\w<>]+)\s+(\w+)\s*\(([^)]*)\)\s*\{', re.MULTILINE)
+    function_pattern = re.compile(
+    r'^\s*(?:@override\s*)?([\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)\s*(?:\{|\=\>)', 
+    re.MULTILINE
+    )
     global_var_pattern = re.compile(
        r'\b(final|const)?\s*(var|(?:\w+<[^<>]+>)|\w+(?:<[^<>]+>)?)?\s+(\w+)\s*(?:=\s*([\s\S]*?));',
         re.MULTILINE
