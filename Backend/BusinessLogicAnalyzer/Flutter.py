@@ -33,10 +33,11 @@ def FlutterAnalyzeStrategy(diagram) -> None:
         print(block)
         # if block.type != BlockType.FILE:
         #     print(block.getContentNoComment())
-        # print("=========================")
+        print("=========================")
         
     for connection in diagram.connections:
         print(connection)
+        print("=========================")
         
 
 
