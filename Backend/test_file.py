@@ -50,7 +50,7 @@ def testDiagram():
         project = frameworkMap[framework](git_url)
         
     diagram = DependencyDiagram(project)
-    # print(diagram)
+    # print(diagram)=-
 
 if __name__ == '__main__':
     # testProject()
