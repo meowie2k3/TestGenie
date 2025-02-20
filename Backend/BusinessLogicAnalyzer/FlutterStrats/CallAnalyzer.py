@@ -19,14 +19,16 @@ def CallAnalyzer(diagram, block, visited = []):
             # find all class/function/variable in file. Avoid BlockType.FILE
             connectedBlocks = [conn.tail for conn in diagram.connections if conn.head == file and conn.type == ConnectionType.CONTAIN]
             currentBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
-            
-            connectedBlocks.extend(currentBlocks)
+
         
             _CallAnalyzer(diagram, currentBlocks, connectedBlocks, visited)
+            # import based recursive call
+            CallAnalyzer(diagram, file, visited)
         
 def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
     # thisFile: blocks of contains in current file
     # callables: blocks of contains in imported file
+    callable.extend(thisFile)
     
     call_pattern = re.compile(r'(\w+)\s*\(')
     
@@ -34,17 +36,19 @@ def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
         if block in visited:
             continue
         # ignore file, class, enum
-        if block.type in (BlockType.FILE, BlockType.CLASS, BlockType.ENUM):
+        if block.type in (BlockType.AbstractClass, BlockType.CLASS, BlockType.ENUM):
+            innerBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
+            # magic recursive calls at 4 a.m
+            _CallAnalyzer(diagram, innerBlocks, callables, visited)
+            
+            visited.append(block)
             continue
-        visited.append(block)
-        # analyze calls in block
-        # If called, create a connection ConnectionType.CALL
-        content = block.getContentNoComment()
-        # content will contain  name itself
-        # or 
-        calls = call_pattern.findall(content)
-        
-        print(calls)
-        for block2 in callables:
-            print(block2)
+        else:
+            visited.append(block)
+            # analyze calls in block
+            # If called, create a connection ConnectionType.CALL
+            content = block.getContentNoComment()
+            # content will contain  name itself
+            # or 
+            calls = call_pattern.findall(content)
     pass

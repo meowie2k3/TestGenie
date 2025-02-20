@@ -4,6 +4,7 @@ class ConnectionType:
     EXTEND = 'Extend'
     IMPLEMENT = 'Implement'
     CONTAIN = 'Contain'
+    EXTEND = 'Extend'
     USE = 'Use'
     CALL = 'Call'
     IMPORT = 'Import'

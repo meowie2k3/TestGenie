@@ -3,6 +3,7 @@ from .Diagram.Block import Block, BlockType
 from .FlutterStrats.ImportAnalyzer import ImportAnalyzer
 from .FlutterStrats.ContainAnalyzer import ContainAnalyzer
 from .FlutterStrats.CallAnalyzer import CallAnalyzer
+from .FlutterStrats.ClassExtensionAnalyze import ClassExtensionAnalyze
 # from LLMService import LLM
 
 def FlutterAnalyzeStrategy(diagram) -> None:
@@ -26,7 +27,9 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     ContainAnalyzer(diagram, diagram.blocks[0])
     
-    CallAnalyzer(diagram, diagram.blocks[0])
+    ClassExtensionAnalyze(diagram)
+    
+    # CallAnalyzer(diagram, diagram.blocks[0])
     
     # print("===============Analyzing result===============")
     # for block in diagram.blocks:
