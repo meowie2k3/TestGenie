@@ -9,4 +9,4 @@ def ClassExtensionAnalyze(diagram):
     classBlock = [block for block in diagram.blocks if block.type == BlockType.CLASS]
         
     for block in classBlock:
-        print(block)
+        print(block) 

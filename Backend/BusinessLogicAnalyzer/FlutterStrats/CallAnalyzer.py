@@ -4,8 +4,10 @@ import os
 import re
 
 def CallAnalyzer(diagram, block, visited = []):
-    visited.append(block)
+    if block in visited:
+        return
     
+    visited.append(block)
     currType = block.type
     
     # NOTE strat: 2-layer recursive
@@ -28,20 +30,26 @@ def CallAnalyzer(diagram, block, visited = []):
 def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
     # thisFile: blocks of contains in current file
     # callables: blocks of contains in imported file
-    callable.extend(thisFile)
+    callables.extend(thisFile)
     
+    printStuff(thisFile, callables)
     call_pattern = re.compile(r'(\w+)\s*\(')
     
     for block in thisFile:
         if block in visited:
             continue
-        # ignore file, class, enum
-        if block.type in (BlockType.AbstractClass, BlockType.CLASS, BlockType.ENUM):
+        
+        if block.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
+            # extend connection analyze
+            
+            
+            # split class, abstract class
             innerBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
             # magic recursive calls at 4 a.m
+            visited.append(block)
             _CallAnalyzer(diagram, innerBlocks, callables, visited)
             
-            visited.append(block)
+            
             continue
         else:
             visited.append(block)
@@ -52,3 +60,12 @@ def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
             # or 
             calls = call_pattern.findall(content)
     pass
+
+def printStuff(thisFile, callables):
+    print("This file:")
+    for block in thisFile:
+        print(block)
+    print("Callables:")
+    for block in callables:
+        print(block)
+    print("=====================================")
