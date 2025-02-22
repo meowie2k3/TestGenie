@@ -6,8 +6,8 @@ class BlockType:
     ENUM = 'Enum'
     GLOBAL_VAR = 'GlobalVar'
     FUNCTION = 'Function'
-    CLASS_FUNCTION = 'ClassFunction'
     CLASS_CONSTRUCTOR = 'ClassConstructor'
+    CLASS_FUNCTION = 'ClassFunction'
     CLASS_ATTRIBUTE = 'ClassAttribute'
     
     

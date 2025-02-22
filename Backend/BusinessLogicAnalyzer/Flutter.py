@@ -16,10 +16,6 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     mainBlock = Block(mainfileDir, mainFileContent, BlockType.FILE)
     # print(mainBlock)
     
-    # llm = LLM(model='deepseek-r1-distill-llama-8b', purpose='Analyzing Flutter project into dependency diagram')
-    # question = "What are the imports in the main file?\n" + mainFileContent
-    # res = llm.invoke(question)
-    # F word to the LLM
     diagram.blocks.append(mainBlock)
     
     ImportAnalyzer(diagram, diagram.blocks[0])
@@ -28,16 +24,20 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     CallAnalyzer(diagram, diagram.blocks[0])
     
-    # print("===============Analyzing result===============")
-    # for block in diagram.blocks:
-    #     print(block)
-    #     # if block.type != BlockType.FILE:
-    #     #     print(block.getContentNoComment())
-    #     print("=========================")
+    # printAnalyzingResult(diagram)
         
-    # for connection in diagram.connections:
-    #     print(connection)
-    #     print("=========================")
+        
+def printAnalyzingResult(diagram):
+    print("===============Analyzing result===============")
+    for block in diagram.blocks:
+        print(block)
+        if block.type != BlockType.FILE:
+            print(block.getContentNoComment())
+        print("=========================")
+        
+    for connection in diagram.connections:
+        print(connection)
+        print("=========================")
         
 
 

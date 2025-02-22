@@ -143,7 +143,7 @@ def ContainAnalyzer(diagram, block, visited = []):
             blocks.extend(funcAndVarBlocks)
         
         # Class analyzing
-        if (currType == BlockType.CLASS):
+        if (currType in (BlockType.CLASS)):
             # two cases: class function and class attribute
             content = block.getContentNoComment() # should be no difference between content and contentNoComment
             # print(content)
@@ -215,14 +215,16 @@ def extract_functions_and_globals(dart_code):
 
 def extract_class_content(class_body):
     """ Extracts functions, constructors, and attributes from an already extracted class body. """
-
+    # print(class_body)
+    # first word is 'class', next word is class name
+    class_name = class_body.split()[1]
     # Regular expression patterns
-    function_pattern = re.compile(
-    r'^\s*(?:@override\s*)?([\w<>]+(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)\s*(?:\{|\=\>)', 
-    re.MULTILINE
-    )
     constructor_pattern = re.compile(
-    r'^\s*(const\s+)?(\w+)\s*\(([^)]*)\)\s*({|;)', re.MULTILINE
+    rf'^\s*(const\s+)?({class_name})\s*\(([^)]*)\)\s*(\{{|;)', re.MULTILINE
+    )
+    function_pattern = re.compile(
+    r'^\s*(?:@override\s*)?(?:([\w<>]+(?:<[^>]+>)?)\s+)?(\w+)\s*\(([^)]*)\)\s*(?:\{|\=\>)', 
+    re.MULTILINE
     )
     attribute_pattern = re.compile(
         r'\b(final|const)?\s*(var|(?:\w+<[^<>]+>)|\w+(?:<[^<>]+>)?)?\s+(\w+)\s*(?:=\s*([\s\S]*?));',
@@ -230,41 +232,9 @@ def extract_class_content(class_body):
     )
 
     blocks = []
-
-    # Step 1: Extract functions first
-    for func_match in function_pattern.finditer(class_body):
-        return_type, func_name, params = func_match.groups()
-        signature = f"{return_type} {func_name}({params})"
-        func_start = func_match.start()
-
-        # Determine function body type: standard `{}` or arrow `=>`
-        func_end = func_start
-        if '=>' in class_body[func_start:]:  # Check if arrow function exists after function declaration
-            func_end = class_body.find(';', func_start) + 1  # Extract until semicolon
-        else:
-            # Extract full function body using balanced bracket approach
-            bracket_count = 0
-            while func_end < len(class_body):
-                if class_body[func_end] == '{':
-                    bracket_count += 1
-                elif class_body[func_end] == '}':
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        func_end += 1
-                        break
-                func_end += 1
-
-        func_content = class_body[func_start:func_end].strip()
-        blocks.append(Block(signature, func_content, BlockType.CLASS_FUNCTION))
-
-    # Remove extracted functions from temp_class_body
-    for block in blocks:
-        class_body = class_body.replace(block.content, '')
-    # print("========Class body after function extraction========")
-    # print(class_body)
-    
-    # Step 2: Extract constructors
-    for constructor_match in constructor_pattern.finditer(class_body):
+    match = constructor_pattern.finditer(class_body)
+    # Step 1: Extract constructors
+    while constructor_match := next(match, None):
         const_modifier, constructor_name, params, body_start = constructor_match.groups()
         
         # Preserve 'const' if present
@@ -289,21 +259,69 @@ def extract_class_content(class_body):
 
         constructor_content = class_body[constructor_start:constructor_end].strip()
         blocks.append(Block(signature, constructor_content, BlockType.CLASS_CONSTRUCTOR))
+        # delete constructor content
+        class_body = class_body.replace(constructor_content, '')
+        # update match
+        match = constructor_pattern.finditer(class_body)
 
-    # Remove extracted constructors from temp_class_body
-    for block in blocks:
-        class_body = class_body.replace(block.content, '')
+    # # Remove extracted constructors from temp_class_body
+    # for block in blocks:
+    #     class_body = class_body.replace(block.content, '')
 
     # print("========Class body after constructor extraction========")
     # print(class_body)
+
+    # Step 2: Extract functions
+    match = function_pattern.finditer(class_body)
+    while func_match := next(match, None):
+        return_type, func_name, params = func_match.groups()
+        signature = f"{(return_type or '').strip()} {func_name}({params})".strip()
+        func_start = func_match.start()
+
+        # Determine function body type: standard `{}` or arrow `=>`
+        func_end = func_start
+        if '=>' in class_body[func_start:]:  # Check if arrow function exists after function declaration
+            func_end = class_body.find(';', func_start) + 1  # Extract until semicolon
+        else:
+            # Extract full function body using balanced bracket approach
+            bracket_count = 0
+            while func_end < len(class_body):
+                if class_body[func_end] == '{':
+                    bracket_count += 1
+                elif class_body[func_end] == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        func_end += 1
+                        break
+                func_end += 1
+
+        func_content = class_body[func_start:func_end]
+
+        newBlock = Block(signature, func_content, BlockType.CLASS_FUNCTION)
+        blocks.append(newBlock)
+        # print("---------Function block---------")
+        # print(newBlock)
+        # delete function content
+        class_body = class_body.replace(func_content, '')
+        # print("---------Updated class body---------")
+        # print(class_body)
+        # update match
+        match = function_pattern.finditer(class_body)
+        
+    # print("========Class body after function extraction========")
+    # print(class_body)
+    
+    
     # Step 3: Extract attributes from the modified class body
-    for attr_match in attribute_pattern.finditer(class_body):
+    match = attribute_pattern.finditer(class_body)
+    while attr_match := next(match, None):
         # print("matching group: ", attr_match.groups())
         qualifier, attr_type, attr_name, attr_value = attr_match.groups()
         full_name = f"{(qualifier or '').strip()} {(attr_type or '').strip()} {attr_name}".strip()
         attr_content = attr_match.group(0).strip()
         
         blocks.append(Block(full_name, attr_content, BlockType.CLASS_ATTRIBUTE))
-        
+        class_body = class_body.replace(attr_content, '')
+        match = attribute_pattern.finditer(class_body)
         
     return blocks
