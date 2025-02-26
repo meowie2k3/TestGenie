@@ -117,14 +117,45 @@ def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
             print(content)
             print("==========================================================")
             printStuff(thisFile, callables)
+            callablesName = getCallablesName(callables)
+            for name, connBlock in callablesName:
+                print(f"Name: {name}")
             
 
-def getCallablesName(callables) -> list:
+def getCallablesName(callables) -> list[tuple]: # type: ignore
     res = []
     for block in callables:
         name = block.name
         type = block.type
-        
+        if type in (BlockType.CLASS, BlockType.ABSTRACT_CLASS):
+            className = name.split()[0]
+            pair = (className, block)
+            res.append(pair)
+        if type in (BlockType.GLOBAL_VAR, BlockType.CLASS_ATTRIBUTE): 
+            # first letter is var type, second letter is var name
+            varName = name.split()[1]
+            pair = (varName, block)
+            res.append(pair)
+            pass
+        if type in (BlockType.FUNCTION, BlockType.CLASS_FUNCTION):
+            name = block.name
+            # two case: 
+            # State<MyHomePage> createState() the function name is createState
+            # _addTwoNumbers(int a, int b) the function name is _addTwoNumbers
+            match = re.search(r'(\w+)\s*\(.*\)', name)
+            if match:
+                funcName = match.group(1)
+                pair = (funcName, block)
+                res.append(pair)
+            
+            pass
+        if type in (BlockType.CLASS_ATTRIBUTE):
+            # first letter is var type, second letter is var name
+            varName = name.split()[1]
+            pair = (varName, block)
+            res.append(pair)
+            
+            pass
     return res    
 
 def printStuff(thisFile, callables):
