@@ -24,15 +24,15 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     CallAnalyzer(diagram, diagram.blocks[0])
     
-    # printAnalyzingResult(diagram)
+    printAnalyzingResult(diagram)
         
         
 def printAnalyzingResult(diagram):
     print("===============Analyzing result===============")
     for block in diagram.blocks:
         print(block)
-        if block.type != BlockType.FILE:
-            print(block.getContentNoComment())
+        # if block.type != BlockType.FILE:
+        #     print(block.getContentNoComment())
         print("=========================")
         
     for connection in diagram.connections:

@@ -41,7 +41,7 @@ def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
         if block.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
             # extend connection analyze
             name = block.name
-            print(name)
+            # print(name)
             # first word is class name
             classname = name.split()[0]
             otherInfo = name[len(classname):]
@@ -113,14 +113,23 @@ def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
                 fullcontent = fullcontent + ';'
                 content = fullcontent[fullcontent.index('=')+1:]
                 content = content[:content.index(';') + 1]
-            print("====================Extracted content=====================")
-            print(content)
-            print("==========================================================")
-            printStuff(thisFile, callables)
+            # print("====================Block=====================")
+            # print("Block name: ", block.name)
+            # print("====================Extracted content=====================")
+            # print(content)
+            # print("==========================================================")
+            # printStuff(thisFile, callables)
             callablesName = getCallablesName(callables)
             for name, connBlock in callablesName:
-                print(f"Name: {name}")
-            
+                # print(f"Name: {name}, Block name: {connBlock.name}")
+                # find name in content
+                # name found can be next to any non-word character or start of line and end of line
+                regex = re.compile(r'(?<![a-zA-Z0-9_])' + re.escape(name) + r'(?![a-zA-Z0-9_])')
+                if regex.search(content):
+                    # check if connection already exists
+                    if not any(conn.head == block and conn.tail == connBlock and conn.type == ConnectionType.CALL for conn in diagram.connections):
+                        diagram.connections.append(Connection(block, connBlock, ConnectionType.CALL))
+                        # print(f"Call connection: {block} --> {connBlock}")
 
 def getCallablesName(callables) -> list[tuple]: # type: ignore
     res = []
@@ -138,7 +147,6 @@ def getCallablesName(callables) -> list[tuple]: # type: ignore
             res.append(pair)
             pass
         if type in (BlockType.FUNCTION, BlockType.CLASS_FUNCTION):
-            name = block.name
             # two case: 
             # State<MyHomePage> createState() the function name is createState
             # _addTwoNumbers(int a, int b) the function name is _addTwoNumbers
@@ -147,14 +155,6 @@ def getCallablesName(callables) -> list[tuple]: # type: ignore
                 funcName = match.group(1)
                 pair = (funcName, block)
                 res.append(pair)
-            
-            pass
-        if type in (BlockType.CLASS_ATTRIBUTE):
-            # first letter is var type, second letter is var name
-            varName = name.split()[1]
-            pair = (varName, block)
-            res.append(pair)
-            
             pass
     return res    
 
