@@ -24,7 +24,7 @@ def FlutterAnalyzeStrategy(diagram) -> None:
     
     CallAnalyzer(diagram, diagram.blocks[0])
     
-    printAnalyzingResult(diagram)
+    # printAnalyzingResult(diagram)
         
         
 def printAnalyzingResult(diagram):

@@ -9,6 +9,8 @@ class ConnectionType:
     CALL = 'Call'
     IMPORT = 'Import'
     
+    def getAllTypes():
+        return [ConnectionType.EXTEND, ConnectionType.IMPLEMENT, ConnectionType.CONTAIN, ConnectionType.EXTEND, ConnectionType.USE, ConnectionType.CALL, ConnectionType.IMPORT]
 
 class Connection:
     def __init__(self, head: Block, tail: Block, type: str):

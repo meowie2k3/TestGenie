@@ -10,6 +10,9 @@ class BlockType:
     CLASS_FUNCTION = 'ClassFunction'
     CLASS_ATTRIBUTE = 'ClassAttribute'
     
+    def getAllTypes():
+        return [BlockType.FILE, BlockType.CLASS, BlockType.ABSTRACT_CLASS, BlockType.ENUM, BlockType.GLOBAL_VAR, BlockType.FUNCTION, BlockType.CLASS_CONSTRUCTOR, BlockType.CLASS_FUNCTION, BlockType.CLASS_ATTRIBUTE]
+    
     
 class Block:
     
