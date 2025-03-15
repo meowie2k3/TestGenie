@@ -49,6 +49,9 @@ class Project:
     def getName(self) -> str:
         return self._name
     
+    def getPath(self) -> str:
+        return projectDir + '/' + self._name
+    
     def run_test(self, filename) -> tuple:
         # this is abtract method
         # if run in this class, it will raise error

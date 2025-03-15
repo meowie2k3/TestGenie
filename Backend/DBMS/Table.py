@@ -23,8 +23,8 @@ class Table:
         sql = f'INSERT INTO {self.name} ('
         for column in values:
             sql += f'{column}, '
-        sql = sql[:-2] + ") VALUES ('"
+        sql = sql[:-2] + ") VALUES ("
         for column in values:
-            sql += f"{values[column]}', "
+            sql += f"'{values[column]}', "
         sql = sql[:-2] + ')'
         return sql

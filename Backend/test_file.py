@@ -1,6 +1,6 @@
 from ProjectManager import Project
 from ProjectManager.Flutter import Flutter
-# from BusinessLogicAnalyzer import DependencyDiagram
+
 from DBMS import DBMS
 
 frameworkMap = {
@@ -42,16 +42,17 @@ def testFiles(): # passed
     print(file0Content)
     print("==========File content==========")
     
-# def testDiagram():
-#     git_url = 'https://github.com/meowie2k3/sample'
-#     project = Project(git_url)
-#     framework = project.recognizeProjectFramework()
+def testDiagram():
+    from BusinessLogicAnalyzer import DependencyDiagram
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
     
-#     if framework in frameworkMap:
-#         project = frameworkMap[framework](git_url)
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
         
-#     diagram = DependencyDiagram(project)
-#     # print(diagram)
+    diagram = DependencyDiagram(project)
+    # print(diagram)
     
 def test_dbms():
     git_url = 'https://github.com/meowie2k3/sample'

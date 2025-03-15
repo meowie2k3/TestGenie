@@ -35,7 +35,7 @@ class BlockType:
     
 class Block:
     
-    def __init__(self, name: str, content: str, type:str):
+    def __init__(self, name: str, content: str, type: str) -> None:
         self.name = name
         self.content = content
         self.type = type

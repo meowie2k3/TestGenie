@@ -15,8 +15,8 @@ class DBMS:
             self._initDB()
         
         # print(self._isProjectExistInDB())
-        if not self._isProjectExistInDB():
-            self._insertProject()
+        # if not self._isProjectExistInDB():
+        self._insertProject()
         
         
     def _connect(self):
@@ -36,6 +36,19 @@ class DBMS:
         query = 'SHOW TABLES'
         res = self.execute(query)
         return len(res) >= self._numberOfTables
+    
+    def execute(self, query) -> list:
+        self._connect()
+        
+        if type(query) == str:
+            self.cursor.execute(query)
+        else:
+            for q in query:
+                self.cursor.execute(q)
+        self.connection.commit()
+        
+        self._close()
+        return self.cursor.fetchall()
     
     def _initDB(self):
         projectQuery = self.project.getTable().getCreateSQL()
@@ -75,19 +88,24 @@ class DBMS:
     
     def _insertProject(self):
         # print('Inserting project')
-        
+        # project table insert
+        query = self.project.getTable().getInsertSQL({
+            'name': self.project.getName(),
+            'directory': self.project.getPath()
+        })
+        print(query)
+        # self.execute(query)
+        # diagram insert
+        diagram = DependencyDiagram(self.project)
+        blocks = diagram.blocks
+        connections = diagram.connections
+        for block in blocks:
+            type = block.type
+            
+            pass
         pass
     
-    def execute(self, query) -> list:
-        self._connect()
-        
-        if type(query) == str:
-            self.cursor.execute(query)
-        else:
-            for q in query:
-                self.cursor.execute(q)
-        self.connection.commit()
-        
-        self._close()
-        return self.cursor.fetchall()
+    def _getEnumId(self, enum, enumName: str):
+        pass
+    
     
