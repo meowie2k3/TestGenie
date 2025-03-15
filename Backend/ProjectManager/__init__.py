@@ -4,13 +4,13 @@
 import os
 import subprocess
 
+
 projectDir = os.path.join(os.path.dirname(__file__), 'Projects')
 sdkDir = os.path.join(os.path.dirname(__file__), 'SDKs')
 
 class Project:
     
     _framework = ''
-    
     
     def __init__(self, git_url):
         self._git_url = git_url
@@ -76,6 +76,19 @@ class Project:
         """
         with open(os.path.join(projectDir, self.getName(), fileDir), 'r') as f:
             return f.read()
+    
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
+        return Table(
+            'Project',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)',
+                'directory': 'VARCHAR(255)',
+            }
+        )
+
     
     def __str__(self) -> str:
         return f'Project {self._name} created from {self._git_url}'

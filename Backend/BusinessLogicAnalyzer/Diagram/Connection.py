@@ -1,5 +1,4 @@
 from .Block import Block
-from DBMS.Table import Table
 
 class ConnectionType:
     EXTEND = 'Extend'
@@ -11,12 +10,19 @@ class ConnectionType:
     IMPORT = 'Import'
     
     @staticmethod
-    def getTypes():
+    def getInsertQuery()->list[str]:
         # return attributes of this class
-        return [attr for attr in dir(ConnectionType) if not callable(getattr(ConnectionType, attr)) and not attr.startswith("__")]
+        attList = [attr for attr in dir(ConnectionType) if not callable(getattr(ConnectionType, attr)) and not attr.startswith("__")]
+        table = ConnectionType.getTable()
+        query = []
+        for att in attList:
+            query.append(table.getInsertSQL({'name': getattr(ConnectionType, att)}) + ';')
+            
+        return query
     
     @staticmethod
     def getTable():
+        from DBMS.Table import Table
         return Table(
             'ConnectionType',
             {
@@ -31,7 +37,9 @@ class Connection:
         self.tail = tail
         self.type = type
     
-    def getTable(self):
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
         return Table(
             'Connection',
             {

@@ -1,4 +1,4 @@
-from DBMS.Table import Table
+
 class BlockType:
     FILE = 'File'
     CLASS = 'Class'
@@ -11,12 +11,19 @@ class BlockType:
     CLASS_ATTRIBUTE = 'ClassAttribute'
     
     @staticmethod
-    def getTypes():
+    def getInsertQuery()->list[str]:
         # return attributes of this class
-        return [attr for attr in dir(BlockType) if not callable(getattr(BlockType, attr)) and not attr.startswith("__")]
+        attList = [attr for attr in dir(BlockType) if not callable(getattr(BlockType, attr)) and not attr.startswith("__")]
+        table = BlockType.getTable()
+        query = []
+        for att in attList:
+            query.append( table.getInsertSQL({'name': getattr(BlockType, att)}) + ';')
+            
+        return query
     
     @staticmethod
     def getTable():
+        from DBMS.Table import Table
         return Table(
             'BlockType',
             {
@@ -71,7 +78,9 @@ class Block:
     def getPrediction(self):
         return self.prediction
     
-    def getTable(self):
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
         return Table(
             'Block',
             {
