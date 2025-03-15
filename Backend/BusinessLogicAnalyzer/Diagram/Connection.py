@@ -1,4 +1,5 @@
 from .Block import Block
+from DBMS.Table import Table
 
 class ConnectionType:
     EXTEND = 'Extend'
@@ -9,15 +10,41 @@ class ConnectionType:
     CALL = 'Call'
     IMPORT = 'Import'
     
-    def getAllTypes():
-        return [ConnectionType.EXTEND, ConnectionType.IMPLEMENT, ConnectionType.CONTAIN, ConnectionType.EXTEND, ConnectionType.USE, ConnectionType.CALL, ConnectionType.IMPORT]
+    @staticmethod
+    def getTypes():
+        # return attributes of this class
+        return [attr for attr in dir(ConnectionType) if not callable(getattr(ConnectionType, attr)) and not attr.startswith("__")]
+    
+    @staticmethod
+    def getTable():
+        return Table(
+            'ConnectionType',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)'
+            }
+        )
 
 class Connection:
     def __init__(self, head: Block, tail: Block, type: str):
         self.head = head
         self.tail = tail
         self.type = type
-        
+    
+    def getTable(self):
+        return Table(
+            'Connection',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'head': 'INT',
+                'tail': 'INT',
+                'type': 'INT',
+                '': 'FOREIGN KEY (head) REFERENCES Block(id)',
+                '':'FOREIGN KEY (tail) REFERENCES Block(id)',
+                '': 'FOREIGN KEY (type) REFERENCES ConnectionType(id)'
+            }
+        )
+    
     def __str__(self):
         return f'{self.head} --> {self.tail} --- {self.type}'
         

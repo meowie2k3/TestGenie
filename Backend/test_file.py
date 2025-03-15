@@ -1,6 +1,7 @@
 from ProjectManager import Project
 from ProjectManager.Flutter import Flutter
 from BusinessLogicAnalyzer import DependencyDiagram
+from BusinessLogicAnalyzer.DBMS import DBMS
 
 frameworkMap = {
     'flutter': Flutter
@@ -50,11 +51,22 @@ def testDiagram():
         project = frameworkMap[framework](git_url)
         
     diagram = DependencyDiagram(project)
-    print(diagram)
+    # print(diagram)
+    
+def test_dbms():
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
+    
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
+        
+    dbms = DBMS(project)
 
 if __name__ == '__main__':
     # testProject()
     # testFramework()
     # testFiles()
-    testDiagram()
+    # testDiagram()
+    test_dbms()
     pass

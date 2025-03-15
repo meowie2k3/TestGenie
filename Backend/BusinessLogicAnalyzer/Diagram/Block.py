@@ -1,4 +1,4 @@
-
+from DBMS.Table import Table
 class BlockType:
     FILE = 'File'
     CLASS = 'Class'
@@ -10,8 +10,20 @@ class BlockType:
     CLASS_FUNCTION = 'ClassFunction'
     CLASS_ATTRIBUTE = 'ClassAttribute'
     
-    def getAllTypes():
-        return [BlockType.FILE, BlockType.CLASS, BlockType.ABSTRACT_CLASS, BlockType.ENUM, BlockType.GLOBAL_VAR, BlockType.FUNCTION, BlockType.CLASS_CONSTRUCTOR, BlockType.CLASS_FUNCTION, BlockType.CLASS_ATTRIBUTE]
+    @staticmethod
+    def getTypes():
+        # return attributes of this class
+        return [attr for attr in dir(BlockType) if not callable(getattr(BlockType, attr)) and not attr.startswith("__")]
+    
+    @staticmethod
+    def getTable():
+        return Table(
+            'BlockType',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)'
+            }
+        )
     
     
 class Block:
@@ -20,6 +32,7 @@ class Block:
         self.name = name
         self.content = content
         self.type = type
+        self.predict()
         
     def __predict(self):
         return ''
@@ -58,8 +71,22 @@ class Block:
     def getPrediction(self):
         return self.prediction
     
+    def getTable(self):
+        return Table(
+            'Block',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)',
+                'content': 'TEXT',
+                'prediction': 'TEXT',
+                'type': 'INT',
+                '': 'FOREIGN KEY (type) REFERENCES BlockType(id)'
+            }
+        )
+    
     def __str__(self):
         return f'{self.name} - {self.type}'
+    
     
 if __name__ == '__main__':
     content = "} /* Lmao */ /n"
