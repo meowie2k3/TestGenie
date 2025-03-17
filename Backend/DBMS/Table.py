@@ -13,6 +13,9 @@ class Table:
         return sql
     
     def getSelectSQL(self, conditions: dict):
+        # if conditions is empty, return all
+        if len(conditions) == 0:
+            return f'SELECT * FROM {self.name}'
         sql = f'SELECT * FROM {self.name} WHERE '
         for column in conditions:
             sql += f"{column} = '{conditions[column]}' AND "

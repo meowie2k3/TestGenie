@@ -15,9 +15,42 @@ class DBMS:
             self._initDB()
         
         # print(self._isProjectExistInDB())
-        # if not self._isProjectExistInDB():
-        self._insertProject()
-        
+        if not self._isProjectExistInDB():
+            self._insertProject()
+            
+        else:
+            # TODO: do something if project already exist
+            pass
+    
+    def getJsonDiagram(self) -> dict:
+        """
+        Get the diagram in json format
+        Dict structure:
+        {
+            project: "project_name",
+            blocks: [
+                {
+                    id: 1,
+                    name: "block_name",
+                    content: "block_content",
+                    prediction: "block_prediction",
+                    type: "block_type"
+                }
+            ]
+            connections: [
+                {
+                    head: 1,
+                    tail: 2,
+                    type: "connection_type"
+                }
+            ]
+        }
+        """
+        # fetch diagram from db
+        blockQuery = Block.getTable().getSelectSQL({})
+        print(blockQuery)
+        blocks = self.execute(blockQuery)
+        pass
         
     def _connect(self):
         self.connection = mysql.connector.connect(
@@ -93,19 +126,76 @@ class DBMS:
             'name': self.project.getName(),
             'directory': self.project.getPath()
         })
-        print(query)
-        # self.execute(query)
+        # print(query)
+        self.execute(query)
         # diagram insert
         diagram = DependencyDiagram(self.project)
+        # not sure if this is needed
+        self.diagram = diagram
+        
         blocks = diagram.blocks
         connections = diagram.connections
+        self._mapBlocksIntoDB(blocks)
+        self._mapConnectionsIntoDB(connections)
+        
+    
+    def _mapBlocksIntoDB(self, blocks: list):
         for block in blocks:
-            type = block.type
-            
-            pass
+            # TODO: handle apostrophe in content
+            # map into block table
+            query = Block.getTable().getInsertSQL({
+                'name': self._handldApostropheString(block.name),
+                'content': self._handldApostropheString(block.content),
+                'prediction': self._handldApostropheString(block.prediction),
+                'type': self._getEnumId('BlockType', block.type)
+            })
+            self.execute(query)
         pass
     
-    def _getEnumId(self, enum, enumName: str):
+    def _mapConnectionsIntoDB(self, connections: list):
+        for connection in connections:
+            # map into connection table
+            query = Connection.getTable().getInsertSQL({
+                'head': self._getBlockId(connection.head),
+                'tail': self._getBlockId(connection.tail),
+                'type': self._getEnumId('ConnectionType', connection.type)
+            })
+            self.execute(query)
         pass
     
+    def _getBlockId(self, block) -> int:
+        table = Block.getTable()
+        query = table.getSelectSQL({
+            'name': self._handldApostropheString(block.name),
+            'type': self._getEnumId('BlockType', block.type)
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
+    def _getEnumId(self, enum, enumName: str) -> int:
+        # base on enumname to get blocktype or connectiontype id
+        if enum in globals():
+            enumClass = globals()[enum]
+            table = enumClass.getTable()
+            query = table.getSelectSQL({
+                'name': enumName
+            })
+            res = self.execute(query)
+            return res[0][0]
+        return 0
+    
+    def _getEnumName(self, enum, enumId: int) -> str:
+        if enum in globals():
+            enumClass = globals()[enum]
+            table = enumClass.getTable()
+            query = table.getSelectSQL({
+                'id': enumId
+            })
+            res = self.execute(query)
+            return res[0][1]
+        return ''
+    
+    def _handldApostropheString(self, string: str) -> str:
+        return string.replace("'", "''")
+        pass
     

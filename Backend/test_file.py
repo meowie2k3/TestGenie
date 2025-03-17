@@ -63,6 +63,7 @@ def test_dbms():
         project = frameworkMap[framework](git_url)
         
     dbms = DBMS(project)
+    dbms.getJsonDiagram()
 
 if __name__ == '__main__':
     # testProject()
