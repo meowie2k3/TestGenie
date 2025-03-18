@@ -1,0 +1,19 @@
+.dashed-edge {
+    stroke-dasharray: 5, 5;
+  }
+  
+.call-edge {
+    stroke: #ff5733;
+    stroke-width: 2px;
+}
+  
+.inheritance-edge {
+    stroke: #33ff57;
+    stroke-width: 2px;
+}
+  
+.dependency-edge {
+    stroke: #3357ff;
+    stroke-dasharray: 4;
+}
+  

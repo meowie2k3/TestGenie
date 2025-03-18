@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from ProjectManager import Project
 from ProjectManager.Flutter import Flutter
 from DBMS import DBMS
@@ -8,6 +9,7 @@ frameworkMap = {
 }
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/hello', methods=['GET'])
 def hello():
@@ -29,6 +31,7 @@ def createProject():
 
 @app.route('/getDiagram', methods=['POST'])
 def getDiagram():
+    # print(request.json)
     if not request.json or not 'git_url' in request.json:
         return jsonify({'message': 'Invalid request'})
     git_url = request.json['git_url']
@@ -41,5 +44,11 @@ def getDiagram():
     diagram = dbms.getJsonDiagram()
     return jsonify(diagram)
 
+@app.route('/getDiagram', methods=['OPTIONS'])
+def getDiagramOptions():
+    print(request.json)
+    print("wrong method")
+    return jsonify({'message': 'Options request'})
+
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

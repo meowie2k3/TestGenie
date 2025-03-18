@@ -10,7 +10,7 @@ export default function Home() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (repoLink.trim()) {
-      navigate(`/diagram`);
+      navigate(`/diagram?git_url=${encodeURIComponent(repoLink)}`);
     }
   };
 

@@ -1,0 +1,11 @@
+.graph-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #eeeeee;
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 10px 10px; /* Adjust polka dot size */
+    overflow: hidden;
+  }

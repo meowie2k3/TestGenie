@@ -1,84 +1,123 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Graph from "react-graph-vis";
-import { fetchGraphData } from "../../services/DiagramService";
+import Node from "./components/Node/Node.js";
+import Edge from "./components/Edge/Edge.js";
+import { fetchDiagramData } from "../../services/DiagramService";
+import "./Diagram.css";
 
-const options = {
-  layout: {
-    hierarchical: false
-  },
-  edges: {
-    color: "#000000"
-  }
-};
+const Diagram = () => {
 
-function randomColor() {
-  const red = Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
-  const green = Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
-  const blue = Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
-  return `#${red}${green}${blue}`;
-}
+  var runOnce = false;
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const gitUrl = queryParams.get("git_url"); // Extract git_url
+  console.log(gitUrl);
+  const [graphData, setGraphData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function Diagram() {
-  const createNode = (x, y) => {
-    const color = randomColor();
-    setState(({ graph: { nodes, edges }, counter, ...rest }) => {
-      const id = counter + 1;
-      const from = Math.floor(Math.random() * (counter - 1)) + 1;
-      return {
-        graph: {
-          nodes: [
-            ...nodes,
-            { id, label: `Node ${id}`, color, x, y }
-          ],
-          edges: [
-            ...edges,
-            { from, to: id }
-          ]
+  useEffect(() => {
+    if (gitUrl) {
+      fetchDiagramData(gitUrl)
+        .then((response) => {
+          // console.log(response);
+          if (response && runOnce === false) {
+            runOnce = true;
+            handleGraphDataMap(response);
+            // setGraphData(graphDataMap);
+          }
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  }, [gitUrl]);
+
+  const handleGraphDataMap = (graphData) => {
+    /*
+    graphData = {
+      "project": "sample"
+      "blocks": [
+        {
+            "id": 32,
+            "name": "lib/main.dart",
+            "type": "File"
         },
-        counter: id,
-        ...rest
-      }
-    });
-  }
-  const [state, setState] = useState({
-    counter: 5,
-    graph: {
-      nodes: [
-        { id: 1, label: "Node 1", color: "#e04141" },
-        { id: 2, label: "Node 2", color: "#e09c41" },
-        { id: 3, label: "Node 3", color: "#e0df41" },
-        { id: 4, label: "Node 4", color: "#7be041" },
-        { id: 5, label: "Node 5", color: "#41e0c9" }
-      ],
-      edges: [
-        { from: 1, to: 2 },
-        { from: 1, to: 3 },
-        { from: 2, to: 4 },
-        { from: 2, to: 5 }
+        {
+            "id": 33,
+            "name": "lib/widgets/app.dart",
+            "type": "File"
+        },
       ]
-    },
-    events: {
-      select: ({ nodes, edges }) => {
-        console.log("Selected nodes:");
-        console.log(nodes);
-        console.log("Selected edges:");
-        console.log(edges);
-        alert("Selected node: " + nodes);
-      },
-      doubleClick: ({ pointer: { canvas } }) => {
-        createNode(canvas.x, canvas.y);
+      "connections": [
+        {
+            "head": 32,
+            "tail": 33,
+            "type": "Import"
+        },
+        {
+            "head": 33,
+            "tail": 34,
+            "type": "Import"
+        },
+      ]
+    }
+    */
+    // check for duplicate ids
+    const idSet = new Set();
+    for (const block of graphData.blocks) {
+      if (idSet.has(block.id)) {
+        console.error(`Duplicate id found: ${block.id}`);
+      }
+      idSet.add(block.id);
+    }
+    for (const connection of graphData.connections) {
+      if (!idSet.has(connection.head)) {
+        console.error(`Invalid head id found: ${connection.head}`);
+      }
+      if (!idSet.has(connection.tail)) {
+        console.error(`Invalid tail id found: ${connection.tail}`);
       }
     }
-  })
-  const { graph, events } = state;
+    console.log(graphData);
+    // dummy data first
+    // const nodes = [
+    //   { id: 32, label: "Node 1", color: "#e04141" },
+    //   { id: 33, label: "Node 2", color: "#e09c41" }
+    // ];
+    // const edges = [
+    //   { from: 32, to: 33 },
+    // ];
+    const nodes = graphData.blocks.map((block) => {
+      return new Node(block.id, block.name, block.type).toGraphNode();
+    });
+    const edges = graphData.connections.map((connection) => {
+      return new Edge(connection.head, connection.tail, connection.type).toGraphEdge();
+    });
+    
+    setGraphData({
+      nodes: nodes,
+      edges: edges,
+    });
+  };
+
+  const options = {
+    layout: { hierarchical: false },
+    edges: { font: { size: 12 } },
+    physics: { enabled: true },
+  };
+
+  if (loading) return <div className="loading">Loading diagram...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
-    <Graph
-      graph={graph}
-      options={options}
-      events={events}
-      style={{ height: "640px" }}
-    />
+    <div className="graph-container">
+      <Graph 
+        graph={graphData} 
+        options={options} 
+        style={{ width: "100vw", height: "100vh" }} />
+    </div>
   );
-}
+};
+
+export default Diagram;
