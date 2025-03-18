@@ -1,6 +1,7 @@
-import axios from "axios";
+import axios from 'axios';
 
-export const fetchGraphData = async (repo) => {
-  const response = await axios.get(`https://your-api.com/analyze?repo=${repo}`);
-  return response.data;
-};
+export default function Api () {
+    return axios.create({
+        baseURL: 'http://127.0.0.1:5000'
+    })
+}

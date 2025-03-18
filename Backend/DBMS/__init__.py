@@ -78,6 +78,24 @@ class DBMS:
         return res
         
         pass
+    
+    def getBlockContent(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['content'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+
+    def getBlockPrediction(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['prediction'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
+    def getNewBlockPrediction(self, blockId: int) -> str:
+        # TODO: implement this
+        return ''
         
     def _connect(self):
         self.connection = mysql.connector.connect(
