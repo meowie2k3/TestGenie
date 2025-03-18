@@ -1,8 +1,6 @@
 from ProjectManager import Project
 from ProjectManager.Flutter import Flutter
 
-from DBMS import DBMS
-
 frameworkMap = {
     'flutter': Flutter
 }
@@ -55,6 +53,7 @@ def testDiagram():
     # print(diagram)
     
 def test_dbms():
+    from DBMS import DBMS
     git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
     framework = project.recognizeProjectFramework()
@@ -63,7 +62,8 @@ def test_dbms():
         project = frameworkMap[framework](git_url)
         
     dbms = DBMS(project)
-    dbms.getJsonDiagram()
+    jsonDiagram = dbms.getJsonDiagram()
+    print(jsonDiagram)
 
 if __name__ == '__main__':
     # testProject()

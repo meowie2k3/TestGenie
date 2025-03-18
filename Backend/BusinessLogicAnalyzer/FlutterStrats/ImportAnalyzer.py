@@ -43,6 +43,8 @@ def ImportAnalyzer(diagram, block):
                 # print(combineDir)
                 fileContent = diagram.project.getFileContent(combineDir)
                 if combineDir not in [block.name for block in diagram.blocks]:
+                    # turn \ into /
+                    combineDir = combineDir.replace('\\','/')
                     blocks.append(Block(combineDir, fileContent, BlockType.FILE))
                 else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == combineDir][0], ConnectionType.IMPORT))
         

@@ -12,15 +12,25 @@ class Table:
         sql = sql[:-2] + ')'
         return sql
     
-    def getSelectSQL(self, conditions: dict):
+    def getSelectSQL(self,fields: list ,conditions: dict):
         # if conditions is empty, return all
-        if len(conditions) == 0:
-            return f'SELECT * FROM {self.name}'
-        sql = f'SELECT * FROM {self.name} WHERE '
-        for column in conditions:
-            sql += f"{column} = '{conditions[column]}' AND "
-        sql = sql[:-5]
-        return sql
+        res = f'SELECT '
+        if len(fields) == 0:
+            res += '*'
+        else:
+            for field in fields:
+                res += f'{field}, '
+            res = res[:-2]
+        res += f' FROM {self.name}'
+        
+        if len(conditions) > 0:
+            res += ' WHERE '
+            for condition in conditions:
+                res += f"{condition} = '{conditions[condition]}' AND "
+            res = res[:-4]
+            
+        return res
+        pass
     
     def getInsertSQL(self, values: dict):
         sql = f'INSERT INTO {self.name} ('
