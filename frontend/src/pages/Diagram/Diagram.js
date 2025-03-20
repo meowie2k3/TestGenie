@@ -102,10 +102,36 @@ const Diagram = () => {
   };
 
   const options = {
-    layout: { hierarchical: false },
-    edges: { font: { size: 12 } },
-    physics: { enabled: true },
+    layout: {
+      hierarchical: false, // Keep it false for a free-flow layout
+    },
+    edges: {
+      smooth: {
+        type: "curvedCW", // Enable curved edges
+        roundness: 0.2,   // Adjust curve roundness
+      },
+      arrows: { to: { enabled: true } }, // Enable directional arrows
+      color: "#848484", // Edge color
+    },
+    nodes: {
+      shape: "box", // Better block visibility
+      margin: 10, // Add spacing
+    },
+    physics: {
+      enabled: true,
+      barnesHut: {
+        gravitationalConstant: -3000, // Spread nodes out
+        centralGravity: 0.1, // Keep some clustering
+        springLength: 200, // Increase spacing
+        springConstant: 0.0, // Softer pull
+      },
+    },
+    interaction: {
+      dragNodes: true, // Allow users to adjust node positions
+      zoomView: true, // Enable zooming
+    },
   };
+  
 
   if (loading) return <div className="loading">Loading diagram...</div>;
   if (error) return <div className="error">{error}</div>;

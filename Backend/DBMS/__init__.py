@@ -212,6 +212,7 @@ class DBMS:
         table = Block.getTable()
         query = table.getSelectSQL(fields=['id'], conditions={
             'name': self._handldApostropheString(block.name),
+            'content': self._handldApostropheString(block.content),
             'prediction': self._handldApostropheString(block.prediction),
             'type': self._getEnumId('BlockType', block.type)
         })
