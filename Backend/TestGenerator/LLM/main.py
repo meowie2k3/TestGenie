@@ -8,9 +8,10 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnableLambda, RunnableBranch
 
 base_url = os.getenv('BASE_URL')
+model_name = os.getenv('LLM_MODEL')
 
 if __name__ == '__main__':
-    model = ChatOpenAI(base_url=base_url, model='llama-3.2-1b-instruct')
+    model = ChatOpenAI(base_url=base_url, model=model_name)
     
     prompt_template = ChatPromptTemplate.from_messages(
         [
