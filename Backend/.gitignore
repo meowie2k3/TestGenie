@@ -4,5 +4,5 @@
 ProjectManager/Projects/
 ProjectManager/SDKs/
 TestGenerator/RAG/db/
-
+TestGenerator/db/
 BusinessLogicAnalyzer/AI_Agent/db

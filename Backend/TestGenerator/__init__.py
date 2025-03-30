@@ -44,12 +44,6 @@ from langchain_community.document_loaders import (
     PyPDFLoader,
 )
 
-file_loader_map = {
-    ".docx": Docx2txtLoader,
-    ".pdf": PyPDFLoader,
-    ".txt": TextLoader,
-}
-
 from langchain.text_splitter import (
     SentenceTransformersTokenTextSplitter,
 )
@@ -70,7 +64,7 @@ currentDir = os.path.dirname(os.path.realpath(__file__))
 db_dir = os.path.join(currentDir, 'db')
 docs_dir = os.path.join(currentDir, 'docs')
 
-class AI_Agent:
+class Test_Generator:
     def __init__(self) -> None:
         if load_dotenv(override=True) == False:
             raise Exception("Failed to load .env file")
@@ -85,16 +79,7 @@ class AI_Agent:
             check_embedding_ctx_length=False
         )
         # load vector store
-        self.store_names = {
-            "dart_programming_tutorial": "dart_programming_tutorial.pdf",
-            "DartLangSpecDraft": "DartLangSpecDraft.pdf",
-            "flutter_tutorial": "flutter_tutorial.pdf",
-        }
-        for store_name, doc_name in self.store_names.items():
-            if not self._check_if_vector_store_exists(store_name):
-                docs = self._load_document(doc_name)
-                chunks = self._split_document(docs)
-                self._create_vector_store(chunks, store_name)
+        
         
     # Function to create and persist vector store
     def _create_vector_store(self, docs, store_name, is_overwrite=False) -> None:
@@ -113,28 +98,20 @@ class AI_Agent:
             print(
                 f"Vector store {store_name} already exists. No need to initialize.")
     
-    def _load_document(self, doc_name):
+    def _load_document(self, doc_name) -> List[Document]:
         file_path = os.path.join(docs_dir, doc_name)
         if not os.path.exists(file_path):
             raise FileNotFoundError(
                 f"_load_document: The file {file_path} does not exist. Please check the path."
             )
-        file_extension = os.path.splitext(file_path)[1]
-        # check if the file extension is supported
-        if file_extension not in file_loader_map:
-            raise Exception(f"_load_document: Unsupported file extension: {file_extension} for file: {file_path}")
-        loader = PyPDFLoader(file_path=file_path)
+        loader = TextLoader(file_path=file_path, autodetect_encoding=True)
         return loader.load()
     
-    def _split_document(self, documents, chunk_size=1000, chunk_overlap=100):
+    def _split_document(documents, chunk_size=1000, chunk_overlap=100) -> List[Document]:
         text_splitter = SentenceTransformersTokenTextSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
         return text_splitter.split_documents(documents)
-    
-    def _check_if_vector_store_exists(self, store_name) -> bool:
-        persistent_directory = os.path.join(db_dir, store_name)
-        return os.path.exists(persistent_directory)
     
     def query_vector_store(self, query, store_name) -> List[Document]:
         persistent_directory = os.path.join(db_dir, store_name)
@@ -152,64 +129,12 @@ class AI_Agent:
                 search_type="similarity_score_threshold",
                 search_kwargs={
                     'score_threshold': 0.4,
-                    'k': 1,
+                    'k': 3,
                 }
             )
             relevant_docs = retriever.invoke(query)
             return relevant_docs
         else:
-            print(f"Vector store {store_name} does not exist.")
-            return []
-
-    def run_test(self) -> None:
-        prompt = hub.pull("hwchase17/react")
-        
-        tools = []
-        for store_name in self.store_names:
-            tools.append(
-                Tool(
-                    name=store_name + "_retriever",
-                    func=lambda query: self.query_vector_store(query, store_name),
-                    description=f"Retrieve documents from the vector store {store_name}",
-                )
+            raise FileNotFoundError(
+                f"query_vector_store: The vector store {store_name} does not exist. Please create it first."
             )
-        
-        bla_system_prompt = (
-            "You are an AI assistant that can analyze business logic (what does each module - function do) from Flutter - Dart source code to generate unit test later.\n"
-            "You can provide helpful answers using available tools.\n"
-            "You will be given a Flutter - Dart source code snippet and you need to analyze the business logic of the code.\n"
-            "If you are unable to answer or not sure about the syntax, you can use provided Flutter - Dart document retrieval tools.\n\n"
-        )
-        
-        bla_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", bla_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-        
-        agent = create_structured_chat_agent(
-            llm=self.model,
-            tools=tools,
-            prompt=bla_prompt,
-        )
-        
-        agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=agent,
-            tools=tools,
-        )
-        
-        source_code = """
-        void main() {
-            runApp(MyApp());
-        }
-        """
-        
-        response = agent_executor.invoke({'input': source_code})
-        print("Bot:", response["output"])
-        
-        
-if __name__ == "__main__":
-    ai_agent = AI_Agent()
-    ai_agent.run_test()

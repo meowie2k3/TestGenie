@@ -86,7 +86,10 @@ def query_vector_store(store_name, query, docs_num=1) -> List[Document]:
             # search_type="mmr",
             # search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
             search_type="similarity_score_threshold",
-            search_kwargs={'score_threshold': 0.4}
+            search_kwargs={
+                'score_threshold': 0.4,
+                'k': docs_num,
+            }
         )
         relevant_docs = retriever.invoke(query)
         return relevant_docs

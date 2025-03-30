@@ -41,7 +41,8 @@ class Block:
         self.type = type
         self.predict()
         
-    def __predict(self):
+    def __predict(self) -> str:
+        # TODO: implement prediction
         return ''
     
     def getContentNoComment(self) -> str:
@@ -72,10 +73,10 @@ class Block:
         return res
 
     
-    def predict(self):
+    def predict(self) -> None:
         self.prediction = self.__predict()
 
-    def getPrediction(self):
+    def getPrediction(self) -> str:
         return self.prediction
     
     @staticmethod
