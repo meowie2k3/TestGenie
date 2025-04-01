@@ -95,6 +95,59 @@ class AI_Agent:
                 docs = self._load_document(doc_name)
                 chunks = self._split_document(docs)
                 self._create_vector_store(chunks, store_name)
+                
+        dbs = []
+        for store_name in self.store_names:
+            dbs.append(
+                Chroma(persist_directory=os.path.join(db_dir, store_name),
+                       embedding_function=self.embeddings)
+            )
+        retrievers = []
+        for db in dbs:
+            retrievers.append(
+                db.as_retriever(
+                    # search_type="similarity",
+                    # search_kwargs={"k": docs_num},
+                    # search_type="mmr",
+                    # search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
+                    search_type="similarity_score_threshold",
+                    search_kwargs={
+                        'score_threshold': 0.4,
+                        'k': 1,
+                    }
+                )
+            )
+            
+        
+        
+    def generate_prediction(self, source_code: str, chat_history: list) -> str:
+        contextualize_q_system_prompt = (
+            "Given a chat history, user request and the latest piece of user source code "
+            "which might reference context in the chat history, "
+            "formulate a statement that can be used to query the model for useful reference."
+            "Do NOT include the user request in the query."
+        )
+        contextualize_q_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", contextualize_q_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+        # Create a history-aware retriever
+        # This uses the LLM to help reformulate the question based on chat history
+        history_aware_retrievers = [] 
+        
+        for retriever in self.retrievers:
+            history_aware_retrievers.append(
+                create_history_aware_retriever(
+                    self.model, retriever, contextualize_q_prompt
+                )
+            )
+        
+        pass
+    
+    
         
     # Function to create and persist vector store
     def _create_vector_store(self, docs, store_name, is_overwrite=False) -> None:
@@ -135,31 +188,6 @@ class AI_Agent:
     def _check_if_vector_store_exists(self, store_name) -> bool:
         persistent_directory = os.path.join(db_dir, store_name)
         return os.path.exists(persistent_directory)
-    
-    def query_vector_store(self, query, store_name) -> List[Document]:
-        persistent_directory = os.path.join(db_dir, store_name)
-        if os.path.exists(persistent_directory):
-            print(f"\n--- Querying the Vector Store {store_name} ---")
-            db = Chroma(
-                persist_directory=persistent_directory, 
-                embedding_function=self.embeddings
-            )
-            retriever = db.as_retriever(
-                # search_type="similarity",
-                # search_kwargs={"k": docs_num},
-                # search_type="mmr",
-                # search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
-                search_type="similarity_score_threshold",
-                search_kwargs={
-                    'score_threshold': 0.4,
-                    'k': 1,
-                }
-            )
-            relevant_docs = retriever.invoke(query)
-            return relevant_docs
-        else:
-            print(f"Vector store {store_name} does not exist.")
-            return []
 
     def run_test(self) -> None:
         prompt = hub.pull("hwchase17/react")
