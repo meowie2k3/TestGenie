@@ -39,7 +39,6 @@ class Block:
         self.name = name
         self.content = content
         self.type = type
-        self.predict()
         
     def __predict(self) -> str:
         # TODO: implement prediction
@@ -73,8 +72,8 @@ class Block:
         return res
 
     
-    def predict(self) -> None:
-        self.prediction = self.__predict()
+    def setPrediction(self, prediction: str) -> None:
+        self.prediction = prediction
 
     def getPrediction(self) -> str:
         return self.prediction

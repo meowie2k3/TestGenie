@@ -47,7 +47,7 @@ class DBMS:
         }
         """
         # fetch diagram from db
-        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={})
+        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type','prediction'],conditions={})
         blocks = self.execute(blockQuery)
         
         connectionQuery = Connection.getTable().getSelectSQL(fields=[], conditions={})
@@ -65,7 +65,8 @@ class DBMS:
             res['blocks'].append({
                 'id': block[0],
                 'name': block[1],
-                'type': self._getEnumName('BlockType', block[2])
+                'type': self._getEnumName('BlockType', block[2]),
+                'prediction': block[3],
             })
             
         for connection in connections:

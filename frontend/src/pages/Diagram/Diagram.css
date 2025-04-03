@@ -1,11 +1,48 @@
-.graph-container {
-    position: fixed;
-    top: 0;
-    left: 0;
+  .diagram-container {
+    display: flex;
     width: 100vw;
     height: 100vh;
+  }
+
+  .graph-section {
+    /* position: fixed; */
+    flex: 3;
+    top: 0;
+    left: 0;
+    /* width: 100vw;
+    height: 100vh; */
     background-color: #eeeeee;
     background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 10px 10px; /* Adjust polka dot size */
     overflow: hidden;
+  }
+
+  .side-panel {
+    flex: 1;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-left: 1px solid #ccc;
+    overflow-y: auto;
+    display: none; /* Hide by default */
+  }
+  
+  .side-panel.visible {
+    display: block; /* Show when a node is selected */
+  }
+  
+  .side-panel h2 {
+    margin-top: 0;
+  }
+  
+  .side-panel button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .side-panel button:hover {
+    background-color: #0056b3;
   }

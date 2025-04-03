@@ -86,8 +86,8 @@ class AI_Agent:
         )
         # load vector store
         self.store_names = {
-            "dart_programming_tutorial": "dart_programming_tutorial.pdf",
-            "DartLangSpecDraft": "DartLangSpecDraft.pdf",
+            # "dart_programming_tutorial": "dart_programming_tutorial.pdf",
+            # "DartLangSpecDraft": "DartLangSpecDraft.pdf",
             "flutter_tutorial": "flutter_tutorial.pdf",
         }
         for store_name, doc_name in self.store_names.items():
@@ -102,9 +102,9 @@ class AI_Agent:
                 Chroma(persist_directory=os.path.join(db_dir, store_name),
                        embedding_function=self.embeddings)
             )
-        retrievers = []
+        self.retrievers = []
         for db in dbs:
-            retrievers.append(
+            self.retrievers.append(
                 db.as_retriever(
                     # search_type="similarity",
                     # search_kwargs={"k": docs_num},
@@ -117,15 +117,17 @@ class AI_Agent:
                     }
                 )
             )
+        self._agent_init()
             
         
         
-    def generate_prediction(self, source_code: str, chat_history: list) -> str:
+    def _agent_init(self) -> None:
         contextualize_q_system_prompt = (
             "Given a chat history, user request and the latest piece of user source code "
             "which might reference context in the chat history, "
             "formulate a statement that can be used to query the model for useful reference."
             "Do NOT include the user request in the query."
+            # "DO NOT add the sentence 'Without more context or specific questions about the code, I can't provide a more detailed explanation' in the answer."
         )
         contextualize_q_prompt = ChatPromptTemplate.from_messages(
             [
@@ -145,7 +147,82 @@ class AI_Agent:
                 )
             )
         
+        bla_system_prompt = (
+            "You are an AI assistant that can analyze business logic (what does each module - function do) from Flutter - Dart source code to generate unit test later.\n"
+            "You can provide helpful answers using available tools.\n"
+            "You will be given a Flutter - Dart source code snippet and you need to analyze the business logic of the code.\n"
+            "Explain each part of the code and what it does.\n"
+            "Just answer the question based on the given source code.\n"
+            "Use three sentences maximum and keep the answer "
+            "concise."
+            "If you are unable to answer or cannot provide more detailed explanation, do NOT say anything\n\n"
+            "DO NOT warn user if more context is needed\n"
+            "{context}"
+        )
+        
+        bla_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", bla_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+        
+        bla_chain = create_stuff_documents_chain(self.model, bla_prompt)
+        
+        rag_chains = []
+        
+        for retriever in history_aware_retrievers:
+            rag_chains.append(create_retrieval_chain(retriever, bla_chain))
+            
+        react_docstore_prompt = hub.pull("hwchase17/react")
+        
+        tools = []
+        
+        store_names = []
+        for store_name, doc_name in self.store_names.items():
+            store_names.append(store_name)
+        
+        for i in range(len(store_names)):
+            # print(f"{store_names[i]}")
+            tools.append(
+                Tool(
+                    name=f"Get code explaination from {store_names[i]}",
+                    func=lambda input, **kwargs: rag_chains[i].invoke(
+                        {"input": input, "chat_history": kwargs.get("chat_history", [])}
+                    ),
+                    description=f"Retrieve documents from the vector store {store_names[i]}",
+                )
+            )
+            
+        agent = create_react_agent(
+            llm=self.model,
+            tools=tools,
+            prompt=react_docstore_prompt,
+        )
+        
+        self.agent_executor = AgentExecutor.from_agent_and_tools(
+            agent=agent, 
+            tools=tools, 
+            handle_parsing_errors=True, 
+            verbose=True,
+        )
+        
         pass
+    
+    def generate_BLA_prediction(
+        self, 
+        source_code: str, 
+        chat_history: list
+    ) -> str:
+        response = self.agent_executor.invoke(
+            {
+                "input": source_code,
+                "chat_history": chat_history,
+            }
+        )
+        return response["output"]
+        
     
     
         
@@ -188,56 +265,16 @@ class AI_Agent:
     def _check_if_vector_store_exists(self, store_name) -> bool:
         persistent_directory = os.path.join(db_dir, store_name)
         return os.path.exists(persistent_directory)
-
-    def run_test(self) -> None:
-        prompt = hub.pull("hwchase17/react")
-        
-        tools = []
-        for store_name in self.store_names:
-            tools.append(
-                Tool(
-                    name=store_name + "_retriever",
-                    func=lambda query: self.query_vector_store(query, store_name),
-                    description=f"Retrieve documents from the vector store {store_name}",
-                )
-            )
-        
-        bla_system_prompt = (
-            "You are an AI assistant that can analyze business logic (what does each module - function do) from Flutter - Dart source code to generate unit test later.\n"
-            "You can provide helpful answers using available tools.\n"
-            "You will be given a Flutter - Dart source code snippet and you need to analyze the business logic of the code.\n"
-            "If you are unable to answer or not sure about the syntax, you can use provided Flutter - Dart document retrieval tools.\n\n"
-        )
-        
-        bla_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", bla_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-        
-        agent = create_structured_chat_agent(
-            llm=self.model,
-            tools=tools,
-            prompt=bla_prompt,
-        )
-        
-        agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=agent,
-            tools=tools,
-        )
-        
-        source_code = """
-        void main() {
-            runApp(MyApp());
-        }
-        """
-        
-        response = agent_executor.invoke({'input': source_code})
-        print("Bot:", response["output"])
         
         
 if __name__ == "__main__":
     ai_agent = AI_Agent()
-    ai_agent.run_test()
+    # ai_agent.run_test()
+    source_code = """
+        void main() {
+            runApp(MyApp());
+        }
+    """
+    chat_history = []
+    response = ai_agent.generate_BLA_prediction(source_code, chat_history)
+    print("Bot:", response)

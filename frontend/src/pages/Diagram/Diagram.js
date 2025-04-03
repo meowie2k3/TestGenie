@@ -13,9 +13,15 @@ const Diagram = () => {
   const queryParams = new URLSearchParams(location.search);
   const gitUrl = queryParams.get("git_url"); // Extract git_url
   console.log(gitUrl);
+  
+  const [nodeData, setNodeData] = useState([]);
+  const [edgeData, setEdgeData] = useState([]);
+
   const [graphData, setGraphData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [selectedNode, setSelectedNode] = useState(null); // New state for side panel
 
   useEffect(() => {
     if (gitUrl) {
@@ -33,36 +39,23 @@ const Diagram = () => {
     }
   }, [gitUrl]);
 
+  const handleNodeClick = (event) => {
+    const nodeId = event.nodes[0]; // Get clicked node ID
+    if (!nodeId) return;
+
+    const clickedNode = nodeData.find((node) => node.id === nodeId);
+    if (!clickedNode) return;
+    
+    setSelectedNode({
+      name: clickedNode.name,
+      type: clickedNode.type,
+      content: "This is the content of the block.", // Replace with real data if available
+      prediction: "Prediction result will appear here.", // Replace with real prediction data
+    });
+  };
+
   const handleGraphDataMap = (graphData) => {
-    /*
-    graphData = {
-      "project": "sample"
-      "blocks": [
-        {
-            "id": 32,
-            "name": "lib/main.dart",
-            "type": "File"
-        },
-        {
-            "id": 33,
-            "name": "lib/widgets/app.dart",
-            "type": "File"
-        },
-      ]
-      "connections": [
-        {
-            "head": 32,
-            "tail": 33,
-            "type": "Import"
-        },
-        {
-            "head": 33,
-            "tail": 34,
-            "type": "Import"
-        },
-      ]
-    }
-    */
+
     // check for duplicate ids
     const idSet = new Set();
     for (const block of graphData.blocks) {
@@ -80,26 +73,38 @@ const Diagram = () => {
       }
     }
     console.log(graphData);
-    // dummy data first
-    // const nodes = [
-    //   { id: 32, label: "Node 1", color: "#e04141" },
-    //   { id: 33, label: "Node 2", color: "#e09c41" }
-    // ];
-    // const edges = [
-    //   { from: 32, to: 33 },
-    // ];
-    const nodes = graphData.blocks.map((block) => {
-      return new Node(block.id, block.name, block.type).toGraphNode();
-    });
-    const edges = graphData.connections.map((connection) => {
-      return new Edge(connection.head, connection.tail, connection.type).toGraphEdge();
-    });
+    var nodes = [];
+    var edges = [];
+    // create nodes
+    for (const block of graphData.blocks) {
+      const node = new Node(block.id, block.name, block.type);
+      nodes.push(node);
+    }
+    // create edges
+    for (const connection of graphData.connections) {
+      const edge = new Edge(
+        connection.head,
+        connection.tail,
+        connection.type,
+      );
+      edges.push(edge);
+    }
+
+    // console.log("nodes", nodes);
+    // console.log("edges", edges);
+
+    setNodeData([...nodes]);
+    setEdgeData([...edges]);
+
+    const graphDataMap = {
+      nodes: nodes.map((node) => node.toGraphNode()),
+      edges: edges.map((edge) => edge.toGraphEdge()),
+    };
+    setGraphData(graphDataMap);
     
-    setGraphData({
-      nodes: nodes,
-      edges: edges,
-    });
   };
+
+  // render section
 
   const options = {
     layout: {
@@ -132,16 +137,35 @@ const Diagram = () => {
     },
   };
   
-
   if (loading) return <div className="loading">Loading diagram...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="graph-container">
-      <Graph 
-        graph={graphData} 
-        options={options} 
-        style={{ width: "100vw", height: "100vh" }} />
+    <div className="diagram-container">
+      {/* Graph Section */}
+      <div className="graph-section">
+        <Graph
+          graph={graphData}
+          options={options}
+          events={{ selectNode: handleNodeClick }}
+          style={{ width: "75vw", height: "100vh" }}
+        />
+      </div>
+
+      {/* Side Panel for Block Details */}
+      <div className={`side-panel ${selectedNode ? "visible" : ""}`}>
+        {selectedNode ? (
+          <>
+            <h2>{selectedNode.name}</h2>
+            <p><strong>Type:</strong> {selectedNode.type}</p>
+            <p><strong>Content:</strong> {selectedNode.content}</p>
+            <p><strong>Prediction:</strong> {selectedNode.prediction}</p>
+            <button onClick={() => setSelectedNode(null)}>Close</button>
+          </>
+        ) : (
+          <p>Select a block to view details</p>
+        )}
+      </div>
     </div>
   );
 };
