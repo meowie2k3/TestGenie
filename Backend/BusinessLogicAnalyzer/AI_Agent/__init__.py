@@ -119,12 +119,27 @@ class AI_Agent:
                 )
             )
         self._agent_init()
+        
+        
+        
+    def generate_BLA_prediction(
+        self, 
+        source_code: str, 
+        chat_history: list
+    ) -> str:
+        response = self.agent_executor.invoke(
+            {
+                "input": source_code,
+                "chat_history": chat_history,
+            }
+        )
+        return response["output"]
             
         
         
     def _agent_init(self) -> None:
         contextualize_q_system_prompt = (
-            "Given a chat history, user request and the latest piece of user source code "
+            "Given a chat history, user request and the latest piece of user source code, "
             "which might reference context in the chat history, "
             "formulate a statement that can be used to query the model for useful reference."
             "Do NOT include the user request in the query."
@@ -191,7 +206,10 @@ class AI_Agent:
                 Tool(
                     name=f"Get code explaination from {store_names[i]}",
                     func=lambda input, **kwargs: rag_chains[i].invoke(
-                        {"input": input, "chat_history": kwargs.get("chat_history", [])}
+                        {
+                            "input": input, 
+                            "chat_history": kwargs.get("chat_history", [])
+                        }
                     ),
                     description=f"Retrieve documents from the vector store {store_names[i]}",
                 )
@@ -211,19 +229,7 @@ class AI_Agent:
         )
         
         pass
-    
-    def generate_BLA_prediction(
-        self, 
-        source_code: str, 
-        chat_history: list
-    ) -> str:
-        response = self.agent_executor.invoke(
-            {
-                "input": source_code,
-                "chat_history": chat_history,
-            }
-        )
-        return response["output"]
+
         
     
     
