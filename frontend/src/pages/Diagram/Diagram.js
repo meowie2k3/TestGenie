@@ -3,7 +3,8 @@ import { useLocation } from "react-router-dom";
 import Graph from "react-graph-vis";
 import Node from "./components/Node/Node.js";
 import Edge from "./components/Edge/Edge.js";
-import { fetchDiagramData } from "../../services/DiagramService";
+import { fetchDiagramData, fetchBlockDetails, savePrediction } from "../../services/DiagramService";
+import SidePanel from "./components/Side-panel/SidePanel.js";
 import "./Diagram.css";
 
 const Diagram = () => {
@@ -12,7 +13,7 @@ const Diagram = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const gitUrl = queryParams.get("git_url"); // Extract git_url
-  console.log(gitUrl);
+  // console.log(gitUrl);
   
   const [nodeData, setNodeData] = useState([]);
   const [edgeData, setEdgeData] = useState([]);
@@ -45,13 +46,40 @@ const Diagram = () => {
 
     const clickedNode = nodeData.find((node) => node.id === nodeId);
     if (!clickedNode) return;
+
+    // Fetch block details using the clicked node ID
+    setSelectedNode(null); // Reset selected node
+    fetchBlockDetails(gitUrl, clickedNode.id)
+      .then((response) => {
+        if (response) {
+          // Update the selected node with details
+          console.log(response);
+          const updatedNode = {
+            ...clickedNode,
+            id: clickedNode.id,
+            content: response.content || "No content available", // Fallback if content is not available
+            prediction: response.prediction || "No prediction available", // Fallback if prediction is not available
+          };
+          setSelectedNode(updatedNode);
+        }
+      })
+      .catch((err) => setError(err.message));
     
-    setSelectedNode({
-      name: clickedNode.name,
-      type: clickedNode.type,
-      content: "This is the content of the block.", // Replace with real data if available
-      prediction: "Prediction result will appear here.", // Replace with real prediction data
-    });
+  };
+
+  const handleSavePrediction = async (nodeId, newPrediction) => {
+    try {
+      // TODO: Implement the save logic
+      const response = await savePrediction(gitUrl, nodeId, newPrediction);
+      console.log(response);
+      if (response && response.success) {
+        alert("Prediction updated successfully!");
+      }
+      else
+        alert("Failed to update prediction.");
+    } catch (error) {
+      console.error("Failed to save prediction:", error);
+    }
   };
 
   const handleGraphDataMap = (graphData) => {
@@ -153,19 +181,11 @@ const Diagram = () => {
       </div>
 
       {/* Side Panel for Block Details */}
-      <div className={`side-panel ${selectedNode ? "visible" : ""}`}>
-        {selectedNode ? (
-          <>
-            <h2>{selectedNode.name}</h2>
-            <p><strong>Type:</strong> {selectedNode.type}</p>
-            <p><strong>Content:</strong> {selectedNode.content}</p>
-            <p><strong>Prediction:</strong> {selectedNode.prediction}</p>
-            <button onClick={() => setSelectedNode(null)}>Close</button>
-          </>
-        ) : (
-          <p>Select a block to view details</p>
-        )}
-      </div>
+      <SidePanel 
+        selectedNode={selectedNode} 
+        setSelectedNode={setSelectedNode} 
+        onSavePrediction={handleSavePrediction} 
+      />
     </div>
   );
 };

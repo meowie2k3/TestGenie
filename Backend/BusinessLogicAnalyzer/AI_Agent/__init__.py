@@ -24,8 +24,9 @@ from langchain.chains import (
 from langchain.chains.combine_documents import (
     create_stuff_documents_chain,
 )
-from langchain_community.vectorstores import (
-    Chroma,
+
+from langchain_chroma import (
+    Chroma
 )
 
 from langchain_core.documents import (
@@ -75,7 +76,7 @@ class AI_Agent:
         if load_dotenv(override=True) == False:
             raise Exception("Failed to load .env file")
         base_url = os.getenv('BASE_URL')
-        model_name = os.getenv('LLM_MODEL')
+        model_name = os.getenv('BLA_LLM_MODEL')
         embed_model = os.getenv('EMBED_MODEL')
         self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0)
         self.embeddings = OpenAIEmbeddings(
@@ -89,7 +90,7 @@ class AI_Agent:
             # "dart_programming_tutorial": "dart_programming_tutorial.pdf",
             # "DartLangSpecDraft": "DartLangSpecDraft.pdf",
             "flutter_tutorial": "flutter_tutorial.pdf",
-        }
+        } 
         for store_name, doc_name in self.store_names.items():
             if not self._check_if_vector_store_exists(store_name):
                 docs = self._load_document(doc_name)
@@ -155,8 +156,9 @@ class AI_Agent:
             "Just answer the question based on the given source code.\n"
             "Use three sentences maximum and keep the answer "
             "concise."
-            "If you are unable to answer or cannot provide more detailed explanation, do NOT say anything\n\n"
-            "DO NOT warn user if more context is needed\n"
+            "Also determine if the code can be tested or not and if it can be tested, "
+            "determine what kind of test it is (unit test, widget test, integration test).\n"
+            "If you are unable to answer or cannot provide more detailed explanation because the context is not enough, do NOT say anything\n\n"
             "{context}"
         )
         

@@ -41,3 +41,37 @@ class Table:
             sql += f"'{values[column]}', "
         sql = sql[:-2] + ')'
         return sql
+    
+    def getUpdateSQL(self, values: dict, conditions: dict):
+        sql = f'UPDATE {self.name} SET '
+        for column in values:
+            sql += f'{column} = \'{values[column]}\', '
+        sql = sql[:-2] + ' WHERE '
+        for column in conditions:
+            sql += f'{column} = \'{conditions[column]}\' AND '
+        sql = sql[:-4]
+        return sql
+    
+
+if __name__ == '__main__':
+    blockTable = Table(
+                'Block',
+                {
+                    'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                    'name': 'VARCHAR(255)',
+                    'content': 'TEXT',
+                    'prediction': 'TEXT',
+                    'type': 'INT',
+                    '': 'FOREIGN KEY (type) REFERENCES BlockType(id)'
+                }
+            )
+    sql = blockTable.getUpdateSQL(
+        values={
+            'prediction': 'test',
+        },
+        conditions={
+            'id': 1,
+        }
+    )
+    print(sql)
+    pass

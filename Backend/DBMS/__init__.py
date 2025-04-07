@@ -47,7 +47,7 @@ class DBMS:
         }
         """
         # fetch diagram from db
-        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type','prediction'],conditions={})
+        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={})
         blocks = self.execute(blockQuery)
         
         connectionQuery = Connection.getTable().getSelectSQL(fields=[], conditions={})
@@ -66,7 +66,6 @@ class DBMS:
                 'id': block[0],
                 'name': block[1],
                 'type': self._getEnumName('BlockType', block[2]),
-                'prediction': block[3],
             })
             
         for connection in connections:
@@ -97,6 +96,19 @@ class DBMS:
     def getNewBlockPrediction(self, blockId: int) -> str:
         # TODO: implement this
         return ''
+    
+    def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
+        query = Block.getTable().getUpdateSQL(
+            values={
+                'prediction': prediction
+            },
+            conditions={
+                'id': blockId
+            }
+        )
+        self.execute(query)
+        
+        pass
         
     def _connect(self):
         self.connection = mysql.connector.connect(
