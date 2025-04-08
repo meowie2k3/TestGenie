@@ -93,9 +93,8 @@ class DBMS:
         res = self.execute(query)
         return res[0][0]
     
-    def getNewBlockPrediction(self, blockId: int) -> str:
-        # TODO: implement this
-        return ''
+    def getBlockOriginalFile(self, blockId: int) -> str:
+        pass
     
     def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
         query = Block.getTable().getUpdateSQL(

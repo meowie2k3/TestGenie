@@ -52,6 +52,11 @@ class Project:
     def getPath(self) -> str:
         return projectDir + '/' + self._name
     
+    def create_test(self, filename, content) -> None:
+        # this is abtract method
+        # if run in this class, it will raise error
+        raise NotImplementedError('This is an abstract method')
+    
     def run_test(self, filename) -> tuple:
         # this is abtract method
         # if run in this class, it will raise error

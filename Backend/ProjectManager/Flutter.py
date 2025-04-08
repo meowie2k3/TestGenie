@@ -80,6 +80,25 @@ class Flutter(Project): # Inherit from Project class
         
         # print(result)
     
+    def create_test(self, filename, content) -> None:
+        # create test file in the test directory
+        # check if test directory exists
+        testDir = os.path.join(projectDir, self.getName(), 'test')
+        if not os.path.exists(testDir):
+            os.makedirs(testDir)
+        
+        # create test file
+        # filename.dart
+        if not filename.endswith('.dart'):
+            filename += '.dart'
+        fileDir = os.path.join(testDir, filename)
+        # check if file already exists
+        if os.path.exists(fileDir):
+            raise Exception(f'File {fileDir} already exists')
+        # write content to file
+        with open(fileDir, 'w') as f:
+            f.write(content)
+    
     # return tuple (result, error)
     def run_test(self, filename) -> tuple:
         fileDir = os.path.join('test', filename)

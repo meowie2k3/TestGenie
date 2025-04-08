@@ -52,7 +52,6 @@ from langchain_openai import (
     ChatOpenAI, 
     OpenAIEmbeddings,
 )
-import re
 
 currentDir = os.path.dirname(os.path.realpath(__file__))
 db_dir = os.path.join(currentDir, 'db')
@@ -101,6 +100,7 @@ class Test_Generator:
                     }
                 )
             )
+        self._agent_init()
         
     def generate_test_case(
         self,
@@ -119,49 +119,20 @@ class Test_Generator:
             prediction: Description of what the function does
             
         Returns:
-            Generated test case as a string (clean Dart source code only)
+            Generated test case as a string
         """
         try:
-            # Generate the test case directly
-            raw_output = self._generate_clean_test(package_name, code_location, function_name_and_arguments, prediction)
-            
-            # Clean up any markdown formatting that might be present
-            cleaned_output = self._clean_code_output(raw_output)
-            
-            return cleaned_output
+            # Instead of using the agent that's having issues, let's use the fallback mechanism directly
+            # This is a temporary solution until the agent issues are fixed
+            return self._generate_fallback_test(package_name, code_location, function_name_and_arguments, prediction)
         except Exception as e:
             print(f"Error generating test case: {str(e)}")
-            return f"// Error generating test case: {str(e)}"
+            # Fallback to direct generation without tools if agent fails
+            return self._generate_fallback_test(package_name, code_location, function_name_and_arguments, prediction)
         
-    def _clean_code_output(self, raw_output: str) -> str:
+    def _generate_fallback_test(self, package_name: str, code_location: str, function_name_and_arguments: str, prediction: str) -> str:
         """
-        Clean the raw output to remove any markdown or formatting characters.
-        
-        Args:
-            raw_output: The raw output from the LLM
-            
-        Returns:
-            Cleaned code ready to be used directly
-        """
-        # Remove markdown code block markers
-        clean_code = re.sub(r'```dart|```', '', raw_output)
-        
-        # Remove any HTML-like comments that might be present
-        clean_code = re.sub(r'/\*\s*Test Coverage Evaluation:', '// Test Coverage Evaluation:', clean_code)
-        clean_code = re.sub(r'\*/', '', clean_code)
-        
-        # Ensure proper imports 
-        if "import 'package:test/test.dart';" not in clean_code:
-            # Add test package import if missing
-            import_section = clean_code.split('\n\n')[0]
-            clean_code = clean_code.replace(import_section, 
-                                          import_section + "\nimport 'package:test/test.dart';")
-        
-        return clean_code.strip()
-        
-    def _generate_clean_test(self, package_name: str, code_location: str, function_name_and_arguments: str, prediction: str) -> str:
-        """
-        Generate a clean test case with just the Dart source code and coverage evaluation comment.
+        Fallback method to generate tests directly without using RAG when retrieval fails.
         
         Args:
             package_name: Name of the package (for import statements)
@@ -170,33 +141,33 @@ class Test_Generator:
             prediction: Description of what the function does
             
         Returns:
-            Clean Dart source code with coverage evaluation comment
+            Generated test case as a string
         """
-        clean_prompt = ChatPromptTemplate.from_messages([
+        fallback_prompt = ChatPromptTemplate.from_messages([
             ("system", 
-             "You are a Test Generator system specialized in Dart test cases.\n"
-             "Generate a clean Dart test file with NO formatting markers, just the raw code that can be directly saved to a .dart file.\n\n"
-             "Details for generation:\n"
+             "You are a Test Generator system. Generate a Dart test case without external context.\n"
+             "Use best practices for testing Dart/Flutter applications.\n"
              "- Package name: {package_name}\n"
              "- Function name and arguments: {function_name_and_arguments}\n"
              "- Code location: {code_location}\n"
-             "- Function description: {prediction}\n\n"
-             "Essential requirements:\n"
-             "1. Start with import statements:\n"
-             "   - import 'package:{package_name}/{code_location}';\n"
-             "   - import 'package:test/test.dart';\n"
-             "2. Include main() function with appropriate test groups and cases\n"
-             "3. Cover normal cases, edge cases, and error cases when relevant\n"
-             "4. Use the Arrange-Act-Assert pattern with comments\n"
-             "5. End with regular comments (not block comments) for test coverage evaluation\n\n"
-             "DO NOT include any markdown formatting (```dart, ```), explanation text, or block comments /* */. "
-             "Your output should be pure Dart code that can be directly saved to a .dart file and executed.\n\n"
-             "Use regular line comments // for the coverage evaluation at the end."
+             "- A description of what the function does: {prediction}\n\n"
+             "Include:\n"
+             "- Proper import statements using 'package:{package_name}/{code_location}'\n"
+             "- Test function(s) with meaningful names\n"
+             "- Comments explaining the test logic\n"
+             "- A variety of test scenarios where appropriate (edge cases, normal cases)\n"
+             "- Assertions to verify the function behavior\n"
+             "- A comment-based evaluation of test coverage at the end of the test case\n\n"
+             "Example import format:\n"
+             "import 'package:sample/lib/widgets/screens/Homepage/homepage.dart';\n\n"
+             "Make sure tests follow standard Dart testing conventions.\n"
+             "Start with a main() function and use test() or group() functions from the test package.\n"
+             "The test should verify the function works correctly with normal inputs, edge cases, and invalid inputs when appropriate."
             ),
-            ("human", "Generate a complete test case file for {function_name_and_arguments}")
+            ("human", "Generate a complete test case for this function")
         ])
         
-        chain = clean_prompt | self.model
+        chain = fallback_prompt | self.model
         
         response = chain.invoke({
             "package_name": package_name,
@@ -206,6 +177,11 @@ class Test_Generator:
         })
         
         return response.content
+    
+    def _agent_init(self) -> None:
+        """Initialize the agent with tools and prompt templates - Not currently used"""
+        # This method is kept for future improvements but not actively used
+        pass
             
     def _getStoreList(self) -> dict:
         """

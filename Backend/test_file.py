@@ -64,6 +64,16 @@ def test_dbms():
     dbms = DBMS(project)
     jsonDiagram = dbms.getJsonDiagram()
     print(jsonDiagram)
+    
+def test_test_generation():
+    from TestGenerator import TestGenerator
+    from DBMS import DBMS
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
+    
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
 
 if __name__ == '__main__':
     # testProject()
