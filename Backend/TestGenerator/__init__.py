@@ -115,6 +115,7 @@ class Test_Generator:
         
     def generate_test_case(
         self,
+        code_location: str,
         function_name_and_arguments: str,
         prediction: str,
     ) -> str:
@@ -123,6 +124,7 @@ class Test_Generator:
                 "input": "Generate a test case for the function based on the prediction and the chat history.",
                 "function_name_and_arguments": function_name_and_arguments,
                 "prediction": prediction,
+                "code_location": code_location,
             }
         )
         return response.get("output", "No output generated.")
@@ -205,7 +207,7 @@ class Test_Generator:
         agent = create_react_agent(
             llm=self.model,
             tools=tools,
-            prompt=tg_system_prompt, # type: ignore
+            prompt=tg_system_prompt,
         )
 
         self.agent_executor = AgentExecutor.from_agent_and_tools(
@@ -286,6 +288,7 @@ class Test_Generator:
 if __name__ == "__main__":
     tg = Test_Generator()
     # print(tg.store_names)
+    code_location = 'lib/widgets/screens/Homepage/homepage.dart'
     function_name_and_arguments = "addTwoNumbers(int a, int b)"
     prediction = """
         The function `addTwoNumbers` takes two integer parameters, `a` and `b`, and returns their sum. Here's how you can implement this in Dart:
@@ -298,4 +301,8 @@ if __name__ == "__main__":
         
         This function simply adds the two input integers and returns the result.
     """
-    print(tg.generate_test_case(function_name_and_arguments, prediction))
+    print(tg.generate_test_case(
+        function_name_and_arguments=function_name_and_arguments, 
+        prediction=prediction,
+        code_location=code_location,
+    ))
