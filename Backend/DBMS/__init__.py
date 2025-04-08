@@ -139,7 +139,7 @@ class DBMS:
         self.connection.commit()
         
         self._close()
-        return self.cursor.fetchall()
+        return self.cursor.fetchall() # type: ignore
     
     def _initDB(self):
         projectQuery = self.project.getTable().getCreateSQL()

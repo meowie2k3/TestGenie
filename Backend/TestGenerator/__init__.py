@@ -78,10 +78,10 @@ class Test_Generator:
         base_url = os.getenv('BASE_URL')
         model_name = os.getenv('TG_LLM_MODEL')
         embed_model = os.getenv('EMBED_MODEL')
-        self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0)
+        self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0) # type: ignore
         self.embeddings = OpenAIEmbeddings(
             base_url=base_url, 
-            model=embed_model,
+            model=embed_model, # type: ignore
             # critical for LM studio mod
             check_embedding_ctx_length=False
         )
@@ -129,16 +129,6 @@ class Test_Generator:
 
         
     def _agent_init(self) -> None:
-        def _wrap_rag_tool(rag_chain):
-            def wrapped(input_data):
-                if isinstance(input_data, str):
-                    input_data = {"input": input_data}
-                return rag_chain.invoke({
-                    "input": input_data.get("input", ""),
-                    "prediction": input_data.get("prediction", ""),
-                    "function_name_and_arguments": input_data.get("function_name_and_arguments", ""),
-                })
-            return wrapped
 
         # 1. Contextualizer prompt
         contextualize_q_system_prompt = (
@@ -167,13 +157,13 @@ class Test_Generator:
             "You are a Test Generator system.\n"
             "You are given the following:\n"
             "- Function name and arguments: {function_name_and_arguments}\n"
-            "- A description of what the function does: {prediction}\n\n"
+            "- A description of what the function does: {prediction}\n"
+            "- Relevant context from the RAG query: {context}\n\n"
             "You need to generate a Dart test case file for the function based on the chat history and the prediction.\n"
             "Include:\n"
             "- Test function(s) with meaningful names\n"
             "- Comments explaining the test logic\n"
             "- A comment-based evaluation of test coverage at the end of the test case\n"
-            "\n{context}"
         )
 
         tg_prompt = ChatPromptTemplate.from_messages([
@@ -190,8 +180,6 @@ class Test_Generator:
         ]
 
         # 5. Tool setup using the safe wrapper
-        react_docstore_prompt = hub.pull("hwchase17/react")
-
         tools = []
         store_names = list(self.store_names.keys())
 
@@ -213,47 +201,19 @@ class Test_Generator:
                 )
             )
 
-
         # 6. Build the agent
         agent = create_react_agent(
             llm=self.model,
             tools=tools,
-            prompt=react_docstore_prompt,
+            prompt=tg_system_prompt, # type: ignore
         )
 
         self.agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=agent,
+            agent=agent, # type: ignore
             tools=tools,
             handle_parsing_errors=True,
             verbose=True,
         )
-
-        
-    def _safe_rag_invoke(self, chain, input_data):
-        try:
-            if not isinstance(input_data, dict):
-                input_data = {"input": input_data}
-
-            input_data.setdefault("prediction", "The function behavior is unknown.")
-            input_data.setdefault("function_name_and_arguments", "UnnamedFunction()")
-
-            return chain.invoke(input_data)
-        except Exception as e:
-            return f"[Error during retrieval] {str(e)}"
-        
-    def _wrap_rag_tool(self, rag_chain):
-        def wrapped(input_data):
-            if isinstance(input_data, str):
-                input_data = {"input": input_data}
-            return self._safe_rag_invoke(
-                rag_chain,
-                {
-                    "input": input_data.get("input", ""),
-                    "function_name_and_arguments": input_data.get("function_name_and_arguments", ""),
-                    "prediction": input_data.get("prediction", ""),
-                }
-            )
-        return wrapped
 
         
     def _getStoreList(self) -> dict:
