@@ -133,6 +133,15 @@ class Test_Generator:
             print(f"Error generating test case: {str(e)}")
             return f"// Error generating test case: {str(e)}"
         
+    def fix_generated_code(
+        self, 
+        error_message: str,
+        current_test_code: str,
+        prediction: str,
+    ): 
+        
+        pass
+        
     def _clean_code_output(self, raw_output: str) -> str:
         """
         Clean the raw output to remove any markdown or formatting characters.

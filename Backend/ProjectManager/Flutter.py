@@ -9,6 +9,7 @@ class Flutter(Project): # Inherit from Project class
         self._setFramework('Flutter')
         self._checkSDK()
         self._flutterPubGet()
+        self._addTestDependency()
         self.yaml_name = self._getYamlName()
         # self._createSampleProject('sample')
         
@@ -78,6 +79,14 @@ class Flutter(Project): # Inherit from Project class
         except subprocess.CalledProcessError as e:
             raise Exception(f'Error running flutter pub get: {e}')
         
+        # print(result)
+        
+    def _addTestDependency(self) -> None:
+        # run pub add test
+        try:
+            self._runFlutterCLI(['pub', 'add', 'test'], isRaiseException=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(f'Error adding test dependency: {e}')
         # print(result)
     
     def create_test(self, filename, content) -> None:

@@ -79,6 +79,13 @@ class DBMS:
         
         pass
     
+    def getBlockName(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['name'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
     def getBlockContent(self, blockId: int) -> str:
         query = Block.getTable().getSelectSQL(fields=['content'], conditions={
             'id': blockId
@@ -94,6 +101,28 @@ class DBMS:
         return res[0][0]
     
     def getBlockOriginalFile(self, blockId: int) -> str:
+        # take blockId as tail, query connection table to get head
+        # backtracking until reach FILE block type and return the blockname
+        # print('blockId:', blockId)
+        query = Connection.getTable().getSelectSQL(fields=['head'], conditions={
+            'tail': blockId
+        })
+        res = self.execute(query)
+        if len(res) > 0:
+            headId = res[0][0]
+            query = Block.getTable().getSelectSQL(fields=['name', 'type'], conditions={
+                'id': headId
+            })
+            res = self.execute(query)
+            if len(res) > 0:
+                blockType = self._getEnumName('BlockType', res[0][1])
+                if blockType == 'File':
+                    originalFile = res[0][0]
+                    # exclude lib/
+                    originalFile = originalFile.split('lib/')[1]
+                    return originalFile
+                else:
+                    return self.getBlockOriginalFile(headId)
         pass
     
     def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
@@ -107,7 +136,7 @@ class DBMS:
         )
         self.execute(query)
         
-        pass
+        pass    
         
     def _connect(self):
         self.connection = mysql.connector.connect(

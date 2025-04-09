@@ -64,9 +64,11 @@ def test_dbms():
     dbms = DBMS(project)
     jsonDiagram = dbms.getJsonDiagram()
     print(jsonDiagram)
+    # testOriginal = dbms.getBlockOriginalFile(118)
+    # print(testOriginal)
     
 def test_test_generation():
-    from TestGenerator import TestGenerator
+    from TestGenerator import Test_Generator
     from DBMS import DBMS
     git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
@@ -74,11 +76,43 @@ def test_test_generation():
     
     if framework in frameworkMap:
         project = frameworkMap[framework](git_url)
+        
+    dbms = DBMS(project)
+    
+    tg = Test_Generator()
+    
+    testing_block_id = 136
+    
+    testFileContent = tg.generate_test_case(
+        package_name= project.getName(),
+        code_location=dbms.getBlockOriginalFile(testing_block_id),
+        function_name_and_arguments=dbms.getBlockName(testing_block_id),
+        prediction=dbms.getBlockPrediction(testing_block_id),
+    )
+    # print(testFileContent)
+    project.create_test(
+        filename='first_test.dart',
+        content=testFileContent
+    )
+    
+def test_run_test():
+    git_url = 'https://github.com/meowie2k3/sample'
+    project = Project(git_url)
+    framework = project.recognizeProjectFramework()
+    
+    if framework in frameworkMap:
+        project = frameworkMap[framework](git_url)
+        
+    run_result, run_error = project.run_test('first_test.dart')
+    # print(run_result)
+    print(run_error)
 
 if __name__ == '__main__':
     # testProject()
     # testFramework()
     # testFiles()
     # testDiagram()
-    test_dbms()
+    # test_dbms()
+    # test_test_generation()
+    test_run_test()
     pass
