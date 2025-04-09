@@ -89,24 +89,27 @@ class Flutter(Project): # Inherit from Project class
             raise Exception(f'Error adding test dependency: {e}')
         # print(result)
     
-    def create_test(self, filename, content) -> None:
+    def create_test(self, filename, content, isOverWrite = False) -> None:
         # create test file in the test directory
         # check if test directory exists
         testDir = os.path.join(projectDir, self.getName(), 'test')
         if not os.path.exists(testDir):
             os.makedirs(testDir)
-        
-        # create test file
-        # filename.dart
-        if not filename.endswith('.dart'):
-            filename += '.dart'
+        # check if file exists
         fileDir = os.path.join(testDir, filename)
-        # check if file already exists
-        if os.path.exists(fileDir):
+        if os.path.exists(fileDir) and not isOverWrite:
             raise Exception(f'File {fileDir} already exists')
-        # write content to file
+        # create file
         with open(fileDir, 'w') as f:
             f.write(content)
+            
+    def get_test_content(self, filename) -> str:
+        # use getFileContent to get the content of the test file
+        testDir = os.path.join(projectDir, self.getName(), 'test')
+        fileDir = os.path.join(testDir, filename)
+        if not os.path.exists(fileDir):
+            raise Exception(f'File {fileDir} does not exist')
+        return self.getFileContent(fileDir)
     
     # return tuple (result, error)
     def run_test(self, filename) -> tuple:

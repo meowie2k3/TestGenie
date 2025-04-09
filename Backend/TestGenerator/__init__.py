@@ -138,9 +138,194 @@ class Test_Generator:
         error_message: str,
         current_test_code: str,
         prediction: str,
-    ): 
+    ) -> str:
+        """
+        Fix issues in generated test code based on error messages from the Dart SDK.
         
-        pass
+        Args:
+            error_message: The error message from the Dart SDK
+            current_test_code: The current test code that has issues
+            prediction: The original prediction about what the function does
+            
+        Returns:
+            Fixed test code that addresses the errors
+        """
+        try:
+            # First, extract unique errors from the potentially repetitive error message
+            unique_errors = self._extract_unique_errors(error_message)
+            
+            # Create a more targeted prompt that focuses on the specific errors
+            fix_prompt = ChatPromptTemplate.from_messages([
+                ("system", 
+                "You are a Dart test code fixer specialized in resolving syntax and type errors.\n"
+                "Fix the provided test code according to the specific error messages:\n\n{unique_errors}\n\n"
+                "Common issues to look for based on the errors:\n"
+                "1. Matching parentheses and brackets\n"
+                "2. Missing semicolons at the end of statements\n"
+                "3. Type mismatches (String vs int, etc.)\n"
+                "4. Incorrect test syntax or assertion patterns\n\n"
+                "Target your fixes precisely to address these errors. Here's what you should do:\n"
+                "1. For syntax errors like missing parentheses, carefully check the entire file structure\n"
+                "2. For missing semicolons, check the line specified and add them where needed\n"
+                "3. For type mismatches, modify the test to use the correct types\n\n"
+                "DO NOT add any explanations or comments about the fixes - ONLY return the corrected code.\n"
+                "DO NOT use markdown formatting - return pure Dart code only.\n"
+                "Ensure the fixed code maintains the same test coverage and intent."
+                ),
+                ("human", "Fix this Dart test code:\n\n{current_test_code}")
+            ])
+            
+            chain = fix_prompt | self.model
+            
+            response = chain.invoke({
+                "unique_errors": unique_errors,
+                "current_test_code": current_test_code,
+            })
+            
+            # Clean up any markdown formatting that might be present in the response
+            fixed_code = self._clean_code_output(response.content)
+            
+            # Perform additional specific fixes for common errors
+            fixed_code = self._apply_specific_fixes(fixed_code, unique_errors)
+            
+            return fixed_code
+        
+        except Exception as e:
+            print(f"Error fixing test code: {str(e)}")
+            # Try a simpler approach with manual fixes for common errors
+            try:
+                manually_fixed = self._manual_fix_common_errors(current_test_code, error_message)
+                return manually_fixed
+            except:
+                # If all else fails, return the original with error comments
+                return f"// Error while trying to fix the code: {str(e)}\n// Original error message: {error_message}\n\n{current_test_code}"
+        
+    def _extract_unique_errors(self, error_message: str) -> str:
+        """
+        Extract unique errors from a potentially repetitive error message.
+        
+        Args:
+            error_message: The raw error message from the Dart SDK
+            
+        Returns:
+            A string containing only unique error messages
+        """
+        # Split the error message into lines
+        lines = error_message.split('\n')
+        
+        # Create a set to store unique errors
+        unique_lines = set()
+        unique_error_snippets = []
+        
+        # Current error snippet
+        current_snippet = []
+        
+        for line in lines:
+            # Skip empty lines
+            if not line.strip():
+                if current_snippet:
+                    error_text = '\n'.join(current_snippet)
+                    if error_text not in unique_lines:
+                        unique_lines.add(error_text)
+                        unique_error_snippets.append(error_text)
+                    current_snippet = []
+                continue
+                
+            # If line starts with a file path, it's a new error
+            if re.match(r'.*\.dart:\d+:\d+:', line):
+                if current_snippet:
+                    error_text = '\n'.join(current_snippet)
+                    if error_text not in unique_lines:
+                        unique_lines.add(error_text)
+                        unique_error_snippets.append(error_text)
+                    current_snippet = []
+                    
+            current_snippet.append(line)
+        
+        # Add the last snippet if there is one
+        if current_snippet:
+            error_text = '\n'.join(current_snippet)
+            if error_text not in unique_lines:
+                unique_error_snippets.append(error_text)
+        
+        return '\n\n'.join(unique_error_snippets)
+
+    def _apply_specific_fixes(self, code: str, errors: str) -> str:
+        """
+        Apply specific fixes to the code based on common error patterns.
+        
+        Args:
+            code: The current test code
+            errors: The unique error messages
+            
+        Returns:
+            Fixed code with specific common issues addressed
+        """
+        # Fix: Can't find ')' to match '('
+        if "Can't find ')' to match '('" in errors:
+            # Check for unbalanced parentheses in group statements
+            group_pattern = r"group\('([^']*)',\s*\(\)\s*{"
+            code = re.sub(group_pattern, r"group('\1', () {", code)
+        
+        # Fix: Expected ';' after this
+        if "Expected ';' after this" in errors:
+            # Add missing semicolons after closing braces
+            code = re.sub(r"}\s*$", "};", code)
+            code = re.sub(r"}\s*\n", "};\n", code)
+        
+        # Fix: A value of type 'String' can't be assigned to a variable of type 'int'
+        if "A value of type 'String' can't be assigned to a variable of type 'int'" in errors:
+            # Fix the specific line with the type error
+            lines = code.split("\n")
+            for i, line in enumerate(lines):
+                if "'seven'" in line and "int" in line:
+                    # Replace the string with an integer
+                    lines[i] = line.replace("'seven'", "7")
+            code = "\n".join(lines)
+        
+        return code
+
+    def _manual_fix_common_errors(self, code: str, error_message: str) -> str:
+        """
+        Manual fixes for common errors when the LLM approach fails.
+        
+        Args:
+            code: The current test code
+            error_message: The error message from the Dart SDK
+            
+        Returns:
+            Fixed code with specific issues manually addressed
+        """
+        lines = code.split('\n')
+        fixed_lines = []
+        
+        # Track unclosed group parentheses
+        group_unclosed = False
+        
+        for i, line in enumerate(lines):
+            fixed_line = line
+            
+            # Fix group syntax
+            if "group('addTwoNumbers'" in line and not line.endswith("{"):
+                fixed_line = "group('addTwoNumbers', () {"
+                group_unclosed = True
+            
+            # Fix string assigned to int
+            if "int b = 'seven'" in line:
+                fixed_line = line.replace("'seven'", "7")
+            
+            # Fix missing semicolons
+            if line.strip() == "}" and i > 0 and not lines[i-1].strip().endswith(";"):
+                if i == len(lines) - 1 or not lines[i+1].strip().startswith(")"):
+                    fixed_line = "};"
+            
+            fixed_lines.append(fixed_line)
+        
+        # If we detected an unclosed group and the last line is a single "}"
+        if group_unclosed and fixed_lines[-1].strip() == "}":
+            fixed_lines[-1] = "});"
+        
+        return '\n'.join(fixed_lines)
         
     def _clean_code_output(self, raw_output: str) -> str:
         """

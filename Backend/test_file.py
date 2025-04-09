@@ -90,10 +90,26 @@ def test_test_generation():
         prediction=dbms.getBlockPrediction(testing_block_id),
     )
     # print(testFileContent)
+    test_filename = 'first_test.dart'
     project.create_test(
-        filename='first_test.dart',
+        filename=test_filename,
         content=testFileContent
     )
+    # validation process
+    run_result, run_error = project.run_test(test_filename)
+    while run_error != '':
+        new_test_content = tg.fix_generated_code(
+            error_message=run_error,
+            current_test_code=project.get_test_content(test_filename),
+            prediction=dbms.getBlockPrediction(testing_block_id),
+        )
+        project.create_test(
+            filename=test_filename,
+            content=new_test_content,
+            isOverWrite=True
+        )
+        run_result, run_error = project.run_test(test_filename)
+        print(run_error)
     
 def test_run_test():
     git_url = 'https://github.com/meowie2k3/sample'
@@ -105,7 +121,11 @@ def test_run_test():
         
     run_result, run_error = project.run_test('first_test.dart')
     # print(run_result)
+    print("==========Test result==========")
     print(run_error)
+    print(run_error == '')
+    fileContent = project.get_test_content('first_test.dart')
+    print(fileContent)
 
 if __name__ == '__main__':
     # testProject()
@@ -113,6 +133,6 @@ if __name__ == '__main__':
     # testFiles()
     # testDiagram()
     # test_dbms()
-    # test_test_generation()
-    test_run_test()
+    test_test_generation()
+    # test_run_test()
     pass
