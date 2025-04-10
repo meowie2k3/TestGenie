@@ -93,7 +93,8 @@ def test_test_generation():
     test_filename = 'first_test.dart'
     project.create_test(
         filename=test_filename,
-        content=testFileContent
+        content=testFileContent,
+        isOverWrite=True
     )
     # validation process
     run_result, run_error = project.run_test(test_filename)
@@ -103,6 +104,7 @@ def test_test_generation():
             current_test_code=project.get_test_content(test_filename),
             prediction=dbms.getBlockPrediction(testing_block_id),
         )
+        # print(new_test_content)
         project.create_test(
             filename=test_filename,
             content=new_test_content,

@@ -127,13 +127,35 @@ class AI_Agent:
         source_code: str, 
         chat_history: list
     ) -> str:
+        # First use the agent to analyze the code
         response = self.agent_executor.invoke(
             {
                 "input": source_code,
                 "chat_history": chat_history,
             }
         )
-        return response["output"]
+        
+        # Then use a direct call to the LLM to structure the output properly
+        structured_prompt = (
+            "Based on the following analysis of code, create a structured response with the following sections:\n"
+            "1. Brief explanation of what the code does\n"
+            "2. Testability assessment\n"
+            "3. TESTING SCENARIOS in the exact format shown below:\n\n"
+            "TESTING SCENARIOS:\n"
+            "1. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+            "2. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+            "3. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
+            "For test names, use descriptive names that clearly indicate the purpose of the test, such as:\n"
+            "- 'ValidPalindromeCheck' instead of 'Scenario Name'\n"
+            "- 'EmptyStringHandling' instead of generic names\n"
+            "- 'BoundaryConditionTest' for edge cases\n"
+            "- 'SpecialCharactersTest' for specific input types\n\n"
+            "Include at least 4-5 different test scenarios covering normal cases, edge cases, and special conditions.\n"
+            "Analysis to structure: " + response["output"]
+        )
+        
+        structured_response = self.model.invoke(structured_prompt)
+        return structured_response.content
             
         
         
@@ -164,16 +186,26 @@ class AI_Agent:
             )
         
         bla_system_prompt = (
-            "You are an AI assistant that can analyze business logic (what does each module - function do) from Flutter - Dart source code to generate unit test later.\n"
+            "You are an AI assistant that analyzes Flutter/Dart source code to identify its business logic for test generation.\n"
             "You can provide helpful answers using available tools.\n"
-            "You will be given a Flutter - Dart source code snippet and you need to analyze the business logic of the code.\n"
-            "Explain each part of the code and what it does.\n"
-            "Just answer the question based on the given source code.\n"
-            "Use three sentences maximum and keep the answer "
-            "concise."
-            "Also determine if the code can be tested or not and if it can be tested, "
-            "determine what kind of test it is (unit test, widget test, integration test).\n"
-            "If you are unable to answer or cannot provide more detailed explanation because the context is not enough, do NOT say anything\n\n"
+            "For the given code snippet:\n\n"
+            "1. FUNCTION ANALYSIS:\n"
+            "   - What is the purpose of this function/class?\n"
+            "   - What are the inputs (parameters) and their types?\n"
+            "   - What is the expected output (return value) and its type?\n"
+            "   - What algorithm or logic does it implement?\n\n"
+            "2. TESTABILITY ASSESSMENT:\n"
+            "   - Can this code be tested? If yes, what type of test is appropriate (unit/widget/integration)?\n"
+            "   - Are there any dependencies that might complicate testing?\n\n"
+            "3. TESTING SCENARIOS:\n"
+            "   ALWAYS include at least 3-5 specific test scenarios using EXACTLY this format:\n\n"
+            "   TESTING SCENARIOS:\n"
+            "   1. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+            "   2. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+            "   3. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
+            "Keep your analysis concise but precise. DO NOT include the source code in your answer.\n"
+            "The TESTING SCENARIOS section MUST follow the exact format shown above, with specific input values and expected outputs.\n"
+            "If the code's purpose is unclear, make your best inference based on the implementation details.\n"
             "{context}"
         )
         
@@ -279,8 +311,17 @@ if __name__ == "__main__":
     ai_agent = AI_Agent()
     # ai_agent.run_test()
     source_code = """
-        void main() {
-            runApp(MyApp());
+        bool isPalindrome(String str) {
+            int left = 0;
+            int right = str.length - 1;
+            while (left < right) {
+                if (str[left] != str[right]) {
+                    return false;
+                }
+                left++;
+                right--;
+            }
+            return true;
         }
     """
     chat_history = []
