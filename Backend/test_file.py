@@ -81,7 +81,7 @@ def test_test_generation():
     
     tg = Test_Generator()
     
-    testing_block_id = 136
+    testing_block_id = 151
     
     testFileContent = tg.generate_test_case(
         package_name= project.getName(),
@@ -124,10 +124,12 @@ def test_run_test():
     run_result, run_error = project.run_test('first_test.dart')
     # print(run_result)
     print("==========Test result==========")
+    print(run_result)
+    print("==========Test error==========")
     print(run_error)
-    print(run_error == '')
-    fileContent = project.get_test_content('first_test.dart')
-    print(fileContent)
+    # print(run_error == '')
+    # fileContent = project.get_test_content('first_test.dart')
+    # print(fileContent)
 
 if __name__ == '__main__':
     # testProject()

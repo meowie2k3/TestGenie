@@ -122,7 +122,26 @@ class Test_Generator:
             Generated test case as a string (clean Dart source code only)
         """
         try:
-            # Generate the test case directly
+        # Extract the structured sections from prediction if needed
+        # Check if prediction contains the expected structure
+            if "TESTING SCENARIOS:" not in prediction and "Brief" not in prediction:
+                # If prediction isn't properly structured, try to structure it
+                structured_prompt = (
+                    "Structure this analysis into the following format:\n"
+                    "1. Brief explanation of what the code does\n"
+                    "2. Testability assessment\n"
+                    "3. TESTING SCENARIOS in this exact format:\n\n"
+                    "TESTING SCENARIOS:\n"
+                    "1. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+                    "2. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+                    "3. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
+                    "Analysis to structure: " + prediction
+                )
+                
+                structured_response = self.model.invoke(structured_prompt)
+                prediction = structured_response.content
+            
+            # Generate the test case with the structured prediction
             raw_output = self._generate_clean_test(package_name, code_location, function_name_and_arguments, prediction)
             
             # Clean up any markdown formatting that might be present
@@ -353,7 +372,13 @@ class Test_Generator:
         
         return clean_code.strip()
         
-    def _generate_clean_test(self, package_name: str, code_location: str, function_name_and_arguments: str, prediction: str) -> str:
+    def _generate_clean_test(
+        self, 
+        package_name: str, 
+        code_location: str, 
+        function_name_and_arguments: str, 
+        prediction: str
+        ) -> str:
         """
         Generate a clean test case with just the Dart source code and coverage evaluation comment.
         
@@ -361,41 +386,48 @@ class Test_Generator:
             package_name: Name of the package (for import statements)
             code_location: Location of the code file to test (path within the package)
             function_name_and_arguments: Function signature with arguments
-            prediction: Description of what the function does
+            prediction: Description of what the function does in structured format
             
         Returns:
             Clean Dart source code with coverage evaluation comment
         """
+        # Parse the prediction to extract test scenarios
+        # The prediction follows a structure with "TESTING SCENARIOS:" section
+        
+        # Extract function name for test naming
+        function_name = function_name_and_arguments.split('(')[0].strip()
+        
         clean_prompt = ChatPromptTemplate.from_messages([
             ("system", 
-             "You are a Test Generator system specialized in Dart test cases.\n"
-             "Generate a clean Dart test file with NO formatting markers, just the raw code that can be directly saved to a .dart file.\n\n"
-             "Details for generation:\n"
-             "- Package name: {package_name}\n"
-             "- Function name and arguments: {function_name_and_arguments}\n"
-             "- Code location: {code_location}\n"
-             "- Function description: {prediction}\n\n"
-             "Essential requirements:\n"
-             "1. Start with import statements:\n"
-             "   - import 'package:{package_name}/{code_location}';\n"
-             "   - import 'package:test/test.dart';\n"
-             "2. Include main() function with appropriate test groups and cases\n"
-             "3. Cover normal cases, edge cases, and error cases when relevant\n"
-             "4. Use the Arrange-Act-Assert pattern with comments\n"
-             "5. End with regular comments (not block comments) for test coverage evaluation\n\n"
-             "DO NOT include any markdown formatting (```dart, ```), explanation text, or block comments /* */. "
-             "Your output should be pure Dart code that can be directly saved to a .dart file and executed.\n\n"
-             "Use regular line comments // for the coverage evaluation at the end."
+            "You are a Test Generator specialized in writing Dart test cases.\n\n"
+            "Generate a complete Dart test file based on the provided function details and test scenarios.\n\n"
+            "FORMAT AND REQUIREMENTS:\n"
+            "1. Start with proper import statements:\n"
+            "   - import 'package:{package_name}/{code_location}';\n"
+            "   - import 'package:test/test.dart';\n"
+            "2. Create a main() function with test groups organized by function\n"
+            "3. Implement EACH test scenario from the prediction\n"
+            "4. Follow Arrange-Act-Assert pattern with clear comments\n"
+            "5. Include edge cases and error handling tests when appropriate\n"
+            "6. End with test coverage evaluation as comments\n\n"
+            "Function details:\n"
+            "- Package: {package_name}\n"
+            "- Location: {code_location}\n"
+            "- Function signature: {function_name_and_arguments}\n\n"
+            "IMPORTANT: Your output must be PURE Dart code with NO markdown formatting.\n"
+            "DO NOT include ```dart, ```, or any other markdown. Return only valid Dart code.\n"
+            "Structure your tests to specifically validate each scenario detailed in the prediction."
             ),
-            ("human", "Generate a complete test case file for {function_name_and_arguments}")
+            ("human", 
+            "Generate a test file for this function based on the following analysis:\n\n{prediction}")
         ])
         
         chain = clean_prompt | self.model
         
         response = chain.invoke({
             "package_name": package_name,
-            "function_name_and_arguments": function_name_and_arguments,
             "code_location": code_location,
+            "function_name_and_arguments": function_name_and_arguments,
             "prediction": prediction
         })
         
@@ -482,15 +514,27 @@ if __name__ == "__main__":
     code_location = 'lib/widgets/screens/Homepage/homepage.dart'
     function_name_and_arguments = "addTwoNumbers(int a, int b)"
     prediction = """
-        The function `addTwoNumbers` takes two integer parameters, `a` and `b`, and returns their sum. Here's how you can implement this in Dart:
-        
-        ```dart
-        int addTwoNumbers(int a, int b) {
-        return a + b;
-        }
-        ```
-        
-        This function simply adds the two input integers and returns the result.
+            '### Brief Explanation of What the Code Does
+    The `addTwoNumbers` function is a simple arithmetic operation that takes two integer parameters, `a` and `b`, and returns their sum. This function does not perform any complex operations or checks; it merely adds the two integers provided as arguments.
+    ### Testability Assessment
+    The code snippet for `addTwoNumbers` is highly testable due to its simplicity. Since the function only performs a basic arithmetic operation, there are no conditional branches or external dependencies that could complicate testing. The function can be tested with various inputs to ensure it behaves correctly under different conditions.
+    ### TESTING SCENARIOS:
+    1. **ValidAdditionTest**: Verify that the sum of two positive integers is correct.
+    - Input: `a = 5`, `b = 7`
+    - Expected: `12`
+    2. **ZeroInputTest**: Verify that adding zero to any integer returns the same integer.
+    - Input: `a = 0`, `b = 10`
+    - Expected: `10`
+    3. **NegativeNumbersTest**: Verify that the sum of two negative integers is correct.
+    - Input: `a = -5`, `b = -7`
+    - Expected: `-12`
+    4. **BoundaryConditionTest**: Verify that adding the maximum and minimum integer values does not cause overflow or unexpected behavior.
+    - Input: `a = 2147483647`, `b = -2147483648`
+    - Expected: `-1`
+    5. **SpecialCharactersTest**: Verify that adding two non-integer inputs (e.g., strings) results in a runtime error or appropriate handling.
+    - Input: `a = "hello"`, `b = 10` (Note: This is not valid input for the function, but it tests how the system handles invalid types)
+    - Expected: Runtime Error or Type Error
+    These test scenarios cover normal cases, edge cases, and special conditions to ensure that the function behaves as expected across a range of inputs.'
     """
     print(tg.generate_test_case(
         package_name=package_name,
