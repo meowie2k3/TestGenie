@@ -81,7 +81,7 @@ def test_test_generation():
     
     tg = Test_Generator()
     
-    testing_block_id = 151
+    testing_block_id = 167
     
     testFileContent = tg.generate_test_case(
         package_name= project.getName(),
@@ -98,7 +98,8 @@ def test_test_generation():
     )
     # validation process
     run_result, run_error = project.run_test(test_filename)
-    while run_error != '':
+    iteration_limit = 10
+    while run_error != '' and iteration_limit > 0:
         new_test_content = tg.fix_generated_code(
             error_message=run_error,
             current_test_code=project.get_test_content(test_filename),
@@ -112,6 +113,8 @@ def test_test_generation():
         )
         run_result, run_error = project.run_test(test_filename)
         print(run_error)
+        # safe guard, avoid infinite loop
+        iteration_limit -= 1
     
 def test_run_test():
     git_url = 'https://github.com/meowie2k3/sample'
