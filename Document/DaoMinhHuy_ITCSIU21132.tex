@@ -1,0 +1,170 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[a4paper,top=2.5cm,bottom=2cm,left=3cm,right=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{tocloft}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{longtable}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter}{2pc}{}
+\titleformat{\section}[hang]{\Large\bfseries}{\thesection}{1pc}{}
+\titleformat{\subsection}[hang]{\large\bfseries}{\thesubsection}{1pc}{}
+
+\begin{document}
+
+% TITLE PAGE
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\LARGE VIETNAM NATIONAL UNIVERSITY OF HO CHI MINH CITY\\[0.2cm]
+    THE INTERNATIONAL UNIVERSITY\\[0.2cm]
+    SCHOOL OF COMPUTER SCIENCE AND ENGINEERING\\[2cm]}
+
+    {\Huge\bfseries Implementing a Test Generation Service\\[0.3cm]
+    For Flutter Framework\\[2cm]}
+
+    {\Large By\\[0.2cm]
+    \textbf{Dao Minh Huy}\\[2cm]}
+
+    A thesis submitted to the School of Computer Science and Engineering\\
+    in partial fulfillment of the requirements for the degree of \\
+    Bachelor of Information Technology / Computer Science / Computer Engineering\\[4cm]
+
+    {\large Ho Chi Minh City, Vietnam\\
+    Year 2025}
+\end{titlepage}
+
+% APPROVAL PAGE
+\chapter*{APPROVAL PAGE}
+\noindent APPROVED BY:\\[1cm]
+\underline{\hspace{10cm}} \\
+Nguyen Van A, Ph.D, Chair (Example)\\[1cm]
+\underline{\hspace{10cm}} \\
+(Typed Committee name here)\\[1cm]
+\underline{\hspace{10cm}} \\
+(Typed Committee name here)\\[1cm]
+\underline{\hspace{10cm}} \\
+(Typed Committee name here)\\[1cm]
+\underline{\hspace{10cm}} \\
+(Typed Committee name here)
+
+\vfill
+\noindent THESIS COMMITTEE
+
+% ACKNOWLEDGMENTS
+\chapter*{ACKNOWLEDGMENTS}
+\addcontentsline{toc}{chapter}{ACKNOWLEDGMENTS}
+It is with deep gratitude and appreciation that I acknowledge the professional guidance of Dr. Tran Thanh Tung. His constant encouragement and support helped me to achieve my goal.
+
+My gratitude goes to the other members of the laboratory, Mr. Tran Van B and Mr. Nguyen Thi C. Their technical help and good humor made these years a great learning experience...
+
+% TABLE OF CONTENTS
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ABSTRACT
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+Software testing is indispensable for ensuring the reliability and correctness of any software product before deployment. Despite its importance...
+
+% CHAPTER 1
+\chapter{Introduction}
+\section{Background}
+As software systems become increasingly complex...
+
+\section{Problem Statement}
+The rapid evolution of technology has led to the proliferation...
+
+\section{Scope and Objectives}
+Initially, this thesis will only focus on one single framework: Flutter...
+
+\section{Structure of Thesis}
+This thesis consists of six chapters...
+
+% CHAPTER 2
+\chapter{Literature Review / Related Work}
+\section{Unit Test Generator}
+\subsection{LLMs Approach Compared to Formulated Approach}
+To accurately give test case with correct syntax...
+
+\subsection{Disadvantages of LLMs}
+One of the most significant challenges is their propensity to generate hallucinations...
+
+\section{Understanding Business Logic}
+\subsection{The Concept of Business Logic}
+An industry’s business logic can be seen as...
+
+% CHAPTER 3
+\chapter{Methodology}
+\section{Overview}
+This section will focus on explaining the requirement analysis...
+
+\section{User Requirement Analysis}
+\begin{longtable}{|c|c|p{8cm}|c|}
+\hline
+\textbf{Req.ID} & \textbf{Name} & \textbf{Description} & \textbf{Type} \\
+\hline
+001 & Read project’s source code & Users can send all project’s source code via Git. & Functional \\
+002 & Return unit test/integration test & Users can download test files. & Functional \\
+003 & Interactive business logic analysis & Users can correct BLA results. & Functional \\
+004 & Performance & Generate test within 5 mins for medium projects. & Non-Functional \\
+005 & Reflect business logic & Test files should reflect business rules. & Non-Functional \\
+006 & Validate generated test & Syntax and logic check must be included. & Non-Functional \\
+\hline
+\end{longtable}
+
+% Include any diagrams as:
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{figure1.png}
+%     \caption{Test Genie’s overall component design}
+% \end{figure}
+
+% CHAPTER 4
+\chapter{Implementation and Results}
+\section{Implementation}
+Abc...
+
+\section{Results}
+Abc...
+
+% CHAPTER 5
+\chapter{Discussion and Evaluation}
+\section{Discussion}
+Abc...
+
+\section{Comparison}
+Abc...
+
+\section{Evaluation}
+Abc...
+
+% CHAPTER 6
+\chapter{Conclusion and Future Work}
+\section{Conclusion}
+Abc...
+
+\section{Future Work}
+Abc...
+
+% REFERENCES
+\begin{thebibliography}{10}
+\bibitem{capgemini} Capgemini. \textit{World Quality Report 2021-22}.
+\bibitem{glassdoor} Glassdoor. “QA Tester Salaries”. \url{https://www.glassdoor.com/Salaries/qa-tester-salary-SRCH_KO0,9.htm}
+\bibitem{cisq} Herb Krasner, CISQ. “The Cost of Poor Software Quality in the US: A 2020 Report”.
+\bibitem{flask} Miguel Grinberg. \textit{Flask Web Development}, O’Reilly, 2014.
+\bibitem{langchain} Langchain Docs. \url{https://python.langchain.com/docs/introduction/}
+\end{thebibliography}
+
+% APPENDIX
+\appendix
+\chapter{Appendix}
+% Additional materials or screenshots if needed
+
+\end{document}
