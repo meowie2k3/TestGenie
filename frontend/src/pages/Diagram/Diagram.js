@@ -88,7 +88,7 @@ const Diagram = () => {
       const response = await generateTest(gitUrl, nodeId);
       console.log(response);
       if (response && response.success) {
-        alert("Test generated successfully!");
+        // alert("Test generated successfully!");
         // Update the selected node with the new test content
         setSelectedNode((prevNode) => ({
           ...prevNode,
