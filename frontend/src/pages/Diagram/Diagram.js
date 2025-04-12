@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import Graph from "react-graph-vis";
 import Node from "./components/Node/Node.js";
 import Edge from "./components/Edge/Edge.js";
-import { fetchDiagramData, fetchBlockDetails, savePrediction } from "../../services/DiagramService";
+import { fetchDiagramData, fetchBlockDetails, savePrediction, generateTest } from "../../services/DiagramService";
 import SidePanel from "./components/Side-panel/SidePanel.js";
 import "./Diagram.css";
 
@@ -59,6 +59,7 @@ const Diagram = () => {
             id: clickedNode.id,
             content: response.content || "No content available", // Fallback if content is not available
             prediction: response.prediction || "No prediction available", // Fallback if prediction is not available
+            test_file_content: response.test_file_content || ""
           };
           setSelectedNode(updatedNode);
         }
@@ -69,7 +70,6 @@ const Diagram = () => {
 
   const handleSavePrediction = async (nodeId, newPrediction) => {
     try {
-      // TODO: Implement the save logic
       const response = await savePrediction(gitUrl, nodeId, newPrediction);
       console.log(response);
       if (response && response.success) {
@@ -79,6 +79,26 @@ const Diagram = () => {
         alert("Failed to update prediction.");
     } catch (error) {
       console.error("Failed to save prediction:", error);
+    }
+  };
+
+  const handleGenerateTest = async (nodeId) => {
+    try {
+      // TODO: Implement the test generation logic
+      const response = await generateTest(gitUrl, nodeId);
+      console.log(response);
+      if (response && response.success) {
+        alert("Test generated successfully!");
+        // Update the selected node with the new test content
+        setSelectedNode((prevNode) => ({
+          ...prevNode,
+          test_file_content: response.test_file_content || "No test content available",
+        }));
+      }
+      else
+        alert("Failed to generate test.");
+    } catch (error) {
+      console.error("Failed to generate test:", error);
     }
   };
 
@@ -185,6 +205,7 @@ const Diagram = () => {
         selectedNode={selectedNode} 
         setSelectedNode={setSelectedNode} 
         onSavePrediction={handleSavePrediction} 
+        handleGenerateTest ={handleGenerateTest}
       />
     </div>
   );
