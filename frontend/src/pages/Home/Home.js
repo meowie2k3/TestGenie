@@ -22,7 +22,6 @@ export default function Home() {
       transition={{ duration: 1 }}
       style={{ pointerEvents: "auto" }} // Ensure clicks are allowed
     >
-      <div className="home-bg-glow"></div>
 
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
