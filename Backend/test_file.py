@@ -124,7 +124,7 @@ def test_run_test():
     if framework in frameworkMap:
         project = frameworkMap[framework](git_url)
         
-    run_result, run_error = project.run_test('first_test.dart')
+    run_result, run_error = project.run_test('block_183.dart')
     # print(run_result)
     print("==========Test result==========")
     print(run_result)
@@ -140,6 +140,6 @@ if __name__ == '__main__':
     # testFiles()
     # testDiagram()
     # test_dbms()
-    test_test_generation()
-    # test_run_test()
+    # test_test_generation()
+    test_run_test()
     pass

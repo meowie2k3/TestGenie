@@ -128,7 +128,7 @@ class DBMS:
     def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
         query = Block.getTable().getUpdateSQL(
             values={
-                'prediction': prediction
+                'prediction': self._handldApostropheString(prediction)
             },
             conditions={
                 'id': blockId

@@ -43,12 +43,12 @@ class Table:
         return sql
     
     def getUpdateSQL(self, values: dict, conditions: dict):
-        sql = f'UPDATE {self.name} SET '
+        sql = f"UPDATE {self.name} SET "
         for column in values:
-            sql += f'{column} = \'{values[column]}\', '
-        sql = sql[:-2] + ' WHERE '
+            sql += f"{column} = \'{values[column]}\', "
+        sql = sql[:-2] + " WHERE "
         for column in conditions:
-            sql += f'{column} = \'{conditions[column]}\' AND '
+            sql += f"{column} = \'{conditions[column]}\' AND "
         sql = sql[:-4]
         return sql
     
