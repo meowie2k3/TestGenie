@@ -1,22 +1,52 @@
 %% TODO: Make sure to use \textbf or \textit for highlighting keywords, and \cite{} to cite the corresponding quotations
 \section{Background}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras convallis nunc at cursus facilisis. Ut at arcu in ligula condimentum varius. Aliquam erat volutpat. Vivamus dolor augue, ullamcorper id elit ac, ullamcorper venenatis tortor. Aenean sit amet elit a metus elementum convallis. Pellentesque efficitur nibh elementum mauris commodo cursus. Quisque ac tortor ut quam varius scelerisque. Morbi lectus nibh, ullamcorper vitae auctor a, eleifend eget libero. Quisque erat purus, efficitur sit amet sem eget, ullamcorper egestas ante~\cite{WQR2122}.
+As software systems become increasingly complex, the demand for rigorous software testing has grown significantly. Modern applications often integrate multiple components, rely on distributed architectures, and interact with various external systems, making them more vulnerable to errors. According to a study by Capgemini (2021), the average cost of software failures has risen by 15\% annually~\cite{WQR2122}, underscoring the need for comprehensive testing to ensure reliability. Furthermore, the adoption of agile and DevOps methodologies has accelerated development cycles, necessitating continuous testing to maintain quality. The World Quality Report (2022) highlights that 78\% of organizations have increased their investment in testing tools and resources over the past five years~\cite{WQR2122}, reflecting the growing recognition of testing as a critical component of software development. Due to high demand in software testing, the market value of digital assurance also get higher. The average annual salary of Quality assurance tester have increased, from 60,000\$ in 2015 to 82,000\$ in 2024~\cite{QASalaries}.
 
 \section{Problem Statement}
-Vivamus semper, elit vel ornare dapibus, ligula sem euismod risus, nec pellentesque diam est in elit. In vel libero nec nisl euismod hendrerit et vel enim. Morbi consectetur nisi id nisl aliquet accumsan. Fusce ut ante fringilla, ultrices leo eu, ultrices metus. Proin a urna eu eros auctor eleifend. Donec tristique, orci et aliquet mattis, orci ex faucibus nulla, sit amet elementum sapien elit a sapien. Proin sed mi egestas, varius leo vitae, dictum erat. Aenean a felis eu eros scelerisque dictum quis ut lacus. Aliquam nibh magna, mattis sit amet elit ac, aliquet vehicula nisi. Integer viverra scelerisque imperdiet. Vivamus eleifend rhoncus leo, nec porttitor sem egestas nec. Sed pharetra porttitor leo vitae volutpat. Phasellus ultricies diam quis tincidunt vehicula.
 
-\section{Scope}
-Morbi gravida ut risus vel tempus. Fusce sit amet elit gravida, congue neque eget, rutrum purus. Praesent facilisis fringilla tortor cursus semper. Donec ultricies turpis ut purus venenatis euismod. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin quis ultrices eros, eleifend iaculis diam. Morbi ipsum risus, tempor sed dui sagittis, ullamcorper suscipit tellus. Praesent eget ex sollicitudin, malesuada odio ut, consequat leo:
+\hspace{0.5cm} The rapid evolution of technology has led to the proliferation of programming languages and development frameworks, each with unique features and ecosystems. While this diversity offers developers powerful tools and improved syntax to enhance productivity, it also introduces significant challenges in the testing process. Developers must familiarize themselves with different testing languages, frameworks, and techniques for each platform, which can be both time-consuming and error-prone.
+
+\hspace{0.2cm} Although languages and frameworks are getting better in both syntax and community support, the testing process also getting trickier. Writing comprehensive unit and integration tests often requires developers to think “backtrackingly,” reconstructing potential use cases and edge cases after implementing the functionality. A human can overlooking critical edge cases that might cause a costly consequence. According to CISQ, poor software cost the U.S. economy \$2.08 trillion in 2020 alone~\cite{CostPoorSoftware}.
+
+\hspace{0.2cm} To address these challenges, this thesis proposes the integration of an AI-driven Test Generation Service named Test Genie. By leveraging Large Language Models (LLMs), this service automates the creation of test cases, significantly reducing the burden on developers. Automating this process not only optimizes resource allocation but also minimizes the potential for human error, ensuring a more thorough and systematic approach to software testing.
+
+
+\section{Scope and Objectives}
+
+\hspace{0.2cm}Initially, this thesis will only focus on one single framework: Flutter - a cross-platfrom framework that can build the product for many platform from one source code. Although Flutter is considered a new framework but the support community and the usage of this framework is increasing every year. This framework also support a testing module, enable users to develop different testing packages and techniques. The research will assess the feasibility of AI in test cases generation by using Langchain library to integrate API of LLM models. By using multiple LLM models, the thesis aim to present a suitable methodology that could provide support to reduce QA testers and developers's workload and effectively cover edge cases that human often miss.
+
+\hspace{0.2cm}To successfully implement this service, three primary objectives must be achieved. First, the AI must demonstrate the capability to analyze the business model and functional requirements directly from the project source code. This requires understanding the logical structure and intent of the application. Second, the AI must leverage an effective test generator model capable of producing test cases that align with the platform's standards while maintaining relevance to the identified business logic. Third, the generated code must be thoroughly validated to ensure its correctness and compatibility within the Flutter ecosystem. By meeting these requirements, the proposed service aims to establish a reliable and efficient solution for automating test case generation.
 
 %% TODO: Use enumerate environment to start an ordered list, while using itemize environment to start an unordered list
-\begin{enumerate}
-	\item This is the first \textbf{bold keyword} of the ordered list to emphasize an important concept.
-	\item The second point in the ordered list addresses \textbf{another key idea} in the discussion.
-	      \begin{itemize} 	
-	      	\item This is the first \textbf{bold keyword} of the unordered list to emphasize an important concept.
-	      	\item The second point addresses \textit{italic keyword} in the unordered list discussion.
-	      \end{itemize}
-\end{enumerate}
+% \begin{enumerate}
+% 	\item This is the first \textbf{bold keyword} of the ordered list to emphasize an important concept.
+% 	\item The second point in the ordered list addresses \textbf{another key idea} in the discussion.
+% 	      \begin{itemize} 	
+% 	      	\item This is the first \textbf{bold keyword} of the unordered list to emphasize an important concept.
+% 	      	\item The second point addresses \textit{italic keyword} in the unordered list discussion.
+% 	      \end{itemize}
+% \end{enumerate}
 
-\section{Objectives}
-Sed ornare erat vitae turpis posuere, in eleifend lorem congue. Morbi at condimentum lorem. Quisque laoreet ante sit amet lorem vehicula eleifend. Sed suscipit volutpat aliquam. Vivamus facilisis malesuada libero, ac consectetur metus fringilla non. Donec justo ipsum, lobortis sit amet fermentum a, maximus vitae nunc. Phasellus iaculis massa ex, ut commodo nisi tristique non.
+\hspace{0.2cm}In this thesis, we will work on three components:
+\begin{itemize}
+	\item[-] Business Logic Analyzer module (BLA)
+	\item[-] AI-integrated test generation module
+	\item[-] AI test validation module
+\end{itemize}
+\hspace{0.2cm}Each component will share the same tech stack:
+\begin{itemize}
+	\item[-] Python~\cite{PyMachineLearning}: This is a popular high-level language that used widely by AI developers. Its simple syntax and wide range of supportive library help developers effectively implement complex system with minimal syntax.
+	\item[-] Python-Flask~\cite{flask}: This is a micro web framework for Python. It is lightweight and easy to use, making it suitable for building small to medium-sized web applications. 
+	\item[-] Python-Langchain~\cite{langchain}: Langchain is a framework for developing applications powered by Large Language Models (LLMs). This is an open-source framework and effectively utilize API provided by LLMs service provider as well as self-hosted LLMs.
+\end{itemize}
+
+\section{Structure of thesis}
+This thesis consist of six chapters:
+\begin{itemize}
+	\item[-] \textbf{Chapter 1. Introduction:} Introduce the background story, how I identify the problem as well as the scope and objectives of this research. This chapter also lightly introduce the proposed solution of the stated problem.
+	\item[-] \textbf{Chapter 2. Liturature review/Related work:} This chapter focus on the related work that contributed to the thesis.
+	\item[-] \textbf{Chapter 3. Methodology:} Presenting the methodology behind the project, including the component of the system, method implemented for each module and the plan to validate the generated test from AI.
+	\item[-] \textbf{Chapter 4. Implement and results:} This chapter summarize the design and implementations of the system as well as the result of this research.
+	\item[-] \textbf{Chapter 5. Discussion and evaluation:} In this chapter, we will evaluate the result of this system.
+	\item[-] \textbf{Chapter 6. Conclusion and future work:} This chapter will conclude the research of this thesis, as well as the plan of development in the future. 
+\end{itemize}

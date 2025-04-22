@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.3) (preloaded format=pdflatex 2025.4.12)  22 APR 2025 16:03
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.3) (preloaded format=pdflatex 2025.4.12)  23 APR 2025 00:19
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -780,23 +780,21 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 [3
 
 
-] (DaoMinhHuy_ITCSIU21132.toc
-
-[4
-
-])
+] (DaoMinhHuy_ITCSIU21132.toc)
 \tf@toc=\write4
 \openout4 = `DaoMinhHuy_ITCSIU21132.toc'.
 
 
 
-[5] (DaoMinhHuy_ITCSIU21132.lot)
+[4
+
+] (DaoMinhHuy_ITCSIU21132.lot)
 \tf@lot=\write5
 \openout5 = `DaoMinhHuy_ITCSIU21132.lot'.
 
 
 
-[6
+[5
 
 ] (DaoMinhHuy_ITCSIU21132.lof)
 \tf@lof=\write6
@@ -804,7 +802,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 
-[7
+[6
 
 ] (DaoMinhHuy_ITCSIU21132.loa)
 \tf@loa=\write7
@@ -812,7 +810,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 
-[8
+[7
 
 ] (DaoMinhHuy_ITCSIU21132.lol)
 \tf@lol=\write8
@@ -820,92 +818,155 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 
+[8
+
+]
+
 [9
 
 ]
-
-[10
-
-]
 Chapter 1.
-(chapters/introduction.tex)
+(chapters/introduction.tex
 
 [1
 
 ]
 
-[2]
+[2])
+
+[3]
 Chapter 2.
 (chapters/work.tex
-<images/sample.png, id=52, 642.4pt x 428.60126pt>
-File: images/sample.png Graphic file (type png)
-<use images/sample.png>
-Package pdftex.def Info: images/sample.png  used on input line 20.
-(pdftex.def)             Requested size: 441.01775pt x 294.25061pt.
 
-
-[3
+[4
 
 ])
 
-[4 <./images/sample.png>]
+[5]
 Chapter 3.
 (chapters/methodology.tex
-Underfull \vbox (badness 1377) has occurred while \output is active []
-
-
-
-[5
-
-])
-
-[6]
-Chapter 4.
-(chapters/prototyping.tex
-Overfull \hbox (0.20778pt too wide) in paragraph at lines 11--12
-[]\OT1/cmr/m/n/12 Duis fau-cibus fringilla ex ac mo-lestie. Phasel-lus fringilla auc-tor nunc, ia-c-ulis dapibus
+Underfull \hbox (badness 1521) in paragraph at lines 19--19
+[]\OT1/cmr/m/n/12 Read project's source
  []
 
-)
-Underfull \vbox (badness 1789) has occurred while \output is active []
+
+Underfull \hbox (badness 10000) in paragraph at lines 19--19
+[]\OT1/cmr/m/n/12 Functional
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--20
+[]\OT1/cmr/m/n/12 Download/copy unit
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--20
+[]\OT1/cmr/m/n/12 Functional
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--21
+[]\OT1/cmr/m/n/12 Interactive busi-ness
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--21
+[]\OT1/cmr/m/n/12 Functional
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 22--22
+[]\OT1/cmr/m/n/12 Non-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 22--22
+\OT1/cmr/m/n/12 functional
+ []
+
+
+Underfull \hbox (badness 1052) in paragraph at lines 23--23
+[]\OT1/cmr/m/n/12 Test file cor-rectly re-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 23--23
+[]\OT1/cmr/m/n/12 Non-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 23--23
+\OT1/cmr/m/n/12 functional
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 24--24
+[]\OT1/cmr/m/n/12 Non-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 24--24
+\OT1/cmr/m/n/12 functional
+ []
+
+
+Overfull \hbox (67.0835pt too wide) in paragraph at lines 16--26
+ [][] 
+ []
 
 
 
-[7
+[6
 
 ]
+
+[7]
 
 [8]
-Chapter 5.
-(chapters/implementation.tex)
 
-[9
+[9]
+<images/System design.drawio.png, id=69, 560.0925pt x 440.64626pt>
+File: images/System design.drawio.png Graphic file (type png)
+<use images/System design.drawio.png>
+Package pdftex.def Info: images/System design.drawio.png  used on input line 93.
+(pdftex.def)             Requested size: 352.81554pt x 277.58171pt.
 
-]
-Chapter 6.
-(chapters/result.tex)
 
-[10
+[10 <./images/System design.drawio.png>]
+<images/DB block design.drawio.png, id=75, 518.93875pt x 554.07pt>
+File: images/DB block design.drawio.png Graphic file (type png)
+<use images/DB block design.drawio.png>
+Package pdftex.def Info: images/DB block design.drawio.png  used on input line 108.
+(pdftex.def)             Requested size: 352.81554pt x 376.72034pt.
 
-]
-Chapter 7.
-(chapters/discussion.tex
 
-[11
-
-])
+[11 <./images/DB block design.drawio.png>])
 
 [12]
-Chapter 8.
-(chapters/conclusion.tex)
-No file DaoMinhHuy_ITCSIU21132.bbl.
-
+Chapter 4.
+(chapters/implementation.tex)
 
 [13
 
 ]
+Chapter 5.
+(chapters/discussion.tex
 
 [14
+
+])
+
+[15]
+Chapter 6.
+(chapters/conclusion.tex)
+No file DaoMinhHuy_ITCSIU21132.bbl.
+
+
+[16
+
+]
+
+[17
 
 ]
 Appendix A.
@@ -914,7 +975,7 @@ LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10> not available
 (Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 2.
 )
 
-[15
+[18
 
 ] (DaoMinhHuy_ITCSIU21132.aux)
  ***********
@@ -923,17 +984,17 @@ L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 18799 strings out of 473523
- 357242 string characters out of 5714630
- 954551 words of memory out of 5000000
- 41652 multiletter control sequences out of 15000+600000
- 569974 words of font info for 78 fonts, out of 8000000 for 9000
+ 18747 strings out of 473523
+ 356380 string characters out of 5714630
+ 954558 words of memory out of 5000000
+ 41607 multiletter control sequences out of 15000+600000
+ 567950 words of font info for 70 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,9n,91p,930b,1311s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\Admin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tctt1000.pk> <C:\Users\Admin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on DaoMinhHuy_ITCSIU21132.pdf (25 pages, 865262 bytes).
+ 84i,10n,91p,1225b,1311s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\Admin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tctt1000.pk> <C:\Users\Admin\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on DaoMinhHuy_ITCSIU21132.pdf (27 pages, 433392 bytes).
 PDF statistics:
- 171 PDF objects out of 1000 (max. 8388607)
+ 139 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 23 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 28 words of extra memory for PDF output out of 10000 (max. 10000000)
 
