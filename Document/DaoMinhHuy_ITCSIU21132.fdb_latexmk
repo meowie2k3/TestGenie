@@ -1,5 +1,5 @@
 # Fdb version 4
-["bibtex DaoMinhHuy_ITCSIU21132"] 0 "DaoMinhHuy_ITCSIU21132.aux" "DaoMinhHuy_ITCSIU21132.bbl" "DaoMinhHuy_ITCSIU21132" 1745296542.78964 0
+["bibtex DaoMinhHuy_ITCSIU21132"] 0 "DaoMinhHuy_ITCSIU21132.aux" "DaoMinhHuy_ITCSIU21132.bbl" "DaoMinhHuy_ITCSIU21132" 1745312634.72277 0
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/bibtex/bst/bibtex/ieeetr.bst" 1291864344 18361 1a00e58565e7f19bf2b3e1bfb82254ae ""
   "DaoMinhHuy_ITCSIU21132.aux" 0 -1 0 "pdflatex"
   "bibliography.bib" 0 -1 0 ""
@@ -7,7 +7,7 @@
   "DaoMinhHuy_ITCSIU21132.bbl"
   "DaoMinhHuy_ITCSIU21132.blg"
   (rewritten before read)
-["pdflatex"] 1745296539.40153 "f:/Thesis/Document/DaoMinhHuy_ITCSIU21132.tex" "DaoMinhHuy_ITCSIU21132.pdf" "DaoMinhHuy_ITCSIU21132" 1745296542.79016 0
+["pdflatex"] 1745312632.28836 "f:/Thesis/Document/DaoMinhHuy_ITCSIU21132.tex" "DaoMinhHuy_ITCSIU21132.pdf" "DaoMinhHuy_ITCSIU21132" 1745312634.72328 0
   "C:/Users/Admin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1745257317 89969 e95579120a3aa0ebc21d2737ca2ba701 ""
   "C:/Users/Admin/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1745265790 14064 62dfe254ca6cf42a684b76ecc0c92f36 ""
   "C:/Users/Admin/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tctt1000.pk" 1745265789 9492 a40e010dd82fa0b592abd037f3f3bd3a ""
@@ -175,24 +175,24 @@
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/vntex/t5enc.def" 1368738347 21986 ccb3b8f7cc27fbd61b3daabbbb82ad3f ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/vntex/t5enc.dfu" 1368738347 13949 387dd4fa58aea5f873839c93430fffed ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
-  "DaoMinhHuy_ITCSIU21132.aux" 1745296542 6290 3ae8d868928a45186130f83f7a2f4fb3 "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.aux" 1745312634 6539 960cadc1455fdc33c4970de4e172030d "pdflatex"
   "DaoMinhHuy_ITCSIU21132.bbl" 0 -1 0 "bibtex DaoMinhHuy_ITCSIU21132"
-  "DaoMinhHuy_ITCSIU21132.loa" 1745296542 122 1324d031609b07c51634925b21bbeea0 "pdflatex"
-  "DaoMinhHuy_ITCSIU21132.lof" 1745296542 300 dcf02a6519fe1a409a9a8cbae55be154 "pdflatex"
-  "DaoMinhHuy_ITCSIU21132.lol" 1745296542 82 110e52b12a6f13a2e13644dfdbd4caa8 "pdflatex"
-  "DaoMinhHuy_ITCSIU21132.lot" 1745296542 333 ff48874a7c38d69b02d2ba7c52bac261 "pdflatex"
-  "DaoMinhHuy_ITCSIU21132.tex" 1745296537 10209 41958bbe8f54a114393f6ba3575e7e61 ""
-  "DaoMinhHuy_ITCSIU21132.toc" 1745296542 2735 2b0be1b79242588b53759f77e62c9909 "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.loa" 1745312634 122 1324d031609b07c51634925b21bbeea0 "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.lof" 1745312634 300 dcf02a6519fe1a409a9a8cbae55be154 "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.lol" 1745312634 82 3821e8f7f6d288990f24c921022a8b2a "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.lot" 1745312634 333 ff48874a7c38d69b02d2ba7c52bac261 "pdflatex"
+  "DaoMinhHuy_ITCSIU21132.tex" 1745312629 11702 5fbed78459b3388557da52cf54ea4646 ""
+  "DaoMinhHuy_ITCSIU21132.toc" 1745312634 2735 113821483eeca370321aa2583d54cf82 "pdflatex"
   "chapters/appendix.tex" 1745258765 967 4a4e702a8cd9ba3d9270e842436ee905 ""
   "chapters/conclusion.tex" 1745258784 517 500905aa292ecfc53ea3ec78500d55db ""
   "chapters/discussion.tex" 1745258799 3477 6721d80d6b11145a799354f21d4beaf1 ""
   "chapters/implementation.tex" 1745259281 1291 12fece7dd20b2b3a98ccfe875ce07c0e ""
-  "chapters/introduction.tex" 1745258578 3033 021063511000394cbdf0f6ead7ce9c7e ""
+  "chapters/introduction.tex" 1745311576 3030 f5f199a9eae09d67231c082b7e2ce438 ""
   "chapters/methodology.tex" 1745259561 4223 dffa91375c7a70717f6a1d298940638d ""
   "chapters/prototyping.tex" 1745259576 3209 f1ce479275618bcf738e6d7fd19deeaf ""
   "chapters/result.tex" 1745265719 2148 d5e6d4624dc21c7386c3bd3d923ec4c3 ""
   "chapters/work.tex" 1745258744 5044 729c1a171f37961cf34d99d6724e965b ""
-  "f:/Thesis/Document/DaoMinhHuy_ITCSIU21132.tex" 1745296537 10209 41958bbe8f54a114393f6ba3575e7e61 ""
+  "f:/Thesis/Document/DaoMinhHuy_ITCSIU21132.tex" 1745312629 11702 5fbed78459b3388557da52cf54ea4646 ""
   "images/IU.png" 1745265828 335728 519db4d025763941c44f8029e683e387 ""
   "images/sample.png" 1745265746 410030 c2f633bffc86c1b54144d5ac9dcb66fc ""
   (generated)
