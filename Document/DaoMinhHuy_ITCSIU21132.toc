@@ -1,9 +1,9 @@
 \babel@toc {english}{}\relax 
-\contentsline {chapter}{List of Tables}{v}{}%
-\contentsline {chapter}{List of Figures}{vi}{}%
-\contentsline {chapter}{List of Algorithms}{vii}{}%
-\contentsline {chapter}{List of Listings}{viii}{}%
-\contentsline {chapter}{Abstract}{ix}{}%
+\contentsline {chapter}{List of Tables}{vi}{}%
+\contentsline {chapter}{List of Figures}{vii}{}%
+\contentsline {chapter}{List of Algorithms}{viii}{}%
+\contentsline {chapter}{List of Listings}{ix}{}%
+\contentsline {chapter}{Abstract}{x}{}%
 \contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{}%
 \contentsline {section}{\numberline {1.1}Background}{1}{}%
 \contentsline {section}{\numberline {1.2}Problem Statement}{1}{}%
@@ -22,14 +22,18 @@
 \contentsline {subsection}{\numberline {3.2.5}Good test file generation - Quality control}{9}{}%
 \contentsline {subsection}{\numberline {3.2.6}Test validation}{9}{}%
 \contentsline {section}{\numberline {3.3}System Design}{10}{}%
-\contentsline {chapter}{\numberline {4}IMPLEMENTATION AND RESULTS}{13}{}%
-\contentsline {section}{\numberline {4.1}Implementation 1}{13}{}%
-\contentsline {subsection}{\numberline {4.1.1}Details of implementation 1}{13}{}%
-\contentsline {chapter}{\numberline {5}DISCUSSION AND EVALUATION}{14}{}%
-\contentsline {section}{\numberline {5.1}Analysis}{14}{}%
-\contentsline {section}{\numberline {5.2}Strengths}{14}{}%
-\contentsline {section}{\numberline {5.3}Limitations}{14}{}%
-\contentsline {section}{\numberline {5.4}Comparison}{14}{}%
-\contentsline {section}{\numberline {5.5}Future Work}{15}{}%
-\contentsline {chapter}{\numberline {6}CONCLUSION AND FUTURE WORK}{16}{}%
-\contentsline {chapter}{\numberline {A}LISTINGS}{18}{}%
+\contentsline {chapter}{\numberline {4}IMPLEMENT AND RESULTS}{13}{}%
+\contentsline {section}{\numberline {4.1}Prerequisites}{13}{}%
+\contentsline {section}{\numberline {4.2}Project Manager module}{13}{}%
+\contentsline {subsection}{\numberline {4.2.1}Details of implementation 1}{13}{}%
+\contentsline {section}{\numberline {4.3}Business Logic Analyzer module}{14}{}%
+\contentsline {section}{\numberline {4.4}Test Generator module}{14}{}%
+\contentsline {section}{\numberline {4.5}Other implementations}{14}{}%
+\contentsline {chapter}{\numberline {5}DISCUSSION AND EVALUATION}{15}{}%
+\contentsline {section}{\numberline {5.1}Analysis}{15}{}%
+\contentsline {section}{\numberline {5.2}Strengths}{15}{}%
+\contentsline {section}{\numberline {5.3}Limitations}{15}{}%
+\contentsline {section}{\numberline {5.4}Comparison}{15}{}%
+\contentsline {section}{\numberline {5.5}Future Work}{16}{}%
+\contentsline {chapter}{\numberline {6}CONCLUSION AND FUTURE WORK}{17}{}%
+\contentsline {chapter}{\numberline {A}LISTINGS}{19}{}%

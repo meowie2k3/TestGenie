@@ -66,6 +66,35 @@
 	stringstyle=\color{orange}\ttfamily,
 }
 
+\lstdefinelanguage{Python}{
+    keywords={def, return, if, elif, else, for, while, break, continue, pass, import, from, as, class, try, except, raise, finally, with, lambda, yield, assert, del, global, nonlocal, and, or, not, is, in},
+    keywordstyle=\bfseries\color{blue},
+    ndkeywords={True, False, None},
+    ndkeywordstyle=\bfseries\color{darkgray},
+    identifierstyle=\color{black},
+    sensitive=true,
+    comment=[l]{\#},
+    commentstyle=\color{green}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    morestring=[b]',
+    morestring=[b]"
+}
+
+\lstdefinelanguage{Dart}{
+    keywords={abstract, as, assert, async, await, break, case, catch, class, const, continue, covariant, default, deferred, do, dynamic, else, enum, export, external, extends, factory, false, final, finally, for, Function, get, hide, if, implements, import, in, interface, is, late, library, mixin, new, null, on, operator, part, required, rethrow, return, set, show, static, super, switch, sync, this, throw, true, try, typedef, var, void, while, with, yield},
+    keywordstyle=\bfseries\color{blue},
+    ndkeywords={bool, int, double, String, List, Map, Set, Future, Stream},
+    ndkeywordstyle=\bfseries\color{teal},
+    identifierstyle=\color{black},
+    sensitive=true,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color{green}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    morestring=[b]',
+    morestring=[b]"
+}
+
 %% Customize chapter titles
 \titleformat{\chapter}[display]
   {\Huge\bfseries\centering}{\chaptername~\thechapter}
@@ -231,7 +260,7 @@ The results of this research aim to demonstrate how AI can transform the softwar
 \chapter{METHODOLOGY}
 \input{chapters/methodology}
 
-\chapter{IMPLEMENTATION AND RESULTS}
+\chapter{IMPLEMENT AND RESULTS}
 \input{chapters/implementation}
 
 \chapter{DISCUSSION AND EVALUATION}

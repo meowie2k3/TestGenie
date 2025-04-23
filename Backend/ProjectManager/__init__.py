@@ -22,8 +22,8 @@ class Project:
         # check if project already cloned
         if os.path.exists(projectDir + '/' + self._name):
             return
-        # else:
-        #     print(self._clone(git_url))
+        else:
+            self._clone(git_url)
     
     def _clone(self, git_url):
         # clone the git repository to the project directory

@@ -1,10 +1,25 @@
 %% TODO: Add a small paragraph to tell what this chapter is about
-This chapter delves into ...
+This chapter delves into the implementation of each module inside Test Genie system. Overall, this system consist of three main modules: 
+\begin{itemize}
+    \item[-] \textbf{Project Manager}: This module manages all the projects that are cloned to server. It mostly responsible for file-based activities and running CLI for each project.
+    \item[-] \textbf{Business Logic Analyzer}: This module will take various source file from Project Manager and break the source code into smaller pieces (blocks). Then, it will analyze each block and determine what each block does and how it should be tested if possible. A test plan will also be generated for each block and save it to the database.
+    \item[-] \textbf{Test Generator}: This module will take the test plan from Business Logic Analyzer and generate a test case for each block. The generated test cases will be saved as files directly in the project source code on server and can be used to run the tests later (validation).
+\end{itemize}
+Additionally, this system also have \textbf{DBMS} module to control the database but this module will not be explained thoroughly in this chapter.
 
 %% TODO: Make sure to use \textbf or \textit for highlighting keywords, and \cite{} to cite the corresponding quotations
 
-\section{Implementation 1}
-Curabitur quis ex odio. Donec semper scelerisque justo ut placerat. Mauris congue lacinia finibus. Nunc sit amet justo purus. Fusce dignissim mauris et turpis auctor ullamcorper. Sed porta elit lectus, non viverra turpis ullamcorper nec. Sed at faucibus nisi. Aenean ultricies dictum augue, quis faucibus nisi vestibulum eget. Donec ullamcorper turpis tellus, ut ultricies tellus vestibulum vel. Aenean lobortis tortor id tempor dignissim.
+\section{Prerequisites}
+
+\section{Project Manager module}
+
+The \textbf{ProjectManager} module serves as the core backend functionality for handling projects within the Test Genie system. It provides a robust framework for managing software projects by integrating Git-based repositories, file management, and testing workflows. The module is built around the \textit{Project} class, which encapsulates essential functionalities such as cloning repositories, recognizing project frameworks, and managing project files. Additionally, it features an abstract interface for test creation, validation, and execution, allowing for framework-specific extensions of functionality. For instance, the \textit{Flutter} subclass extends the \textit{Project} class to handle Flutter-specific tasks, including dependency management, `pubspec.yaml` parsing, and test execution. By modularizing these functionalities, the \textbf{ProjectManager} module streamlines project handling and enhances the system's scalability for various software development frameworks.
 
 \subsection{Details of implementation 1}
 Curabitur lacinia lorem sed neque imperdiet, ac pulvinar ipsum tempor. Donec accumsan egestas scelerisque. Mauris ultrices erat nec sem semper hendrerit. Pellentesque accumsan lacus arcu, sit amet hendrerit ex posuere vitae. Quisque ut vehicula orci. In hac habitasse platea dictumst. Sed mollis non felis nec semper. Ut justo nisi, lacinia quis rutrum sit amet, ornare ut lectus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam finibus consectetur purus a blandit. Aenean a lectus nunc. Sed egestas blandit vestibulum. Duis ac pretium justo.
+
+\section{Business Logic Analyzer module}
+
+\section{Test Generator module}
+
+\section{Other implementations}
