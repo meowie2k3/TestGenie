@@ -23,12 +23,12 @@
 \contentsline {subsection}{\numberline {3.2.6}Test validation}{9}{}%
 \contentsline {section}{\numberline {3.3}System Design}{10}{}%
 \contentsline {chapter}{\numberline {4}IMPLEMENT AND RESULTS}{13}{}%
-\contentsline {section}{\numberline {4.1}Prerequisites}{13}{}%
-\contentsline {section}{\numberline {4.2}Project Manager module}{13}{}%
-\contentsline {subsection}{\numberline {4.2.1}Details of implementation 1}{13}{}%
-\contentsline {section}{\numberline {4.3}Business Logic Analyzer module}{14}{}%
-\contentsline {section}{\numberline {4.4}Test Generator module}{14}{}%
-\contentsline {section}{\numberline {4.5}Other implementations}{14}{}%
+\contentsline {section}{\numberline {4.1}Project Manager module}{13}{}%
+\contentsline {subsection}{\numberline {4.1.1}Module prequisites}{13}{}%
+\contentsline {subsection}{\numberline {4.1.2}Flutter class}{14}{}%
+\contentsline {section}{\numberline {4.2}Business Logic Analyzer module}{14}{}%
+\contentsline {section}{\numberline {4.3}Test Generator module}{14}{}%
+\contentsline {section}{\numberline {4.4}Other implementations}{14}{}%
 \contentsline {chapter}{\numberline {5}DISCUSSION AND EVALUATION}{15}{}%
 \contentsline {section}{\numberline {5.1}Analysis}{15}{}%
 \contentsline {section}{\numberline {5.2}Strengths}{15}{}%
