@@ -28,7 +28,22 @@ Subclass of Project are required to implement the following methods:
 
 \subsection{Flutter class}
 
+The \textbf{Flutter} class extends the \textbf{Project} class to provide framework-specific support for managing Flutter projects. This class is responsible for handling operations unique to Flutter, such as managing dependencies, running tests, and validating projects. It ensures that the Flutter SDK is installed and properly configured in the \textit{./SDKs/flutter} directory before performing any operations.
 
+Key methods of the \textbf{Flutter} class include:
+\begin{itemize}
+    \item[-] \textbf{\_runFlutterCLI}: This method executes commands using the Flutter CLI within the context of the project directory. It supports arguments for various Flutter commands and handles errors if the command fails.
+    \item[-] \textbf{\_checkSDK}: Ensures that the Flutter SDK is installed and operational by running the \texttt{flutter --version} command. If the SDK is not present or misconfigured, the method raises an exception.
+    \item[-] \textbf{\_flutterPubGet}: Automatically installs dependencies listed in the \textit{pubspec.yaml} file by running \texttt{flutter pub get}.
+    \item[-] \textbf{\_addTestDependency}: Adds the Flutter \textit{test} package as a dependency using \texttt{flutter pub add test}.
+    \item[-] \textbf{create\_test}: Creates a test file in the designated \textit{test} directory of the project. If the file already exists and overwriting is not allowed, an exception is raised.
+    \item[-] \textbf{get\_test\_content}: Retrieves the content of a test file from the \textit{test} directory.
+    \item[-] \textbf{run\_test}: Executes a specified Dart test file using the Flutter CLI and returns the results.
+    \item[-] \textbf{validate}: Iterates through all Dart test files in the \textit{test} directory and validates them by running each test.
+    \item[-] \textbf{getListSourceFiles}: Collects and returns a list of all source files in the \textit{lib} directory, ensuring that the \textit{main.dart} file is prioritized as the entry point.
+\end{itemize}
+
+This design enables seamless integration of Flutter-specific features into the \textbf{Test Genie} system while adhering to the modular structure defined by the \textbf{Project} class. By implementing these methods, the \textbf{Flutter} class ensures compatibility with the broader system and provides developers with a streamlined process for managing and testing Flutter projects.
 
 \section{Business Logic Analyzer module}
 

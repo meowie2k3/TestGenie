@@ -26,14 +26,14 @@
 \contentsline {section}{\numberline {4.1}Project Manager module}{13}{}%
 \contentsline {subsection}{\numberline {4.1.1}Module prequisites}{13}{}%
 \contentsline {subsection}{\numberline {4.1.2}Flutter class}{14}{}%
-\contentsline {section}{\numberline {4.2}Business Logic Analyzer module}{14}{}%
-\contentsline {section}{\numberline {4.3}Test Generator module}{14}{}%
-\contentsline {section}{\numberline {4.4}Other implementations}{14}{}%
-\contentsline {chapter}{\numberline {5}DISCUSSION AND EVALUATION}{15}{}%
-\contentsline {section}{\numberline {5.1}Analysis}{15}{}%
-\contentsline {section}{\numberline {5.2}Strengths}{15}{}%
-\contentsline {section}{\numberline {5.3}Limitations}{15}{}%
-\contentsline {section}{\numberline {5.4}Comparison}{15}{}%
-\contentsline {section}{\numberline {5.5}Future Work}{16}{}%
-\contentsline {chapter}{\numberline {6}CONCLUSION AND FUTURE WORK}{17}{}%
-\contentsline {chapter}{\numberline {A}LISTINGS}{19}{}%
+\contentsline {section}{\numberline {4.2}Business Logic Analyzer module}{15}{}%
+\contentsline {section}{\numberline {4.3}Test Generator module}{15}{}%
+\contentsline {section}{\numberline {4.4}Other implementations}{15}{}%
+\contentsline {chapter}{\numberline {5}DISCUSSION AND EVALUATION}{16}{}%
+\contentsline {section}{\numberline {5.1}Analysis}{16}{}%
+\contentsline {section}{\numberline {5.2}Strengths}{16}{}%
+\contentsline {section}{\numberline {5.3}Limitations}{16}{}%
+\contentsline {section}{\numberline {5.4}Comparison}{16}{}%
+\contentsline {section}{\numberline {5.5}Future Work}{17}{}%
+\contentsline {chapter}{\numberline {6}CONCLUSION AND FUTURE WORK}{18}{}%
+\contentsline {chapter}{\numberline {A}LISTINGS}{20}{}%
