@@ -264,3 +264,80 @@ class Flutter(Project): # Inherit from Project class
             return res
             
 \end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{Block}$ class.}, label={lst:4}]
+    class Block:
+    def __init__(self, name: str, content: str, type: str) -> None:
+        self.name = name
+        self.content = content
+        self.type = type
+        
+    def __predict(self) -> str:
+        # TODO: implement prediction
+        return ''
+    
+    def getContentNoComment(self) -> str:
+        # no split by line
+        content = self.content
+        res = ''
+        i = 0
+        isCommentSingleLine = False
+        isCommentMultiLine = False
+        while i < len(self.content)-1:
+            # if \n, reset isCommentSingleLine
+            if content[i] == '\n':
+                isCommentSingleLine = False
+            if content[i] == '/' and content[i+1] == '*':
+                isCommentMultiLine = True
+            if content[i] == '/' and content[i+1] == '/':
+                isCommentSingleLine = True
+            if not isCommentSingleLine and not isCommentMultiLine:
+                res += content[i]
+            if content[i] == '*' and content[i+1] == '/':
+                isCommentMultiLine = False
+                i+=1
+            i+=1
+        
+        # delete all empty lines
+        res = '\n'.join([line for line in res.split('\n') if line.strip() != ''])
+        
+        return res
+    
+    def setPrediction(self, prediction: str) -> None:
+        self.prediction = prediction
+
+    def getPrediction(self) -> str:
+        return self.prediction
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{BlockType}$ class (Enumerate).}, label={lst:5}]
+    class BlockType:
+        FILE = 'File'
+        CLASS = 'Class'
+        ABSTRACT_CLASS = 'AbstractClass'
+        ENUM = 'Enum'
+        GLOBAL_VAR = 'GlobalVar'
+        FUNCTION = 'Function'
+        CLASS_CONSTRUCTOR = 'ClassConstructor'
+        CLASS_FUNCTION = 'ClassFunction'
+        CLASS_ATTRIBUTE = 'ClassAttribute'
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{Connection}$ class.}, label={lst:6}]
+    class Connection:
+    def __init__(self, head: Block, tail: Block, type: str):
+        self.head = head
+        self.tail = tail
+        self.type = type
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{ConnectionType}$ class (Enumerate).}, label={lst:7}]
+    class ConnectionType:
+        EXTEND = 'Extend'
+        IMPLEMENT = 'Implement'
+        CONTAIN = 'Contain'
+        EXTEND = 'Extend'
+        USE = 'Use'
+        CALL = 'Call'
+        IMPORT = 'Import'
+\end{lstlisting}

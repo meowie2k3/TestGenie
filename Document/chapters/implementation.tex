@@ -51,6 +51,10 @@ The \textbf{Business Logic Analyzer} module is designed to parse and analyze the
 
 \subsection{DependencyDiagram class}
 
+The \textbf{DependencyDiagram} class serves as a connector within the Test Genie system, bridging the gap between the framework-specific analysis strategies, such as \textit{FlutterAnalyzeStrategy}, and the AI-powered prediction functionality provided by the \textbf{AI\_Agent}. This class is responsible for constructing a logical representation of the project in the form of a dependency diagram, which comprises blocks (representing functional units) and connections (representing the relationships between those units). The \textbf{\_generateDiagram} method encapsulates this functionality by invoking the appropriate analysis strategy for the project's framework (Listing A.3), allowing the class to dynamically adapt to diverse frameworks supported by the system. This modular design ensures that the class is both extensible and maintainable as new frameworks are introduced.
+
+In addition to structural analysis, the \textbf{DependencyDiagram} class leverages the \textbf{AI\_Agent} to enrich the diagram with meaningful predictions. Through the \textbf{\_getPre-dictions} method (Listing A.3), each block in the diagram is analyzed to generate insights into its behavior and logic, which are subsequently embedded into the block. This integration of AI-based predictions and static code analysis makes the \textbf{DependencyDiagram} a powerful tool for understanding the project's overall architecture and behavior. By combining these two mechanisms, this class plays a pivotal role in preparing the business logic analyzation for further steps in the Test Genie system: test generation and validation.
+
 \subsubsection{Diagram objects}
 
 \subsubsection{FlutterAnalyzeStrategy Algorithm}
