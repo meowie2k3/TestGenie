@@ -1,6 +1,4 @@
 from ProjectManager import Project
-from .Diagram.Block import Block, BlockType
-from .Diagram.Connection import Connection, ConnectionType
 from .Flutter import FlutterAnalyzeStrategy
 from .AI_Agent import AI_Agent
 
