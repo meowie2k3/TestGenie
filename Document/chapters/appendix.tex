@@ -3,6 +3,7 @@
   import subprocess
   
   class Project:
+
       _framework = ''
       def __init__(self, git_url):
           self._git_url = git_url
@@ -248,21 +249,6 @@ class Flutter(Project): # Inherit from Project class
             for block in self.blocks:
                 block.setPrediction(self.ai_agent.generate_BLA_prediction(source_code=block.getContentNoComment(), chat_history=[]))
             
-        def __str__(self) -> str:
-            """_summary_
-    
-            Returns:
-                str: project name, list of blocks and connections in the diagram
-            """
-            res = f'Project: {self.project.getName()}\n'
-            res += 'Blocks:\n'
-            for block in self.blocks:
-                res += f'{block.name} - {block.type}\n'
-            res += 'Connections:\n'
-            for connection in self.connections:
-                res += f'{connection.head.name} -> {connection.tail.name} - {connection.type}\n'
-            return res
-            
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{Block}$ class.}, label={lst:4}]
@@ -271,11 +257,7 @@ class Flutter(Project): # Inherit from Project class
         self.name = name
         self.content = content
         self.type = type
-        
-    def __predict(self) -> str:
-        # TODO: implement prediction
-        return ''
-    
+
     def getContentNoComment(self) -> str:
         # no split by line
         content = self.content
@@ -340,4 +322,373 @@ class Flutter(Project): # Inherit from Project class
         USE = 'Use'
         CALL = 'Call'
         IMPORT = 'Import'
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{FlutterAnalyzeStrategy}$ function.}, label={lst:8}]
+    def FlutterAnalyzeStrategy(diagram) -> None:
+    # print('Flutter analyze strategy')
+    # print(diagram)
+    fileList = diagram.project.getListSourceFiles()
+    # print(fileList)
+    # create a block for main first
+    mainfileDir = fileList[0]
+    mainFileContent = diagram.project.getFileContent(mainfileDir)
+    # turn \ into /
+    mainfileDir = mainfileDir.replace('\\','/')
+    # print(mainfileDir)
+    mainBlock = Block(mainfileDir, mainFileContent, BlockType.FILE)
+    # print(mainBlock)
+    
+    diagram.blocks.append(mainBlock)
+    
+    ImportAnalyzer(diagram, diagram.blocks[0])
+    
+    ContainAnalyzer(diagram, diagram.blocks[0])
+    
+    CallAnalyzer(diagram, diagram.blocks[0])
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{ImportAnalyzer}$ function.}, label={lst:9}]
+def ImportAnalyzer(diagram, block):
+    currContent = block.content
+    currType = block.type
+    # print("Current content: ", currentContent)
+    # print("Current type: ", currentType)
+    
+    # analyze imports
+    if (currType == 'File'):
+        importLines = [line.strip() for line in currContent.split('\n') if line.strip().startswith('import')]
+        # print(importLines)
+        blocks = []
+        for line in importLines:
+            # print(line)
+            directory = line.split(' ')[1].replace(';', '')
+            # delete first and last character => delete quotes
+            directory = directory[1:-1]
+            # print(directory)
+            # 3 cases: import from other package, import from project, import as relative path
+            if directory.startswith('package:'):
+                # import from other package, import from project
+                prjName = diagram.project.yaml_name
+                if directory.startswith(f'package:{prjName}'):
+                    # import from project
+                    # create block for this file and connection
+                    fileDir = directory.split(f'package:{prjName}')[1]
+                    fileDir = 'lib' + fileDir
+                    fileContent = diagram.project.getFileContent(fileDir)
+                    # if fileDir is not in Diagram.blocks
+                    if not any(block.name == fileDir for block in diagram.blocks):
+                        blocks.append(Block(fileDir, fileContent, BlockType.FILE))
+                    else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == fileDir][0], ConnectionType.IMPORT))
+            else:
+                # import as relative path
+                currentDir = block.name #ex: lib/main.dart
+                currentDir = currentDir.split('/')
+                currentDir.pop()
+                currentDir = '/'.join(currentDir)
+                combineDir = os.path.normpath(os.path.join(currentDir, directory))
+                # print(combineDir)
+                fileContent = diagram.project.getFileContent(combineDir)
+                if combineDir not in [block.name for block in diagram.blocks]:
+                    # turn \ into /
+                    combineDir = combineDir.replace('\\','/')
+                    blocks.append(Block(combineDir, fileContent, BlockType.FILE))
+                else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == combineDir][0], ConnectionType.IMPORT))
+        
+        for b in blocks:
+            # print(b)
+            diagram.blocks.append(b)
+            diagram.connections.append(Connection(block, b, ConnectionType.IMPORT))
+            ImportAnalyzer(diagram, b)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{ContainAnalyzer}$ function.}, label={lst:10}]
+def ContainAnalyzer(diagram, block, visited = []):
+    visited.append(block)
+    currType = block.type
+    
+    # print("Current content: ", currContent)
+    # print("Current type: ", currType)
+    
+    # keep analyze if type is file or class or abstract class
+    if (currType == BlockType.FILE 
+        or currType == BlockType.CLASS
+        or currType == BlockType.ABSTRACT_CLASS
+        ):
+        content = block.getContentNoComment()
+        # print(content)
+        lines = content.split('\n')
+        # if type is file, analyze classes and functions (standalone functions)
+        # if type is class, analyze functions
+        blocks = []
+        # File analyzing
+        if (currType == BlockType.FILE):
+            # two cases: class and abstract class
+            if 'class ' in content:
+                # this file have class(es)
+                isClassContent = False
+                openedBracket = 0
+                className = ''
+                classContent = []
+                # class or final class
+                for line in lines:
+                    if line.strip().startswith('class ') or line.strip().startswith('final class '):
+                        # first line of class
+                        # NOTE: there is no class inside class
+                        # get class name
+                        className = line.split('class ')[1].split('{')[0].strip()
+                        # print(className)
+                        isClassContent = True
+                        classContent.append(line)
+                    elif '}' in line and isClassContent:
+                        # two cases: class end or function end
+                        classContent.append(line)
+                        if '{' in line:
+                            continue
+                        if openedBracket > 0:
+                            openedBracket = openedBracket - 1
+                        else: 
+                            # class end
+                            isClassContent = False
+                            classContent = '\n'.join(classContent)
+                            blocks.append(Block(className, classContent, BlockType.CLASS))
+                            classContent = []
+                    elif '{' in line and isClassContent:
+                        openedBracket = openedBracket + 1
+                        classContent.append(line)
+                    elif isClassContent:
+                        classContent.append(line)
+                
+                # abstract class
+                if 'abstract class ' in content or 'abstract final class ' in content:
+                    isAbstractClassContent = False
+                    openedBracket = 0
+                    className = ''
+                    classContent = []
+                    for line in lines:
+                        if line.strip().startswith('abstract class ') or line.strip().startswith('abstract final class '):
+                            # first line of class
+                            # NOTE: there is no class inside class
+                            # get class name
+                            if line.strip().startswith('abstract class '):
+                                
+                                className = line.split('abstract class ')[1].split('{')[0].strip()
+                            # Check if it's an abstract final class
+                            if line.strip().startswith('abstract final class '):
+                                className = line.split('abstract final class ')[1].split('{')[0].strip()
+                            # print(className)
+                            isAbstractClassContent = True
+                            classContent.append(line)
+                        elif '}' in line and isAbstractClassContent:
+                            # two cases: class end or function end
+                            classContent.append(line)
+                            if '{' in line:
+                                continue
+                            if openedBracket > 0:
+                                openedBracket = openedBracket - 1
+                            else: 
+                                # class end
+                                isAbstractClassContent = False
+                                classContent = '\n'.join(classContent)
+                                blocks.append(Block(className, classContent, BlockType.ABSTRACT_CLASS))
+                                classContent = []
+                        elif '{' in line and isAbstractClassContent:
+                            openedBracket = openedBracket + 1
+                            classContent.append(line)
+                        elif isAbstractClassContent:
+                            classContent.append(line)
+                            
+            # enum
+            if 'enum ' in content:
+                # no {} in enum
+                # maybe () in enum
+                # once } is found, enum end
+                isEnumContent = False
+                enumName = ''
+                enumContent = []
+                for line in lines:
+                    if line.strip().startswith('enum '):
+                        # first line of enum
+                        enumName = line.split('enum ')[1].split('{')[0].strip()
+                        isEnumContent = True
+                        enumContent.append(line)
+                    elif '}' in line and isEnumContent:
+                        enumContent.append(line)
+                        isEnumContent = False
+                        enumContent = '\n'.join(enumContent)
+                        blocks.append(Block(enumName, enumContent, BlockType.ENUM))
+                        # print(enumContent)
+                    elif isEnumContent:
+                        enumContent.append(line)
+                
+            # function
+            # standalone function / GlobalVar only!
+            # strat: get rid of all analyzed class and enum first
+            leftoverContent = content
+            for b in blocks:
+                leftoverContent = leftoverContent.replace(b.content, '')
+            # get rid of import line
+            leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if not line.strip().startswith('import')])
+            # remove empty lines
+            leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if line.strip() != ''])
+            # print("========Leftover content========")
+            # print(block.name)
+            # print(leftoverContent)
+            
+            # two case of function: difined return type or not (dynamic)
+            # variable must have a type
+            # print("========Function and GlobalVar========")
+            funcAndVarBlocks = extract_functions_and_globals(leftoverContent)
+            blocks.extend(funcAndVarBlocks)
+        
+        # Class analyzing
+        if (currType in (BlockType.CLASS)):
+            # two cases: class function and class attribute
+            content = block.getContentNoComment() # should be no difference between content and contentNoComment
+            # print(content)
+            classContentBlock = extract_class_content(content)
+            blocks.extend(classContentBlock)
+            
+        # blocks recursive
+        for b in blocks:
+            # print(b)
+            # print(b.content)
+            diagram.blocks.append(b)
+            diagram.connections.append(Connection(block, b, ConnectionType.CONTAIN))
+            ContainAnalyzer(diagram, b, visited=visited)
+            
+    # find connection connected to this block and not visited
+    connectedBlocks = [c.tail for c in diagram.connections if c.head == block and c.tail not in visited]
+    for b in connectedBlocks:
+        ContainAnalyzer(diagram, b, visited=visited)    
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{CallAnalyzer}$ function.}, label={lst:11}]
+    def CallAnalyzer(diagram, block, visited = []):
+    if block in visited:
+        return
+    
+    visited.append(block)
+    currType = block.type
+    
+    # NOTE strat: 2-layer recursive
+    if currType in (BlockType.FILE):
+        # find connected file (imported file)
+        connectedFiles = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.IMPORT]
+        
+        for file in connectedFiles:
+            # print("Imported file:")
+            # print(file)
+            # find all class/function/variable in file. Avoid BlockType.FILE
+            connectedBlocks = [conn.tail for conn in diagram.connections if conn.head == file and conn.type == ConnectionType.CONTAIN]
+            currentBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
+
+        
+            _CallAnalyzer(diagram, currentBlocks, connectedBlocks, visited)
+            # import based recursive call
+            CallAnalyzer(diagram, file, visited)
+        
+def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
+    # thisFile: blocks of contains in current file
+    # callables: blocks of contains in imported file
+    callables.extend(thisFile)
+    
+    # printStuff(thisFile, callables)
+    
+    for block in thisFile:
+        if block in visited:
+            continue
+        
+        if block.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
+            # extend connection analyze
+            name = block.name
+            # print(name)
+            # first word is class name
+            classname = name.split()[0]
+            otherInfo = name[len(classname):]
+            for connBlock in callables:
+                if connBlock.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
+                    className = connBlock.name.split()[0]
+                    # if className found in otherInfo, create a connection ConnectionType.EXTEND
+                    if className in otherInfo:
+                        diagram.connections.append(Connection(block, connBlock, ConnectionType.EXTEND))
+                        # print(f"Extend connection: {block} --> {connBlock}")
+                
+            # split class, abstract class
+            innerBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
+            # magic recursive calls at 4 a.m
+            visited.append(block)
+            _CallAnalyzer(diagram, innerBlocks, callables, visited)
+            
+            
+            continue
+        else:
+            visited.append(block)
+            # analyze calls in block
+            # If called, create a connection ConnectionType.CALL
+            
+            fullcontent = block.getContentNoComment()
+            # print("=====================================")
+            # print(block)
+            # print(fullcontent)
+            
+            content = ''
+            # Extract content only, exclude function name, params
+            if block.type in (BlockType.FUNCTION, BlockType.CLASS_FUNCTION):
+                if '=>' in fullcontent:
+                    # take content from => to ;
+                    # add a ; to the end of content
+                    fullcontent = fullcontent + ';'
+                    content = fullcontent[fullcontent.index('=>')+2:]
+                    content = content[:content.index(';') + 1]
+                
+                else:
+                    roundbracketOpened = 0
+                    initialRoundBracket = False
+                    curlybracketOpened = 0
+                    isContent = False
+                    for char in fullcontent:
+                        # params section
+                        if char == '(' and not isContent and not initialRoundBracket:
+                            initialRoundBracket = True
+                            roundbracketOpened += 1
+                        if char == ')' and not isContent:
+                            roundbracketOpened -= 1
+                            if roundbracketOpened == 0 and initialRoundBracket:
+                                initialRoundBracket = False
+                        if char == '{':
+                            if not isContent and not initialRoundBracket:
+                                isContent = True
+                            curlybracketOpened += 1
+                        if char == '}' and isContent:
+                            curlybracketOpened -= 1
+                            if curlybracketOpened == 0:
+                                isContent = False
+                                content += char
+                                break
+                        if isContent:
+                            content += char
+            if block.type in (BlockType.CLASS_ATTRIBUTE):
+                # extract content from = to ;
+                # add a ; to the end of content
+                fullcontent = fullcontent + ';'
+                content = fullcontent[fullcontent.index('=')+1:]
+                content = content[:content.index(';') + 1]
+            # print("====================Block=====================")
+            # print("Block name: ", block.name)
+            # print("====================Extracted content=====================")
+            # print(content)
+            # print("==========================================================")
+            # printStuff(thisFile, callables)
+            callablesName = getCallablesName(callables)
+            for name, connBlock in callablesName:
+                # print(f"Name: {name}, Block name: {connBlock.name}")
+                # find name in content
+                # name found can be next to any non-word character or start of line and end of line
+                regex = re.compile(r'(?<![a-zA-Z0-9_])' + re.escape(name) + r'(?![a-zA-Z0-9_])')
+                if regex.search(content):
+                    # check if connection already exists
+                    if not any(conn.head == block and conn.tail == connBlock and conn.type == ConnectionType.CALL for conn in diagram.connections):
+                        diagram.connections.append(Connection(block, connBlock, ConnectionType.CALL))
+                        # print(f"Call connection: {block} --> {connBlock}")
 \end{lstlisting}

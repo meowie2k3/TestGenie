@@ -150,8 +150,6 @@ def ContainAnalyzer(diagram, block, visited = []):
             classContentBlock = extract_class_content(content)
             blocks.extend(classContentBlock)
             
-        
-        
         # blocks recursive
         for b in blocks:
             # print(b)

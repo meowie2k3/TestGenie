@@ -57,7 +57,90 @@ In addition to structural analysis, the \textbf{DependencyDiagram} class leverag
 
 \subsubsection{Diagram objects}
 
+
+The DependencyDiagram class relies on objects from the Diagram folder to represent the blocks and connections within the dependency structure. These objects are defined as follows:
+
+\begin{itemize}
+    \item[-] \textbf{Block class}: Represents the functional units of the source code, such as files, classes, functions, or variables (Listing A.4). Each block contains the following attributes:
+    \begin{itemize}
+        \item[-] \textit{name}: The name of the block.
+        \item[-] \textit{content}: The source code or content of the block.
+        \item[-] \textit{type}: The type of the block, determined by the BlockType class.
+        \item[-] \textit{prediction}: (Optional) AI-generated predictions for the block's logic or behavior.
+    \end{itemize}
+    Additionally, the Block class provides methods such as:
+    \begin{itemize}
+        \item[-] \textbf{getContentNoComment}: Removes comments from the block's content for clean analysis.
+        \item[-] \textbf{setPrediction} and \textbf{getPrediction}: Manage predictions for the block.
+    \end{itemize}
+
+    \item[-] \textbf{BlockType class}: Enumerates the possible types of blocks (Listing A.5), such as \textit{File}, \textit{Class}, \textit{Function}, and more. It also provides methods to:
+    \begin{itemize}
+        \item[-] Generate database queries for storing and managing block types.
+        \item[-] Define the schema for the BlockType database table.
+    \end{itemize}
+
+    \item[-] \textbf{Connection class}: Represents relationships between blocks (Listing A.6), with attributes:
+    \begin{itemize}
+        \item[-] \textit{head}: The source block of the connection.
+        \item[-] \textit{tail}: The destination block of the connection.
+        \item[-] \textit{type}: The type of relationship, determined by the ConnectionType class.
+    \end{itemize}
+    It also facilitates database storage and retrieval through schema definitions.
+
+    \item[-] \textbf{ConnectionType class}: Enumerates the types of relationships between blocks (Listing A.7), such as \textit{Extend}, \textit{Implement}, \textit{Call}, and \textit{Import}. It provides similar database-related methods as the BlockType class.
+\end{itemize}
+
 \subsubsection{FlutterAnalyzeStrategy Algorithm}
+
+The \textbf{FlutterAnalyzeStrategy} function (Listing A.8) is a core component of the \textbf{DependencyDiagram} generation process within the \textbf{Business Logic Analyzer} module. This function is specifically designed to analyze Flutter projects by reading their source code, breaking it into logical units (\textit{blocks}), and appending these blocks to the diagram. It employs three custom backtracking algorithms (\textit{ImportAnalyzer}, \textit{ContainAnalyzer}, and \textit{CallAnalyzer}) to achieve a comprehensive structural and relational analysis of the project. Here's a detailed breakdown of the algorithm:
+
+\begin{itemize}
+    \item[-] \textbf{Initialization:}
+    \begin{itemize}
+        \item The function begins by retrieving the list of source files in the project using the \textbf{getListSourceFiles} method from the \textbf{Project} class (Listing A.1).
+        \item The first file in the list is assumed to be the project's entry point (typically \texttt{main.dart}). Its content is extracted, and a new \textbf{Block} object is created to represent it. This block is assigned the \texttt{FILE} type from the \textbf{BlockType} class.
+        \item The newly created \texttt{main.dart} block is appended to the \textbf{blocks} attribute of the \textbf{DependencyDiagram} instance.
+    \end{itemize}
+
+    \item[-] \textbf{Import Analysis (ImportAnalyzer):}
+    \begin{itemize}
+        \item The \textbf{ImportAnalyzer} algorithm (Listing A.9) scans the content of the \texttt{main.dart} block for \texttt{import} statements. These statements indicate dependencies on other Dart libraries or files.
+        \item For each \texttt{import} statement, a \textbf{Connection} object is created between the current block (as the \textit{head}) and the imported file (as the \textit{tail}). The connection type is marked as \texttt{IMPORT}.
+        \item Unlike the other analyzers, \textbf{ImportAnalyzer} primarily focuses on establishing file-level relationships and does not create new blocks.
+    \end{itemize}
+
+    \item[-] \textbf{Containment Analysis (ContainAnalyzer):}
+    \begin{itemize}
+        \item The \textbf{ContainAnalyzer} algorithm (Listing A.10) dives deeper into each file to identify hierarchical relationships within the code. For example:
+        \begin{itemize}
+            \item Classes contained within files.
+            \item Standalone functions contained within files.
+            \item Functions and attributes contained within classes.
+        \end{itemize}
+        \item For each identified entity, a new \textbf{Block} object is created and appended to the \textbf{blocks} list. The type of the block is determined based on the entity, such as \texttt{CLASS}, \texttt{FUNCTION}, or \texttt{CLASS\_ATTRIBUTE}.
+        \item Connections are established between the parent block (e.g., the file block) and the contained entities, using the \texttt{CONTAIN} relationship type.
+    \end{itemize}
+
+    \item[-] \textbf{Call Analysis (CallAnalyzer):}
+    \begin{itemize}
+        \item The \textbf{CallAnalyzer} algorithm (Listing A.11) identifies calling activities between functions and classes. For instance:
+        \begin{itemize}
+            \item Functions calling other functions, either within the same file or across files.
+            \item Methods from one class invoking methods or attributes of another class.
+        \end{itemize}
+        \item For each calling activity found, a \textbf{Connection} object is created to represent the caller (as the \textit{head}) and the callee (as the \textit{tail}). The relationship type for these connections is set to \texttt{CALL}.
+        \item This analysis also considers cross-file and cross-class interactions, providing insights into the dynamic flow of the project.
+    \end{itemize}
+
+    \item[-] \textbf{Finalizing the Diagram:}
+    \begin{itemize}
+        \item After executing the three algorithms, the \textbf{blocks} list of the \textbf{DependencyDiagram} instance contains a comprehensive representation of the project's structural elements.
+        \item Similarly, the \textbf{connections} list captures the relationships between these elements, making the diagram a complete and versatile model of the project's dependencies and interactions.
+    \end{itemize}
+\end{itemize}
+
+The \textbf{FlutterAnalyzeStrategy} function effectively combines the results of these three backtracking algorithms to deliver a detailed and accurate dependency diagram. By modularizing the analysis into distinct phases (\textit{Import Analysis}, \textit{Containment Analysis}, and \textit{Call Analysis}), the function ensures that the structural and relational aspects of the project are thoroughly captured. This makes it an indispensable part of the Test Genie system's ability to analyze and generate tests for Flutter projects.
 
 \subsection{AI\_Agent class}
 
