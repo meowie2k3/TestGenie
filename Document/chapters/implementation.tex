@@ -144,6 +144,91 @@ The \textbf{FlutterAnalyzeStrategy} function effectively combines the results of
 
 \subsection{AI\_Agent class}
 
+The \textbf{AI\_Agent} class is a component of the Test Genie system that provide AI-driven insights into the business logic of analyzed code blocks. This class is initialized within the \textbf{DependencyDiagram} class and utilized in the \textbf{\_getPredictions} method to generate structured predictions for each block. The initialization process of the \textbf{AI\_Agent} involves setting up its environment, loading necessary resources, and preparing the underlying AI models and vector stores.
+
+\subsubsection{Initialization Flow}
+
+The initialization of the \textbf{AI\_Agent} class involves several key steps to prepare its environment and components:
+
+\begin{itemize}
+    \item[-] \textbf{Environment Setup:}
+    \begin{itemize}
+        \item The class begins by loading environment variables from a \texttt{.env} file using the \texttt{load\_dotenv} function. If the file fails to load, an exception is raised.
+        \item Critical environment variables include:
+        \begin{itemize}
+            \item \texttt{BASE\_URL}: The base URL for API requests.
+            \item \texttt{BLA\_LLM\_MODEL}: The name of the language model used for predictions.
+            \item \texttt{EMBED\_MODEL}: The embedding model used for vectorization.
+        \end{itemize}
+    \end{itemize}
+
+    \item[-] \textbf{Model and Embedding Initialization:}
+    \begin{itemize}
+        \item A \textbf{ChatOpenAI} instance is initialized for interacting with the language model. This instance is configured with the \texttt{BASE\_URL} and \texttt{BLA\_LLM\_MODEL}.
+        \item An \textbf{OpenAIEmbeddings} instance is initialized for generating document embeddings. It is configured to skip context length checks for compatibility with specific setups.
+    \end{itemize}
+
+    \item[-] \textbf{Vector Store Creation:}
+    \begin{itemize}
+        \item The \textbf{AI\_Agent} manages document vector stores for efficient retrieval. A predefined list of documents (e.g., \texttt{flutter\_tutorial.pdf}) is used to populate these stores.
+        \item For each document:
+        \begin{itemize}
+            \item The document is loaded using appropriate loaders (e.g., \textbf{PyPDFLoader}).
+            \item The document is split into chunks using the \textbf{SentenceTransformersTokenTextSplitter}.
+            \item A persistent vector store is created for the document using the \textbf{Chroma} library.
+        \end{itemize}
+        \item If a vector store already exists for a document, it is reused without reinitialization.
+    \end{itemize}
+
+    \item[-] \textbf{Retriever Initialization:}
+    \begin{itemize}
+        \item For each vector store, a \textbf{retriever} is configured to fetch relevant documents based on similarity thresholds. These retrievers are stored for later use.
+    \end{itemize}
+
+    \item[-] \textbf{Agent Initialization:}
+    \begin{itemize}
+        \item The \textbf{\_agent\_init} method is invoked to set up a history-aware retrieval system and define the agent's behavior for analyzing code.
+        \item Custom prompts are created for contextualizing queries and for generating predictions. These prompts guide the language model in providing detailed business logic analysis and testing scenarios.
+        \item A \textbf{react\_agent} is created using the \textbf{create\_react\_agent} function, and its execution is managed by an \textbf{AgentExecutor}.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{generate\_BLA\_prediction Function}
+
+The \textbf{generate\_BLA\_prediction} function is the primary method used to analyze source code and generate structured insights. It operates as follows:
+
+\begin{itemize}
+    \item[-] \textbf{Input Parameters:}
+    \begin{itemize}
+        \item \texttt{source\_code}: The code snippet to be analyzed.
+        \item \texttt{chat\_history}: A list of previous interactions to provide context for the analysis.
+    \end{itemize}
+
+    \item[-] \textbf{Analysis Workflow:}
+    \begin{itemize}
+        \item The function first invokes the \textbf{agent\_executor} to analyze the source code. The executor uses the retrievers and language model to provide an initial analysis.
+        \item The output of this analysis is then refined by directly querying the language model with a structured prompt.
+    \end{itemize}
+
+    \item[-] \textbf{Structured Prediction Output:}
+    \begin{itemize}
+        \item The final output includes the following sections:
+        \begin{itemize}
+            \item \textbf{Brief Explanation:} A summary of what the code does.
+            \item \textbf{Testability Assessment:} An evaluation of whether the code can be tested and what types of tests are appropriate.
+            \item \textbf{Testing Scenarios:} A list of specific test cases, each including a descriptive name, input values, and expected behavior.
+        \end{itemize}
+        \item The testing scenarios are formatted to enforce clarity and coverage, ensuring that normal cases, edge cases, and special conditions are addressed.
+    \end{itemize}
+
+    \item[-] \textbf{Return Value:}
+    \begin{itemize}
+        \item The structured response is returned as the output, ready to be integrated into the \textbf{DependencyDiagram}.
+    \end{itemize}
+\end{itemize}
+
+The \textbf{AI\_Agent} class, with its robust initialization and advanced prediction capabilities, is a cornerstone of the Test Genie system's ability to provide insightful and actionable analysis of Flutter/Dart projects.
+
 
 \section{Test Generator module}
 
