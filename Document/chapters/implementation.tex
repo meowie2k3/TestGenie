@@ -144,17 +144,17 @@ The \textbf{FlutterAnalyzeStrategy} function effectively combines the results of
 
 \subsection{AI\_Agent class}
 
-The \textbf{AI\_Agent} class is a component of the Test Genie system that provide AI-driven insights into the business logic of analyzed code blocks. This class is initialized within the \textbf{DependencyDiagram} class and utilized in the \textbf{\_getPredictions} method to generate structured predictions for each block. The initialization process of the \textbf{AI\_Agent} involves setting up its environment, loading necessary resources, and preparing the underlying AI models and vector stores.
+The \textbf{AI\_Agent} class is a component of the Test Genie system that provide AI-driven insights into the business logic of analyzed code blocks using \textit{Langchain framework} ~\cite{langchain}. This class is initialized within the \textbf{DependencyDiagram} class and utilized in the \textit{\_getPredictions} method (Listing A.3) to generate structured predictions for each block. The initialization process of the \textbf{AI\_Agent} involves setting up its environment, loading necessary resources, and preparing the underlying AI models and vector stores.
 
 \subsubsection{Initialization Flow}
 
-The initialization of the \textbf{AI\_Agent} class involves several key steps to prepare its environment and components:
+The initialization of the \textbf{AI\_Agent} class (Listing A.12) involves several key steps to prepare its environment and components:
 
 \begin{itemize}
     \item[-] \textbf{Environment Setup:}
     \begin{itemize}
         \item The class begins by loading environment variables from a \texttt{.env} file using the \texttt{load\_dotenv} function. If the file fails to load, an exception is raised.
-        \item Critical environment variables include:
+        \item Critical environment variables (Listing A.13) include:
         \begin{itemize}
             \item \texttt{BASE\_URL}: The base URL for API requests.
             \item \texttt{BLA\_LLM\_MODEL}: The name of the language model used for predictions.
@@ -187,7 +187,7 @@ The initialization of the \textbf{AI\_Agent} class involves several key steps to
 
     \item[-] \textbf{Agent Initialization:}
     \begin{itemize}
-        \item The \textbf{\_agent\_init} method is invoked to set up a history-aware retrieval system and define the agent's behavior for analyzing code.
+        \item The \textit{\_agent\_init} method is invoked to set up a history-aware retrieval system and define the agent's behavior for analyzing code.
         \item Custom prompts are created for contextualizing queries and for generating predictions. These prompts guide the language model in providing detailed business logic analysis and testing scenarios.
         \item A \textbf{react\_agent} is created using the \textbf{create\_react\_agent} function, and its execution is managed by an \textbf{AgentExecutor}.
     \end{itemize}
@@ -195,41 +195,18 @@ The initialization of the \textbf{AI\_Agent} class involves several key steps to
 
 \subsubsection{generate\_BLA\_prediction Function}
 
-The \textbf{generate\_BLA\_prediction} function is the primary method used to analyze source code and generate structured insights. It operates as follows:
+The \textbf{generate\_BLA\_prediction} function (Listing A.12) is the primary method of the \textbf{AI\_Agent} class, responsible for analyzing source code and generating structured predictions. It takes two input parameters: \texttt{source\_code}, which is the code snippet to be analyzed, and \texttt{chat\_history}, a list of previous interactions that provide context for the analysis. These inputs allow the function to understand the context of the code and any prior discussions related to it.
 
-\begin{itemize}
-    \item[-] \textbf{Input Parameters:}
-    \begin{itemize}
-        \item \texttt{source\_code}: The code snippet to be analyzed.
-        \item \texttt{chat\_history}: A list of previous interactions to provide context for the analysis.
-    \end{itemize}
+The function begins by invoking the \textbf{agent\_executor}, which analyzes the source code in the context of the provided chat history. The executor uses the retrievers and the language model to perform an initial analysis, retrieving any relevant documents from the vector stores to assist in understanding the code. This step produces a preliminary output that captures the essential details of the code's functionality and properties.
 
-    \item[-] \textbf{Analysis Workflow:}
-    \begin{itemize}
-        \item The function first invokes the \textbf{agent\_executor} to analyze the source code. The executor uses the retrievers and language model to provide an initial analysis.
-        \item The output of this analysis is then refined by directly querying the language model with a structured prompt.
-    \end{itemize}
+Once the initial analysis is complete, the function refines the output by directly querying the language model with a structured prompt. This prompt is specifically designed to guide the model in organizing the analysis into well-defined sections. These sections include a brief explanation of what the code does, an assessment of its testability, and a set of detailed testing scenarios. The testing scenarios are formatted to clearly describe the functionality being tested, the input values, and the expected outcomes. This ensures that the generated test cases are practical, comprehensive, and easy to understand.
 
-    \item[-] \textbf{Structured Prediction Output:}
-    \begin{itemize}
-        \item The final output includes the following sections:
-        \begin{itemize}
-            \item \textbf{Brief Explanation:} A summary of what the code does.
-            \item \textbf{Testability Assessment:} An evaluation of whether the code can be tested and what types of tests are appropriate.
-            \item \textbf{Testing Scenarios:} A list of specific test cases, each including a descriptive name, input values, and expected behavior.
-        \end{itemize}
-        \item The testing scenarios are formatted to enforce clarity and coverage, ensuring that normal cases, edge cases, and special conditions are addressed.
-    \end{itemize}
+The final structured response produced by the language model includes three main components. The first is a \textbf{Brief Explanation}, summarizing the purpose and functionality of the code. The second is a \textbf{Testability Assessment}, evaluating whether the code can be tested and identifying the appropriate types of tests, such as unit, widget, or integration tests. The third component is a list of \textbf{Testing Scenarios}, which outlines specific test cases with descriptive names, input values, and expected behaviors. These scenarios ensure coverage of normal cases, edge cases, and special conditions, providing a thorough basis for test planning.
 
-    \item[-] \textbf{Return Value:}
-    \begin{itemize}
-        \item The structured response is returned as the output, ready to be integrated into the \textbf{DependencyDiagram}.
-    \end{itemize}
-\end{itemize}
-
-The \textbf{AI\_Agent} class, with its robust initialization and advanced prediction capabilities, is a cornerstone of the Test Genie system's ability to provide insightful and actionable analysis of Flutter/Dart projects.
-
+The structured response generated by the \textit{generate\_BLA\_prediction} function serves as the final output, ready to be integrated into the \textbf{DependencyDiagram} for further use. By combining retrieval-augmented generation with precise prompts, this function delivers high-quality insights that enable efficient and accurate test planning for Flutter/Dart projects.
 
 \section{Test Generator module}
 
 \section{Other implementations}
+
+\section{Implemetation Result - Demo}

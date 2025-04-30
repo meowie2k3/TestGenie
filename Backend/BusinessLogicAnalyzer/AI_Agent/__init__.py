@@ -262,10 +262,6 @@ class AI_Agent:
         
         pass
 
-        
-    
-    
-        
     # Function to create and persist vector store
     def _create_vector_store(self, docs, store_name, is_overwrite=False) -> None:
         persistent_directory = os.path.join(db_dir, store_name)
