@@ -929,3 +929,370 @@ class AI_Agent:
     
     EMBED_MODEL=
 \end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{Test\_Generator}$ class.}, label={lst:14}]
+    class Test_Generator:
+    def __init__(self) -> None:
+        if load_dotenv(override=True) == False:
+            raise Exception("Failed to load .env file")
+        base_url = os.getenv('BASE_URL')
+        model_name = os.getenv('TG_LLM_MODEL')
+        embed_model = os.getenv('EMBED_MODEL')
+        self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0) # type: ignore
+        self.embeddings = OpenAIEmbeddings(
+            base_url=base_url, 
+            model=embed_model, # type: ignore
+            # critical for LM studio mod
+            check_embedding_ctx_length=False
+        )
+        # load vector store process
+        self.store_names = self._getStoreList()
+        for store_name, doc_name in self.store_names.items():
+            if not self._check_if_vector_store_exists(store_name):
+                docs = self._load_document(doc_name)
+                chunks = self._split_document(docs)
+                self._create_vector_store(chunks, store_name)
+        
+        self.dbs = []
+        for store_name in self.store_names.keys():
+            self.dbs.append(Chroma(persist_directory=os.path.join(db_dir, store_name), embedding_function=self.embeddings))
+        
+        self.retrievers = []
+        for db in self.dbs:
+            self.retrievers.append(
+                db.as_retriever(
+                    search_type="similarity_score_threshold",
+                    search_kwargs={
+                        'score_threshold': 0.2,
+                        'k': 1,
+                    }
+                )
+            )
+        
+        # Create error cache to avoid repeating fixes
+        self.error_fix_cache = {}
+        
+        # Set of attempted fixes for error tracking
+        self.attempted_fixes_for_error = {}
+        
+        # Maximum retries for a single error
+        self.max_error_fix_attempts = 3
+        
+    def generate_test_case(
+        self,
+        package_name: str,
+        code_location: str,
+        function_name_and_arguments: str,
+        prediction: str,
+    ) -> str:
+        """
+        Generate a test case for a function based on the prediction and code details.
+        
+        Args:
+            package_name: Name of the package (for import statements)
+            code_location: Location of the code file to test (path within the package)
+            function_name_and_arguments: Function signature with arguments
+            prediction: Description of what the function does
+            
+        Returns:
+            Generated test case as a string (clean Dart source code only)
+        """
+        try:
+        # Extract the structured sections from prediction if needed
+        # Check if prediction contains the expected structure
+            if "TESTING SCENARIOS:" not in prediction and "Brief" not in prediction:
+                # If prediction isn't properly structured, try to structure it
+                structured_prompt = (
+                    "Structure this analysis into the following format:\n"
+                    "1. Brief explanation of what the code does\n"
+                    "2. Testability assessment\n"
+                    "3. TESTING SCENARIOS in this exact format:\n\n"
+                    "TESTING SCENARIOS:\n"
+                    "1. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+                    "2. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
+                    "3. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
+                    "Analysis to structure: " + prediction
+                )
+                
+                structured_response = self.model.invoke(structured_prompt)
+                prediction = structured_response.content
+            
+            # Generate the test case with the structured prediction
+            raw_output = self._generate_clean_test(package_name, code_location, function_name_and_arguments, prediction)
+            
+            # Clean up any markdown formatting that might be present
+            cleaned_output = self._clean_code_output(raw_output)
+            
+            return cleaned_output
+        except Exception as e:
+            print(f"Error generating test case: {str(e)}")
+            return f"// Error generating test case: {str(e)}"
+        
+    def fix_generated_code(
+        self, 
+        error_message: str,
+        current_test_code: str,
+        prediction: str,
+    ) -> str:
+        """
+        Fix issues in generated test code based on error messages from the Dart SDK.
+        Enhanced with online search and error pattern learning capabilities.
+        
+        Args:
+            error_message: The error message from the Dart SDK
+            current_test_code: The current test code that has issues
+            prediction: The original prediction about what the function does
+            
+        Returns:
+            Fixed test code that addresses the errors
+        """
+        try:
+            # Create a unique identifier for this error+code combination to track fix attempts
+            error_hash = self._generate_error_hash(error_message, current_test_code)
+            
+            # Check if we've seen and fixed this exact error before
+            if error_hash in self.error_fix_cache:
+                print(f"Using cached fix for error: {error_hash[:10]}...")
+                return self.error_fix_cache[error_hash]
+            
+            # Track fix attempts to avoid infinite loops
+            if error_hash not in self.attempted_fixes_for_error:
+                self.attempted_fixes_for_error[error_hash] = 0
+            
+            self.attempted_fixes_for_error[error_hash] += 1
+            
+            # If we've tried too many times, use different strategies or bail out
+            if self.attempted_fixes_for_error[error_hash] > self.max_error_fix_attempts:
+                print(f"Maximum fix attempts reached for error {error_hash[:10]}. Applying emergency fix...")
+                # Apply emergency fix that attempts to produce at least a basic test case
+                emergency_fixed = self._emergency_fix(current_test_code, error_message)
+                self.error_fix_cache[error_hash] = emergency_fixed
+                return emergency_fixed
+            
+            # Extract unique errors from the potentially repetitive error message
+            unique_errors = self._extract_unique_errors(error_message)
+            
+            # 1. First try our standard approach
+            if self.attempted_fixes_for_error[error_hash] == 1:
+                fixed_code = self._standard_ai_fix(unique_errors, current_test_code)
+                
+            # 2. If that didn't work, search online for solutions
+            elif self.attempted_fixes_for_error[error_hash] == 2:
+                # Search for online solutions for this error
+                online_solutions = self._search_for_error_solutions(unique_errors)
+                
+                # Use online solutions to enhance fix prompt
+                fixed_code = self._ai_fix_with_online_knowledge(unique_errors, current_test_code, online_solutions)
+                
+            # 3. Final attempt with different approach
+            else:
+                fixed_code = self._comprehensive_repair_attempt(error_message, current_test_code, prediction)
+            
+            # Apply additional specific rule-based fixes
+            fixed_code = self._apply_specific_fixes(fixed_code, unique_errors)
+            
+            # Cache the successful fix for this error
+            self.error_fix_cache[error_hash] = fixed_code
+            
+            return fixed_code
+        
+        except Exception as e:
+            print(f"Error fixing test code: {str(e)}")
+            # Try a simpler approach with manual fixes for common errors
+            try:
+                manually_fixed = self._manual_fix_common_errors(current_test_code, error_message)
+                return manually_fixed
+            except:
+                # If all else fails, return the original with error comments
+                return f"// Error while trying to fix the code: {str(e)}\n// Original error message: {error_message}\n\n{current_test_code}"
+    
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{main.py}$ file.}, label={lst:15}]
+    frameworkMap = {
+        'flutter': Flutter
+    }
+    
+    def getDBMS(git_url) -> DBMS:
+        project = Project(git_url)
+        framework = project.recognizeProjectFramework()
+        
+        if framework in frameworkMap:
+            project = frameworkMap[framework](git_url)
+            
+        dbms = DBMS(project)
+        
+        return dbms
+    
+    app = Flask(__name__)
+    CORS(app)
+    
+    # Post git project url
+    @app.route('/createProject', methods=['POST'])
+    def createProject():
+        if not request.json or not 'git_url' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        project = Project(git_url)
+        # print(project)
+        return jsonify({'message': f'{project}'})
+    
+    @app.route('/getDiagram', methods=['POST'])
+    def getDiagram():
+        # print(request.json)
+        if not request.json or not 'git_url' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        
+        dbms = getDBMS(git_url)
+        
+        diagram = dbms.getJsonDiagram()
+        return jsonify(diagram)
+    
+    @app.route('/getDiagram', methods=['OPTIONS'])
+    def getDiagramOptions():
+        print(request.json)
+        print("wrong method")
+        return jsonify({'message': 'Options request'})
+    
+    @app.route('/getBlockContent', methods=['POST'])
+    def getBlockContent():
+        if not request.json or not 'git_url' in request.json or not 'block_id' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        blockId = request.json['block_id']
+        
+        dbms = getDBMS(git_url)
+        blockContent = dbms.getBlockContent(blockId)
+        return jsonify(blockContent)
+        
+    @app.route('/getBlockPrediction', methods=['POST'])
+    def getBlockPrediction():
+        if not request.json or not 'git_url' in request.json or not 'block_id' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        blockId = request.json['block_id']
+        
+        dbms = getDBMS(git_url)
+        blockPrediction = dbms.getBlockPrediction(blockId)
+        return jsonify(blockPrediction)
+    
+    @app.route('/getBlockDetail', methods=['POST'])
+    def getBlockDetail():
+        if not request.json or not 'git_url' in request.json or not 'block_id' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        blockId = request.json['block_id']
+        
+        dbms = getDBMS(git_url)
+        # {
+           # 'content': blockContent,
+             # 'prediction': blockPrediction, 
+        # }
+        content = dbms.getBlockContent(blockId)
+        prediction = dbms.getBlockPrediction(blockId)
+        try: 
+            test_file_content = dbms.project.get_test_content ('block_' + str(blockId) + '_test.dart')
+        except Exception as e:
+            test_file_content = ''
+            
+        return jsonify({
+            'content': content,
+            'prediction': prediction,
+            'test_file_content': test_file_content,
+        })
+    
+    # dont know why this is needed
+    @app.route('/getBlockDetail', methods=['OPTIONS'])
+    def getBlockDetailOptions():
+        print(request.json)
+        print("wrong method")
+        return jsonify({'message': 'Options request'})
+    
+    @app.route('/updateBlockPrediction', methods=['POST'])
+    def updateBlockPrediction():
+        if not request.json or not 'git_url' in request.json or not 'block_id' in request.json or not 'prediction' in request.json:
+            return jsonify({'message': 'Invalid request'})
+        git_url = request.json['git_url']
+        blockId = request.json['block_id']
+        prediction = request.json['prediction']
+        
+        dbms = getDBMS(git_url)
+        dbms.updateBlockPrediction(blockId, prediction)
+        
+        return jsonify(
+            {
+                'message': 'Update success!',
+                'code': 200,
+                'success': True,
+            }
+        )
+    
+    @app.route('/updateBlockPrediction', methods=['OPTIONS'])
+    def updateBlockPredictionOptions():
+        print(request.json)
+        print("wrong method")
+        return jsonify({'message': 'Options request'})
+        
+    @app.route('/generateTest', methods=['POST'])
+    def generateTest():
+        try:
+            if not request.json or not 'git_url' in request.json or not 'block_id' in request.json:
+                return jsonify({'message': 'Invalid request'})
+            git_url = request.json['git_url']
+            blockId = request.json['block_id']
+            
+            dbms = getDBMS(git_url)
+            tg = Test_Generator()
+            
+            testFileContent = tg.generate_test_case(
+                package_name= dbms.project.getName(),
+                code_location=dbms.getBlockOriginalFile(blockId),
+                function_name_and_arguments=dbms.getBlockName(blockId),
+                prediction=dbms.getBlockPrediction(blockId),
+            )
+            file_name = 'block_' + str(blockId) + '_test.dart'
+            
+            dbms.project.create_test(
+                filename=file_name,
+                content=testFileContent,
+                isOverWrite=True
+            )
+            # validation process
+            run_result, run_error = dbms.project.run_test(file_name)
+            iteration_limit = 5
+            while run_error != '' and iteration_limit > 0:
+                new_test_content = tg.fix_generated_code(
+                    error_message=run_error,
+                    code_location=dbms.getBlockOriginalFile(blockId),
+                    function_name_and_arguments=dbms.getBlockName(blockId),
+                    prediction=dbms.getBlockPrediction(blockId),
+                )
+                dbms.project.create_test(
+                    filename=file_name,
+                    content=new_test_content,
+                    isOverWrite=True
+                )
+                run_result, run_error = dbms.project.run_test(file_name)
+                iteration_limit -= 1
+            
+            return jsonify(
+                {
+                    'message': 'Test generation success!',
+                    'code': 200,
+                    'success': True,
+                    'test_file_content': testFileContent,
+                }
+            )
+        except Exception as e:
+            return jsonify({'message': str(e)})
+    
+    @app.route('/generateTest', methods=['OPTIONS'])
+    def generateTestOptions():
+        print(request.json)
+        print("wrong method")
+        return jsonify({'message': 'Options request'})
+        
+    if __name__ == '__main__':
+        app.run(debug=True)
+\end{lstlisting}

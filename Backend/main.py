@@ -23,14 +23,6 @@ def getDBMS(git_url) -> DBMS:
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/hello', methods=['GET'])
-def hello():
-    return jsonify({'message': 'Hello, World!'})
-
-@app.route('/hello/<name>', methods=['GET'])
-def hello_name(name):
-    return jsonify({'message': f'Hello, {name}!'})
-
 # Post git project url
 @app.route('/createProject', methods=['POST'])
 def createProject():
