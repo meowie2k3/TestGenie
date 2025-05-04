@@ -280,6 +280,41 @@ Beside core modules, the Test Genie system also includes other component to help
 \end{itemize}
 \subsection{DBMS module}
 
+The \textbf{DBMS module} is component responsible for managing the database and facilitating interactions between the project's metadata and the database. It provides functionalities for storing, retrieving, and updating information related to blocks, connections, and projects in the system. The \textbf{DBMS} module is composed of the \textbf{DBMS} class and the \textbf{Table} class, each serving specific purposes in database management.
+
+\subsubsection{DBMS Class}
+
+The \textbf{DBMS} class (Listing A.21) is the primary interface for interacting with the database. It handles database initialization, project insertion, and retrieval of blocks and connections. This class is initialized with a \textbf{Project} instance and ensures that the database is ready for operations. The initialization flow involves checking whether the database is initialized using the \texttt{\_isDBinit} method. If not, the \texttt{\_initDB} method is called to create necessary tables and populate them with default values.
+
+When a new project is added, the \textbf{DBMS} class verifies if the project already exists in the database using the \texttt{\_isProjectExistInDB} method. If the project does not exist, the \texttt{\_insertProject} method maps the project's blocks and connections into the database. Blocks and connections are extracted from a \textbf{DependencyDiagram} instance associated with the project. These are then stored in respective tables using the \texttt{\_mapBlocksIntoDB} and \texttt{\_mapConnectionsIntoDB} methods.
+
+The class also provides methods for retrieving and updating data:
+\begin{itemize}
+    \item \texttt{getBlockName}, \texttt{getBlockContent}, and \texttt{getBlockPrediction} retrieve information about blocks based on their IDs.
+    \item \texttt{getBlockOriginalFile} performs backtracking to identify the original file associated with a block.
+    \item \texttt{updateBlockPrediction} updates a block's prediction in the database.
+\end{itemize}
+
+All database queries are executed through the \texttt{execute} method, which establishes a connection, executes the query, and closes the connection. The \textbf{DBMS} class employs a modular design, relying on the \textbf{Table} class for creating and executing SQL queries dynamically.
+
+\subsubsection{Table Class}
+
+The \textbf{Table} class (Listing A.16) provides a flexible and reusable framework for managing database tables. It abstracts SQL query generation, enabling the \textbf{DBMS} class to focus on higher-level operations. Each instance of the \textbf{Table} class represents a database table, defined by its name and columns.
+
+The \textbf{Table} class supports the following operations:
+\begin{itemize}
+    \item \textbf{Table Creation:} The \texttt{getCreateSQL} method generates an SQL query to create the table if it does not already exist. Column definitions are specified during initialization.
+    \item \textbf{Data Retrieval:} The \texttt{getSelectSQL} method constructs SQL queries for retrieving data. It supports both conditional and unconditional retrieval.
+    \item \textbf{Data Insertion:} The \texttt{getInsertSQL} method generates SQL queries for inserting data into the table. Column names and values are supplied as dictionaries.
+    \item \textbf{Data Update:} The \texttt{getUpdateSQL} method constructs SQL queries for updating existing records. Conditions and values are specified as dictionaries.
+\end{itemize}
+
+The \textbf{Table} class is heavily utilized by the \textbf{DBMS} class for creating and managing tables such as \texttt{Block} (Listing A.18), \texttt{Connection} (Listing A.20), \texttt{BlockType} (Listing A.17), and \texttt{ConnectionType} (Listing A.19). By encapsulating SQL query generation, the \textbf{Table} class ensures consistency and reduces redundancy across the system.
+
+\subsubsection{Integration and Workflow}
+
+Together, the \textbf{DBMS} and \textbf{Table} classes form a cohesive system for managing the Test Genie database. The \textbf{DBMS} class utilizes the \textbf{Table} class to dynamically generate SQL queries, enabling seamless interaction with the database. This architecture ensures that the database remains synchronized with the project's metadata, providing a reliable foundation for the Test Genie system's operations.
+
 \subsection{Backend - API implementation}
 
 \subsection{Frontend implemetation}

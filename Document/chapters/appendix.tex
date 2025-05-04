@@ -1296,3 +1296,408 @@ class AI_Agent:
     if __name__ == '__main__':
         app.run(debug=True)
 \end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{Table}$ class.}, label={lst:16}]
+class Table:
+    def __init__(self, name: str, columns: dict):
+        self.name = name
+        self.columns = columns
+        
+        
+    def getCreateSQL(self):
+        sql = f'CREATE TABLE IF NOT EXISTS {self.name} ('
+        for column in self.columns:
+            sql += f'{column} {self.columns[column]}, '
+        sql = sql[:-2] + ')'
+        return sql
+    
+    def getSelectSQL(self,fields: list ,conditions: dict):
+        # if conditions is empty, return all
+        res = f'SELECT '
+        if len(fields) == 0:
+            res += '*'
+        else:
+            for field in fields:
+                res += f'{field}, '
+            res = res[:-2]
+        res += f' FROM {self.name}'
+        
+        if len(conditions) > 0:
+            res += ' WHERE '
+            for condition in conditions:
+                res += f"{condition} = '{conditions[condition]}' AND "
+            res = res[:-4]
+            
+        return res
+        pass
+    
+    def getInsertSQL(self, values: dict):
+        sql = f'INSERT INTO {self.name} ('
+        for column in values:
+            sql += f'{column}, '
+        sql = sql[:-2] + ") VALUES ("
+        for column in values:
+            sql += f"'{values[column]}', "
+        sql = sql[:-2] + ')'
+        return sql
+    
+    def getUpdateSQL(self, values: dict, conditions: dict):
+        sql = f"UPDATE {self.name} SET "
+        for column in values:
+            sql += f"{column} = \'{values[column]}\', "
+        sql = sql[:-2] + " WHERE "
+        for column in conditions:
+            sql += f"{column} = \'{conditions[column]}\' AND "
+        sql = sql[:-4]
+        return sql
+    
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{getTable}$ function - BlockType class.}, label={lst:17}]
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
+        return Table(
+            'BlockType',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)'
+            }
+        )
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{getTable}$ function - Block class.}, label={lst:18}]
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
+        return Table(
+            'Block',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)',
+                'content': 'TEXT',
+                'prediction': 'TEXT',
+                'type': 'INT',
+                '': 'FOREIGN KEY (type) REFERENCES BlockType(id)'
+            }
+        )
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{getTable}$ function - ConnectionType class.}, label={lst:19}]
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
+        return Table(
+            'ConnectionType',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'name': 'VARCHAR(255)'
+            }
+        )
+    
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{getTable}$ function - Connection class.}, label={lst:20}]
+    @staticmethod
+    def getTable():
+        from DBMS.Table import Table
+        return Table(
+            'Connection',
+            {
+                'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'head': 'INT',
+                'tail': 'INT',
+                'type': 'INT',
+                '': 'FOREIGN KEY (head) REFERENCES Block(id)',
+                '':'FOREIGN KEY (tail) REFERENCES Block(id)',
+                '': 'FOREIGN KEY (type) REFERENCES ConnectionType(id)'
+            }
+        )
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={$\texttt{DBMS}$ class.}, label={lst:21}]
+class DBMS:
+    
+    _numberOfTables = 5
+    
+    def __init__(self, project) -> None:
+        self.project = project
+
+        # print(self._isDBinit())
+        if not self._isDBinit():
+            self._initDB()
+        
+        # print(self._isProjectExistInDB())
+        if not self._isProjectExistInDB():
+            self._insertProject()
+            
+        else:
+            # TODO: do something if project already exist
+            pass
+    
+    def getJsonDiagram(self) -> dict:
+        """
+        Get the diagram in json format
+        Dict structure:
+        {
+            project: "project_name",
+            blocks: [
+                {
+                    id: 1,
+                    name: "block_name",
+                    content: "block_content",
+                    prediction: "block_prediction",
+                    type: "block_type"
+                }
+            ]
+            connections: [
+                {
+                    head: 1,
+                    tail: 2,
+                    type: "connection_type"
+                }
+            ]
+        }
+        """
+        # fetch diagram from db
+        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={})
+        blocks = self.execute(blockQuery)
+        
+        connectionQuery = Connection.getTable().getSelectSQL(fields=[], conditions={})
+        connections = self.execute(connectionQuery)
+        
+        # print(blocks)
+        # print(connections)
+        
+        res = {
+            'project': self.project.getName(),
+            'blocks': [],
+            'connections': []
+        }
+        for block in blocks:
+            res['blocks'].append({
+                'id': block[0],
+                'name': block[1],
+                'type': self._getEnumName('BlockType', block[2]),
+            })
+            
+        for connection in connections:
+            res['connections'].append({
+                'head': connection[1],
+                'tail': connection[2],
+                'type': self._getEnumName('ConnectionType', connection[3])
+            })
+            
+        return res
+        
+        pass
+    
+    def getBlockName(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['name'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
+    def getBlockContent(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['content'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+
+    def getBlockPrediction(self, blockId: int) -> str:
+        query = Block.getTable().getSelectSQL(fields=['prediction'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
+    def getBlockOriginalFile(self, blockId: int) -> str:
+        # take blockId as tail, query connection table to get head
+        # backtracking until reach FILE block type and return the blockname
+        # print('blockId:', blockId)
+        query = Connection.getTable().getSelectSQL(fields=['head'], conditions={
+            'tail': blockId
+        })
+        res = self.execute(query)
+        if len(res) > 0:
+            headId = res[0][0]
+            query = Block.getTable().getSelectSQL(fields=['name', 'type'], conditions={
+                'id': headId
+            })
+            res = self.execute(query)
+            if len(res) > 0:
+                blockType = self._getEnumName('BlockType', res[0][1])
+                if blockType == 'File':
+                    originalFile = res[0][0]
+                    # exclude lib/
+                    originalFile = originalFile.split('lib/')[1]
+                    return originalFile
+                else:
+                    return self.getBlockOriginalFile(headId)
+        pass
+    
+    def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
+        query = Block.getTable().getUpdateSQL(
+            values={
+                'prediction': self._handldApostropheString(prediction)
+            },
+            conditions={
+                'id': blockId
+            }
+        )
+        self.execute(query)
+        
+        pass    
+        
+    def _connect(self):
+        self.connection = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='1234',
+            database='test_genie'
+        )
+        self.cursor = self.connection.cursor(buffered=True)
+        
+    def _close(self):
+        self.cursor.close()
+        self.connection.close()
+        
+    def _isDBinit(self):
+        query = 'SHOW TABLES'
+        res = self.execute(query)
+        return len(res) >= self._numberOfTables
+    
+    def execute(self, query) -> list:
+        self._connect()
+        
+        if type(query) == str:
+            self.cursor.execute(query)
+        else:
+            for q in query:
+                self.cursor.execute(q)
+        self.connection.commit()
+        
+        self._close()
+        return self.cursor.fetchall() # type: ignore
+    
+    def _initDB(self):
+        projectQuery = self.project.getTable().getCreateSQL()
+        self.execute(projectQuery)
+        
+        blockCreateQuery = Block.getTable().getCreateSQL()
+        self.execute(blockCreateQuery)
+        
+        connectionQuery = Connection.getTable().getCreateSQL()
+        self.execute(connectionQuery)
+        self._insertEnumDB()
+        
+    def _insertEnumDB(self):
+        
+        blockTypeCreateQuery = BlockType.getTable().getCreateSQL()
+        # print(blockTypeQuery)
+        self.execute(blockTypeCreateQuery)
+        
+        blockTypeInsertQuery = BlockType.getInsertQuery()
+        # print(blockTypeInsertQuery)
+        self.execute(blockTypeInsertQuery)
+        
+        connectionTypeCreateQuery = ConnectionType.getTable().getCreateSQL()
+        self.execute(connectionTypeCreateQuery)
+        
+        connectionTypeInsertQuery = ConnectionType.getInsertQuery()
+        # print(connectionTypeInsertQuery)
+        self.execute(connectionTypeInsertQuery)
+    
+    def _isProjectExistInDB(self):
+        query = self.project.getTable().getSelectSQL(fields=['name'], conditions={
+            'name': self.project.getName()
+        })
+        # print(query)
+        res = self.execute(query)
+        return len(res) > 0
+    
+    def _insertProject(self):
+        # print('Inserting project')
+        # project table insert
+        query = self.project.getTable().getInsertSQL({
+            'name': self.project.getName(),
+            'directory': self.project.getPath()
+        })
+        # print(query)
+        self.execute(query)
+        # diagram insert
+        diagram = DependencyDiagram(self.project)
+        # not sure if this is needed
+        self.diagram = diagram
+        
+        blocks = diagram.blocks
+        connections = diagram.connections
+        self._mapBlocksIntoDB(blocks)
+        self._mapConnectionsIntoDB(connections)
+        
+    
+    def _mapBlocksIntoDB(self, blocks: list):
+        for block in blocks:
+            # TODO: handle apostrophe in content
+            # map into block table
+            query = Block.getTable().getInsertSQL({
+                'name': self._handldApostropheString(block.name),
+                'content': self._handldApostropheString(block.content),
+                'prediction': self._handldApostropheString(block.prediction),
+                'type': self._getEnumId('BlockType', block.type)
+            })
+            self.execute(query)
+        pass
+    
+    def _mapConnectionsIntoDB(self, connections: list):
+        for connection in connections:
+            # map into connection table
+            query = Connection.getTable().getInsertSQL({
+                'head': self._getBlockId(connection.head),
+                'tail': self._getBlockId(connection.tail),
+                'type': self._getEnumId('ConnectionType', connection.type)
+            })
+            self.execute(query)
+        pass
+    
+    def _getBlockId(self, block) -> int:
+        table = Block.getTable()
+        query = table.getSelectSQL(fields=['id'], conditions={
+            'name': self._handldApostropheString(block.name),
+            'content': self._handldApostropheString(block.content),
+            'prediction': self._handldApostropheString(block.prediction),
+            'type': self._getEnumId('BlockType', block.type)
+        })
+        res = self.execute(query)
+        return res[0][0]
+    
+    def _getEnumId(self, enum, enumName: str) -> int:
+        # base on enumname to get blocktype or connectiontype id
+        if enum in globals():
+            enumClass = globals()[enum]
+            table = enumClass.getTable()
+            query = table.getSelectSQL(fields=['id'], conditions={
+                'name': enumName
+            })
+            res = self.execute(query)
+            return res[0][0]
+        return 0
+    
+    def _getEnumName(self, enum, enumId: int) -> str:
+        if enum in globals():
+            enumClass = globals()[enum]
+            table = enumClass.getTable()
+            query = table.getSelectSQL(fields=['name'], conditions={
+                'id': enumId
+            })
+            res = self.execute(query)
+            return res[0][0]
+        return ''
+    
+    def _handldApostropheString(self, string: str) -> str:
+        return string.replace("'", "''")
+        pass
+    
+\end{lstlisting}
