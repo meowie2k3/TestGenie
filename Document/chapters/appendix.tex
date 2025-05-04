@@ -1637,7 +1637,6 @@ class DBMS:
         self._mapBlocksIntoDB(blocks)
         self._mapConnectionsIntoDB(connections)
         
-    
     def _mapBlocksIntoDB(self, blocks: list):
         for block in blocks:
             # TODO: handle apostrophe in content
@@ -1650,7 +1649,6 @@ class DBMS:
             })
             self.execute(query)
         pass
-    
     def _mapConnectionsIntoDB(self, connections: list):
         for connection in connections:
             # map into connection table
@@ -1661,7 +1659,6 @@ class DBMS:
             })
             self.execute(query)
         pass
-    
     def _getBlockId(self, block) -> int:
         table = Block.getTable()
         query = table.getSelectSQL(fields=['id'], conditions={
@@ -1672,7 +1669,6 @@ class DBMS:
         })
         res = self.execute(query)
         return res[0][0]
-    
     def _getEnumId(self, enum, enumName: str) -> int:
         # base on enumname to get blocktype or connectiontype id
         if enum in globals():
@@ -1684,7 +1680,6 @@ class DBMS:
             res = self.execute(query)
             return res[0][0]
         return 0
-    
     def _getEnumName(self, enum, enumId: int) -> str:
         if enum in globals():
             enumClass = globals()[enum]
@@ -1695,9 +1690,7 @@ class DBMS:
             res = self.execute(query)
             return res[0][0]
         return ''
-    
     def _handldApostropheString(self, string: str) -> str:
         return string.replace("'", "''")
         pass
-    
 \end{lstlisting}

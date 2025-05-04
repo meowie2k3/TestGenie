@@ -317,6 +317,102 @@ Together, the \textbf{DBMS} and \textbf{Table} classes form a cohesive system fo
 
 \subsection{Backend - API implementation}
 
-\subsection{Frontend implemetation}
+The \textbf{Backend API implementation} serves as the interface between the frontend and the core functionalities of the Test Genie system. It is implemented using the Flask framework, allowing for seamless communication via HTTP requests. The backend exposes multiple API endpoints for managing projects, generating dependency diagrams, retrieving block details, updating predictions, and generating test cases. Below is a detailed analysis of the key API endpoints provided in the \texttt{main.py} file (Listing A.15).
+
+\subsubsection{API Endpoints}
+
+\begin{itemize}
+    \item[-] \textbf{/createProject (POST):} 
+    This endpoint is responsible for initializing a new project in the system. The request must include a JSON payload with the \texttt{git\_url} of the project repository. Upon receiving the request, the backend clones the repository and creates a \textbf{Project} instance. The response confirms the successful creation of the project.
+
+    \item[-] \textbf{/getDiagram (POST):} 
+    This endpoint generates a dependency diagram for the specified project. The request must include the \texttt{git\_url} of the project. The backend creates a \textbf{DBMS} instance for the project and retrieves the diagram in JSON format using the \texttt{getJsonDiagram} method. The response includes the diagram's blocks and connections, which represent the project's logical structure.
+
+    \item[-] \textbf{/getBlockContent (POST):} 
+    This endpoint retrieves the content of a specific block in the project. The request must include \texttt{git\_url} and \texttt{block\_id}. The backend uses the \texttt{getBlockContent} method of the \textbf{DBMS} class to fetch the block's content from the database and returns it as a response.
+
+    \item[-] \textbf{/getBlockPrediction (POST):} 
+    This endpoint retrieves the AI-generated prediction for a specific block. Similar to \texttt{/getBlockContent}, the request must include \texttt{git\_url} and \texttt{block\_id}. The backend uses the \texttt{getBlockPrediction} method to fetch the prediction from the database and returns it.
+
+    \item[-] \textbf{/getBlockDetail (POST):} 
+    This endpoint provides comprehensive details about a block, including its content, prediction, and associated test file content (if available). The request must include \texttt{git\_url} and \texttt{block\_id}. The backend combines the results of \texttt{getBlockContent}, \texttt{getBlockPrediction}, and test file retrieval methods to provide a detailed response.
+
+    \item[-] \textbf{/updateBlockPrediction (POST):} 
+    This endpoint updates the prediction of a specific block in the database. The request must include \texttt{git\_url}, \texttt{block\_id}, and the new \texttt{prediction}. The backend uses the \texttt{updateBlockPrediction} method of the \textbf{DBMS} class to update the database. A success message is returned upon completion.
+
+    \item[-] \textbf{/generateTest (POST):} 
+    This endpoint orchestrates the process of generating a test case for a specific block. The request must include \texttt{git\_url} and \texttt{block\_id}. The backend performs the following steps:
+    \begin{enumerate}
+        \item Initializes a \textbf{DBMS} instance and a \textbf{Test\_Generator} instance.
+        \item Calls the \texttt{generate\_test\_case} method of the \textbf{Test\_Generator} class to create a test case based on the block's prediction and metadata.
+        \item Saves the generated test case to a file using the \textbf{Project} class's \texttt{create\_test} method.
+        \item Validates the test case by running it via the \texttt{run\_test} method.
+        \item If errors are encountered, iteratively refines the test case using the \texttt{fix\_generated\_code} method until the test passes or a retry limit is reached.
+    \end{enumerate}
+    The response includes the generated test file content and a success message upon successful execution.
+
+\end{itemize}
+
+\subsubsection{Error Handling}
+
+The backend API includes robust error handling mechanisms to ensure stability and reliability:
+\begin{itemize}
+    \item Missing or invalid request parameters result in a clear error message being returned to the client.
+    \item Methods like \texttt{run\_test} and \texttt{create\_test} include exception handling to manage file creation and test execution errors.
+    \item The \texttt{/generateTest} endpoint employs a retry mechanism to iteratively refine failing test cases, ensuring a high success rate.
+\end{itemize}
+
+\subsubsection{Integration with Core Modules}
+
+The API endpoints rely on the core modules of the Test Genie system:
+\begin{itemize}
+    \item The \textbf{Project Manager} module is used for project initialization and file management.
+    \item The \textbf{Business Logic Analyzer} module provides block predictions that guide test generation.
+    \item The \textbf{Test Generator} module handles test case creation and validation.
+    \item The \textbf{DBMS} module manages the database, ensuring consistent storage and retrieval of project metadata.
+\end{itemize}
+
+By leveraging these modules, the backend API provides a comprehensive interface for users to interact with the Test Genie system, facilitating efficient project management, dependency analysis, and test generation
+
+\subsection{Frontend implementation}
+
+The \textbf{Frontend} of the Test Genie system is responsible for providing a user-friendly interface to interact with the backend services. It is built using a React framework, leveraging components, routing, and services to achieve a modular and maintainable architecture. Below is an analysis of its structure and loading logic.
+
+\subsubsection{Directory Structure}
+
+The frontend source code is organized into the following key files and directories:
+\begin{itemize}
+    \item \textbf{\texttt{App.js} and \texttt{App.css}:} Serves as the entry point for the React application, rendering the main application structure and applying global styles.
+    \item \textbf{\texttt{index.js} and \texttt{index.css}:} Initializes the React application and injects it into the DOM. The \texttt{index.css} file applies global styles.
+    \item \textbf{\texttt{pages/}:} Contains React components representing individual pages in the application. Each page corresponds to a specific route.
+    \item \textbf{\texttt{routes/}:} Manages routing logic for the application, connecting URLs to their respective page components.
+    \item \textbf{\texttt{services/}:} Includes utility functions and services for making API calls to the backend. This modularizes and centralizes the API interaction logic.
+    \item \textbf{\texttt{setupTests.js}:} Configures the testing environment for the frontend, ensuring proper setup for unit and integration tests.
+    \item \textbf{\texttt{reportWebVitals.js}:} Used for measuring the application's performance metrics.
+    \item \textbf{\texttt{logo.svg}:} Contains assets like the application logo used across the frontend interface.
+    \item \textbf{\texttt{App.test.js}:} Includes test cases for the main application component.
+\end{itemize}
+
+\subsubsection{Loading Logic}
+
+The frontend follows a typical React application lifecycle with the following loading logic:
+\begin{enumerate}
+    \item When the application starts, \texttt{index.js} initializes the React application and renders the root \texttt{App.js} component into the DOM.
+    \item The \texttt{App.js} component manages the high-level structure of the application, including the navigation bar, footer, and main content area.
+    \item The \texttt{routes/} directory defines the mapping between URLs and React components, ensuring that the correct page is displayed for each route.
+    \item Components in the \texttt{pages/} directory dynamically render content based on the application's state and user interactions.
+    \item The \texttt{services/} directory provides reusable functions for making API calls to the backend. These functions are used within page components to fetch or send data.
+    \item Global styles and assets are applied using \texttt{App.css} and \texttt{index.css}, ensuring a consistent look and feel throughout the application.
+\end{enumerate}
+
+\subsubsection{Integration with Backend}
+
+The frontend interacts with the backend API endpoints via functions provided in the \texttt{services/} directory. These functions encapsulate HTTP requests, allowing components to focus on rendering logic without worrying about API interaction details. This separation of concerns improves maintainability and reduces code duplication.
+
+\subsubsection{Testing and Performance}
+
+The frontend includes a testing configuration file, \texttt{setupTests.js}, and test cases, such as \texttt{App.test.js}, to ensure the reliability of components. Performance metrics can be measured using the \texttt{reportWebVitals.js} file, providing insights into the application's runtime behavior.
+
+In summary, the frontend implementation of the Test Genie system is modular, maintainable, and well-integrated with the backend services, offering a seamless user experience for interacting with the system.
 
 \section{Implemetation Result - Demo}
