@@ -415,4 +415,107 @@ The frontend includes a testing configuration file, \texttt{setupTests.js}, and 
 
 In summary, the frontend implementation of the Test Genie system is modular, maintainable, and well-integrated with the backend services, offering a seamless user experience for interacting with the system.
 
-\section{Implemetation Result - Demo}
+\section{Implementation Result - Demo}
+
+This section provides a detailed overview of the Test Genie system's user interface and functionality as demonstrated in the application. Screenshots from the application are included to showcase its features, explain the purpose of each button, and describe how users can interact with the system.
+
+\subsection{Homepage}
+
+The homepage (Figure~\ref{fig:homepage}) serves as the entry point for users interacting with the system. It provides a user-friendly interface where users can initiate various actions such as uploading a project or exploring previously analyzed projects.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/homepage.png}
+    \caption{Homepage of Test Genie system.}
+    \label{fig:homepage}
+\end{figure}
+
+Main Features:
+\begin{itemize}
+    \item \textbf{Git project repo link:} Users can input the URL of their Git project repository to analyze.
+    \item \textbf{Submit Button:} Help user quickly submit their project url
+\end{itemize}
+
+\subsection{Interactive Dependency Diagram}
+
+The dependency diagram is one of the core components of the Test Genie system. It visualizes the relationships between blocks in a project, such as files, functions, and classes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/diagram-initial_load.png}
+    \caption{Initial load of the dependency diagram.}
+    \label{fig:diagram-initial_load}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/diagram-dragged.png}
+    \caption{Diagram blocks can be dragged to rearrange their positions.}
+    \label{fig:diagram-dragged}
+\end{figure}
+
+Key Interactions:
+\begin{itemize}
+    \item \textbf{Drag and Drop:} Users can click and drag blocks to rearrange them for better visualization (Figure~\ref{fig:diagram-dragged}).
+    \item \textbf{Zoom and Pan:} The diagram supports zooming in and out for detailed or high-level views. Users can pan the diagram to focus on specific areas.
+    \item \textbf{Click on Block:} Clicking a block opens its details, including content, predictions, and test cases.
+\end{itemize}
+
+\subsection{Block Detail View}
+
+When a block in the diagram is clicked, the Block Detail View is displayed (Figure~\ref{fig:block-detail}). This view provides detailed information about the selected block.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/block_detail.png}
+    \caption{Block Detail View showcasing the block's content and prediction.}
+    \label{fig:block-detail}
+\end{figure}
+
+Key Features:
+\begin{itemize}
+    \item \textbf{Source Code Content:} Displays the source code content of the block.
+    \item \textbf{Prediction:} Shows the AI-generated prediction for the block's functionality.
+    \item \textbf{Adjustable Prediction:} Users can modify the prediction to refine its accuracy.
+    \item \textbf{Test Case Viewer:} Displays the associated test cases for the block, if available.
+\end{itemize}
+
+\subsection{Adjustable Predictions}
+
+One of the unique features of Test Genie is the ability to adjust AI-generated predictions. Figure~\ref{fig:prediction-adjustable} showcases how users can interact with and modify predictions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/prediction-adjustable.png}
+    \caption{Prediction adjustment interface for refining AI-generated predictions.}
+    \label{fig:prediction-adjustable}
+\end{figure}
+
+Key Features:
+\begin{itemize}
+    \item \textbf{Editable Text Field:} Users can directly edit the prediction to increase its accuracy.
+    \item \textbf{Save Button:} Saves the updated prediction to the database.
+    \item \textbf{Cancel Button:} Discards changes made to the prediction.
+\end{itemize}
+
+\subsection{Test Generation}
+
+After analyzing the blocks, Test Genie allows users to generate test cases for specific blocks. Users can view the generated test cases and validate them.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/generated_test.png}
+    \caption{Generated test cases for a specific block.}
+    \label{fig:generated-test}
+\end{figure}
+
+Key Features:
+\begin{itemize}
+    \item \textbf{View Test Cases:} Displays the generated test cases for the selected block.
+    \item \textbf{Run Test Button:} Executes the test cases and displays the results.
+    \item \textbf{Iterative Refinement:} If tests fail, users can iteratively refine the test cases to address errors.
+\end{itemize}
+
+\subsection{Summary of Interactions}
+
+The Test Genie system combines a user-friendly interface with advanced functionalities to simplify the process of dependency analysis and test generation. By integrating interactive diagrams, adjustable predictions, and robust test generation, it provides a comprehensive solution for software analysis and testing.
