@@ -432,15 +432,13 @@ The homepage (Figure~\ref{fig:homepage}) serves as the entry point for users int
 
 Main Features:
 \begin{itemize}
-    \item \textbf{Git project repo link:} Users can input the URL of their Git project repository to analyze.
-    \item \textbf{Submit Button:} Help user quickly submit their project url
+    \item \textbf{Git project repo link input field:} Users can input the URL of their Git project repository to analyze.
 \end{itemize}
-
 \subsection{Interactive Dependency Diagram}
 
-The dependency diagram is one of the core components of the Test Genie system. It visualizes the relationships between blocks in a project, such as files, functions, and classes.
+The dependency diagram is one of the core components of the Test Genie system. It visualizes to users the relationships between blocks in a project, such as files, functions, and classes.
 
-\begin{figure}[H]
+\begin{figure}[H] 
     \centering
     \includegraphics[width=0.8\textwidth]{images/diagram-initial_load.png}
     \caption{Initial load of the dependency diagram.}
@@ -458,7 +456,7 @@ Key Interactions:
 \begin{itemize}
     \item \textbf{Drag and Drop:} Users can click and drag blocks to rearrange them for better visualization (Figure~\ref{fig:diagram-dragged}).
     \item \textbf{Zoom and Pan:} The diagram supports zooming in and out for detailed or high-level views. Users can pan the diagram to focus on specific areas.
-    \item \textbf{Click on Block:} Clicking a block opens its details, including content, predictions, and test cases.
+    \item \textbf{Click on Block:} Clicking a block opens its details, including content (source code), predictions, and test cases.
 \end{itemize}
 
 \subsection{Block Detail View}
@@ -495,7 +493,6 @@ Key Features:
 \begin{itemize}
     \item \textbf{Editable Text Field:} Users can directly edit the prediction to increase its accuracy.
     \item \textbf{Save Button:} Saves the updated prediction to the database.
-    \item \textbf{Cancel Button:} Discards changes made to the prediction.
 \end{itemize}
 
 \subsection{Test Generation}
@@ -512,8 +509,7 @@ After analyzing the blocks, Test Genie allows users to generate test cases for s
 Key Features:
 \begin{itemize}
     \item \textbf{View Test Cases:} Displays the generated test cases for the selected block.
-    \item \textbf{Run Test Button:} Executes the test cases and displays the results.
-    \item \textbf{Iterative Refinement:} If tests fail, users can iteratively refine the test cases to address errors.
+    \item \textbf{Quick copy button:} Allows users to quickly copy the test case code to the clipboard for easy integration into their projects.
 \end{itemize}
 
 \subsection{Summary of Interactions}
