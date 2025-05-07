@@ -3,19 +3,23 @@ This chapter presents a comprehensive evaluation of the \textbf{Test Genie} syst
 
 \section{Performance Analysis}
 
-The performance of the \textbf{Test Genie} system is evaluated based on two most complex process: AI generation time and BLA algorithm complexity. Others processes are negletable since their time complexity are O(1). 
+The performance of the \textbf{Test Genie} system is evaluated based on two most complex process: AI generation time and BLA algorithm complexity. Others processes are negletable since their time complexity are O(1). Although DBMS module is dependent on the server's response time, it is impossible to estimate the time complexity of the server's response. However, it is important to note that the DBMS module may become a bottleneck in the overall system performance.
 
-\subsection{AI generation time}
+To fully calculate the performance estimation of this system, let the estimation time for AI to generate tests is $T_{AI\_test}$ and the time to fully generate blocks in BLA is $T_{BLA}$. Since the block generating procedure contain two separate steps are source code splitting and blocks's prediction generation, we can define the time complexity of BLA as $T_{BLA} = T_{split} + T_{predict}$, where $T_{split}$ is the time complexity of source code splitting and $T_{predict}$ is the time complexity of blocks's prediction generation. The overall time complexity of the system can be expressed as:
+\begin{equation}
+T_{total} = T_{AI\_test} + T_{BLA} = T_{AI\_test} + T_{split} + T_{predict}
+\end{equation}
 
-\subsubsection{AI for prediction generation}
+If we account for DBMS module as a parameter $m$, the overall time complexity of the system can be expressed as:
+\begin{equation}
+T_{total} = T_{AI\_test} + T_{BLA} + m = T_{AI\_test} + T_{split} + T_{predict} + m
+\end{equation}
 
-\subsubsection{AI for test generation}
 
-\subsection{BLA Algorithm complexity}
+\subsection{Code Splitting Algorithm complexity}
 
-\subsubsection{Time Complexity}
+\subsection{AI generation time estimation}
 
-\subsubsection{Space Complexity}
 
 \section{Accuracy Evaluation}
 
