@@ -86,11 +86,11 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \section{System Design}
 
-\hspace{0.5cm}Overall, this system have two separate implementation: User Interface (Frontend) and Application service (Backend), connected through API Gateway. In this thesis, we will focus on how the service and each component inside is design.
+\hspace{0.5cm}Overall, this system have two separate implementation: User Interface (Frontend) and Application service (Backend), connected through a Request Handler, which will invoke the 
 % insert images/System design.drawio.png
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{images/System design.drawio.png}
+	\includegraphics[width=1.0\textwidth]{images/System design.drawio.png}
 	\caption{Test Genie’s overall component design}
 	\label{fig:system-design}
 \end{figure}
@@ -117,6 +117,8 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 \hspace{0.5cm}Furthermore, the \textit{BlockType entity} is used to define the classification of blocks, storing various block types such as files, classes or functions. This separation of component types allows for better categorization and analysis. The Project entity ensures that each component is tied to a specific source code directory, while ConnectType maintains clarity by classifying relationships between them. This ERD structure enables the BLA module to effectively visualize and analyze complex relationships within user projects, making it easier to identify patterns and dependencies for test generation.
 
 \hspace{0.5cm} Just like \textit{BlockType entity}, the \textit{ConnectType entity} is used to define the classification of connections, storing various connection types such as Call, Contain, Use relationships, etc. This separation of connection types allows for better categorization and analysis. The Project entity ensures that each component is tied to a specific source code directory, while ConnectType maintains clarity by classifying relationships between them. This ERD structure enables the BLA module to effectively visualize and analyze complex relationships within user projects, making it easier to identify patterns and dependencies for test generation.
+                                                                                                                                              
+% connection between  each module, how they interact with each other, why each module is needed => Why this design help complete user requirement
 
 % \begin{algorithm}[H]
 % 	\small
