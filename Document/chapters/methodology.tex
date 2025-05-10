@@ -86,22 +86,17 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \section{System Design}
 
-\hspace{0.5cm}Overall, this system have two separate implementation: User Interface (Frontend) and Application service (Backend), connected through a Request Handler, which will invoke the 
+\hspace{0.5cm}Overall, this system have two separate implementation: User Interface (Frontend) and Application service (Backend), connected through a Request Handler, which will invoke the required methods in the Application service. 
+% Since most calculation for each project only calculate once then stored into the database, the Request Handler will mostly invoke DBMS module to get calculated data. Only when data is not yet calculated, DBMS can deplay the response and invoke other modules.
 % insert images/System design.drawio.png
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1.0\textwidth]{images/System design.drawio.png}
-	\caption{Test Genie’s overall component design}
+	\caption{Test Genie’s overall module design}
 	\label{fig:system-design}
 \end{figure}
 
-\hspace{0.5cm}\textbf{Project manager.}	This component is abstracted by framework, handle anything related to the project’s files. This component also interact with Git to clone the required project and responsible to use the SDK to validate existing tests.
 
-\hspace{0.5cm}\textbf{BLA module}.	The BLA module plays a crucial role in analyzing the project's source code. It interacts with both project files and the database to break down the source code into components and identify relationships between classes and functions. These relationships are stored in a SQL database and visualized as component dependency diagrams to provide users with a clear representation of the project's structure. Analyzing strategy in this module will also be abstracted by framework.
-
-\hspace{0.5cm}\textbf{Test Generator.}	This component communicates with Large Language Models (LLMs) to generate test files based on the analyzed business logic. It uses prompts and additional embedded documentation to produce runnable and framework-compliant test files that meet the project’s requirements.
-
-\hspace{0.5cm}\textbf{Block of component ERD.}	To analyze user’s project easier, BLA module will firstly split the source files into components. These components will be connected together through different type of connection. 
 
 \begin{figure}[H]
 	\centering
