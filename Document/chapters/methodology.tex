@@ -86,10 +86,9 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \section{System Design}
 
-
 \subsubsection{Core Design Philosophy}
 
-The design of the Test Genie system is centered on addressing the issue of source code bias in AI-based test generation. By splitting the source code into smaller, independent blocks, the system ensures that each block can be analyzed and tested in isolation. This modular approach prevents unrelated contexts from influencing the AI's predictions, thereby improving the accuracy and reliability of the generated tests.
+\hspace{0.5cm}The design of the Test Genie system is centered on addressing the issue of source code bias in AI-based test generation. By splitting the source code into smaller, independent blocks, the system ensures that each block can be analyzed and tested in isolation. This modular approach prevents unrelated contexts from influencing the AI's predictions, thereby improving the accuracy and reliability of the generated tests. This design philosophy is illustrated in Figure~\ref{fig:system-design}.
 
 \subsubsection{System Architecture}
 The system is structured into three main layers: the \textbf{User Interface (UI)}, the \textbf{Request Handler} act as a bridge, and the \textbf{Application Service (Backend)}. Figure~\ref{fig:system-design} illustrates the overall module design of the system.
@@ -123,16 +122,16 @@ The system is structured into three main layers: the \textbf{User Interface (UI)
 
 \paragraph{Application Service (Backend)}
 
-The backend is the core of the Test Genie system and comprises several interconnected modules:
+\hspace{0.5cm}The backend is the core of the system and comprises several interconnected modules:
 \begin{itemize}
-    \item \textbf{Project Manager:} Handles project data and source code submission.
-    \item \textbf{Business Logic Analyzer (BLA):} Splits source code into blocks and identifies relationships between them.
+    \item \textbf{Project Manager:} Responsible for managing project data and handling source code submission.
+    \item \textbf{Business Logic Analyzer (BLA):} Splits the source code into blocks, identifies relationships between them, and generates initial predictions.
     \item \textbf{Validator:} Ensures that generated test cases are syntactically correct and runnable.
-    \item \textbf{Test Generator:} Uses AI-based predictions to create test cases for each block.
-    \item \textbf{Framework Analyzer:} Ensures framework compatibility.
+    \item \textbf{Test Generator:} Uses AI models to generate test cases for each block.
+    \item \textbf{Framework Analyzer:} Ensures compatibility with specific frameworks, such as Flutter.
     \item \textbf{Vector Stores:}
         \begin{itemize}
-            \item \textit{Syntax Vector Store:} Assists in parsing and understanding code syntax.
+            \item \textit{Syntax Vector Store:} Stores syntax-related data to assist in understanding code.
             \item \textit{Test Technique Vector Store:} Stores best practices for test generation.
         \end{itemize}
 \end{itemize}
@@ -145,6 +144,13 @@ The DBMS stores and manages data efficiently. Key entities include:
     \item \textbf{Connection Entity:} Defines relationships between blocks, forming a directed graph.
     \item \textbf{BlockType and ConnectionType Entities:} Classify blocks and connections to enable structured querying.
 \end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{images/DB block design.drawio.png}
+	\caption{Block Relational Database Design}
+	\label{fig:block-erd}
+\end{figure}
 
 \subsubsection{Workflow and Interaction}
 
@@ -164,13 +170,6 @@ The modular design of the backend, combined with the use of independent blocks, 
 \subsubsection{Alignment with User Requirements}
 
 The system design aligns with the requirements outlined in Table~\ref{tab:user-requirements}. By leveraging modular design, efficient database management, and AI-powered modules, Test Genie provides a robust solution for automated test generation.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.8\textwidth]{images/DB block design.drawio.png}
-	\caption{Block Relational Database Design}
-	\label{fig:block-erd}
-\end{figure}
 
 \subsubsection{Integration with AI Models}
 
