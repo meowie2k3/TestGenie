@@ -102,7 +102,7 @@ The system is structured into three main layers: the \textbf{User Interface (UI)
 
 \paragraph{User Interface (UI)}
 
-\hspace{0.5cm}The User Interface is web-based and designed to facilitate seamless interaction between users and the system. Key features include:
+\hspace{0.5cm}The User Interface is web-based and designed to facilitate interaction between users and the system. Key features include:
 \begin{itemize}
     \item \textbf{Diagram Visualization:} Displays graphical representations of the source code structure, including \textit{Nodes (Blocks)} and \textit{Edges (Connections)}.The \textit{Nodes (Blocks)} will contain information of a block data structure defined from backend: 
 		\begin{itemize}
@@ -111,7 +111,7 @@ The system is structured into three main layers: the \textbf{User Interface (UI)
 			\item Block Content (block's source code)
 			\item Block Prediction
 		\end{itemize}
-    \item \textbf{Interactive Elements:} Allows users to inspect and manipulate blocks, providing feedback to the system for improving test generation accuracy. With this human-in-the-loop approach, users can help the system correct the output of the BLA process.
+    \item \textbf{Interactive Elements:} Allows users zoom in, move blocks around and inspect the block's content. Further more, user can adjust the block's prediction directly. They can both adjust the block's prediction and test plan. With this human-in-the-loop approach, users can help the system correct the output of the BLA process, allow to-be-generated test closer to user's intention.
 \end{itemize}
 
 \hspace{0.5cm}The UI sends user inputs and requests to the backend via the \textit{Request Handler}.
@@ -124,17 +124,18 @@ The system is structured into three main layers: the \textbf{User Interface (UI)
 
 \hspace{0.5cm}The backend is the core of the system and comprises several interconnected modules:
 \begin{itemize}
-    \item \textbf{Project Manager:} Responsible for managing project data and handling source code submission.
-    \item \textbf{Business Logic Analyzer (BLA):} Splits the source code into blocks, identifies relationships between them, and generates initial predictions.
-    \item \textbf{Validator:} Ensures that generated test cases are syntactically correct and runnable.
+    \item \textbf{Project Manager:} Responsible for managing project data and handling source code cloning from git repositories.
+    \item \textbf{Business Logic Analyzer (BLA):} Splits the source code into blocks, identifies relationships between them, and generates initial predictions using AI models.
+    \item \textbf{Validator:} Embedded into \textit{Project Manager} module, this component use framework's SDK to validate the generated test files, ensures that generated test cases are syntactically correct and runnable.
     \item \textbf{Test Generator:} Uses AI models to generate test cases for each block.
-    \item \textbf{Framework Analyzer:} Ensures compatibility with specific frameworks, such as Flutter.
     \item \textbf{Vector Stores:}
         \begin{itemize}
             \item \textit{Syntax Vector Store:} Stores syntax-related data to assist in understanding code.
             \item \textit{Test Technique Vector Store:} Stores best practices for test generation.
         \end{itemize}
 \end{itemize}
+
+% NOTE: could explain more about BLA here
 
 \paragraph{Database Management System (DBMS)}
 
@@ -156,16 +157,17 @@ The DBMS stores and manages data efficiently. Key entities include:
 
 The system workflow involves the following steps:
 \begin{enumerate}
-    \item \textbf{Source Code Submission:} Users submit their project's source code via the UI.
-    \item \textbf{Business Logic Analysis:} The BLA module parses and splits the source code into blocks, which are stored in the database along with their relationships.
+    \item \textbf{Source Code Submission:} Users submit their project's git repository via the website (UI layer) homepage.
+    \item \textbf{Business Logic Analysis:} The BLA module parses and splits the source code into blocks with \textit{Backtracking algorithm}, which then stored in the database along with their relationships.
     \item \textbf{Test Generation:} The Test Generator uses AI models to generate test cases for each block.
     \item \textbf{Validation:} Generated tests are validated for syntax and functionality.
     \item \textbf{User Feedback:} Users refine and approve the generated test cases.
 \end{enumerate}
 
-\subsubsection{Addressing Source Code Bias}
+\subsubsection{Addressing Source Code Bias Issue}
 
-The modular design of the backend, combined with the use of independent blocks, ensures that the system mitigates source code bias. Each block is processed independently, preventing unrelated contexts from influencing test generation. This approach enhances the accuracy, reliability, and maintainability of the generated tests.
+% rewrite this part
+
 
 \subsubsection{Alignment with User Requirements}
 
