@@ -86,9 +86,13 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \section{System Design}
 
-\hspace{0.5cm}The system design of Test Genie is structured into three main layers: the \textbf{User Interface (UI)}, the \textbf{Request Handler}, and the \textbf{Application Service (Backend)}. These layers work together to achieve unbiased and efficient test generation by leveraging modular design principles and AI-based predictions.
 
-% Since most calculation for each project only calculate once then stored into the database, the Request Handler will mostly invoke DBMS module to get calculated data. Only when data is not yet calculated, DBMS can deplay the response and invoke other modules.
+\subsubsection{Core Design Philosophy}
+
+The design of the Test Genie system is centered on addressing the issue of source code bias in AI-based test generation. By splitting the source code into smaller, independent blocks, the system ensures that each block can be analyzed and tested in isolation. This modular approach prevents unrelated contexts from influencing the AI's predictions, thereby improving the accuracy and reliability of the generated tests.
+
+\subsubsection{System Architecture}
+The system is structured into three main layers: the \textbf{User Interface (UI)}, the \textbf{Request Handler} act as a bridge, and the \textbf{Application Service (Backend)}. Figure~\ref{fig:system-design} illustrates the overall module design of the system.
 % insert images/System design.drawio.png
 \begin{figure}[H]
 	\centering
@@ -97,7 +101,7 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 	\label{fig:system-design}
 \end{figure}
 
-\subsubsection{User Interface (UI)}
+\paragraph{User Interface (UI)}
 
 \hspace{0.5cm}The User Interface is web-based and designed to facilitate seamless interaction between users and the system. Key features include:
 \begin{itemize}
@@ -105,7 +109,7 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 		\begin{itemize}
 			\item Block ID
 			\item Block Type
-			\item Block Content
+			\item Block Content (block's source code)
 			\item Block Prediction
 		\end{itemize}
     \item \textbf{Interactive Elements:} Allows users to inspect and manipulate blocks, providing feedback to the system for improving test generation accuracy. With this human-in-the-loop approach, users can help the system correct the output of the BLA process.
@@ -113,57 +117,53 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \hspace{0.5cm}The UI sends user inputs and requests to the backend via the \textit{Request Handler}.
 
-\subsubsection{Request Handler}
+\paragraph{Request Handler}
 
-\hspace{0.5cm}The Request Handler serves as the intermediary between the UI and the backend services. It routes user requests to the appropriate backend modules, ensuring efficient communication and processing.
+\hspace{0.5cm}The Request Handler serves as the intermediary between the UI and the backend services. It routes user requests to the appropriate backend modules, invoke necessary computations and database queries, and returns back to UI for user. The resolving time of each request depends on each module that it invoke. If the project already calculated, the Request Handler will only need to query the database to get the result, which normally neglectable. If the project has not been calculated yet, the Request Handler will invoke the BLA module to calculate the project and store it into the database. The time complexity of each calculation for a project will be discussed in \textit{Chapter 5}.
 
-\subsubsection{Application Service (Backend)}
+\paragraph{Application Service (Backend)}
 
-\hspace{0.5cm}The backend is the core of the Test Genie system, comprising several interconnected modules:
+The backend is the core of the Test Genie system and comprises several interconnected modules:
 \begin{itemize}
-    \item \textbf{Project Manager:} Manages project data and handles the submission of source code.
-    \item \textbf{Business Logic Analyzer (BLA):} Splits source code into distinct \textit{Blocks} and identifies relationships between them. These relationships are stored as \textit{Connections} in the database.
-    \item \textbf{Validator:} Ensures that generated test cases are syntactically correct and runnable within the intended framework.
-    \item \textbf{Test Generator:} Uses AI-based predictions to create test cases for each block. It integrates with the \textit{LLM (Large Language Model)} for generating context-aware tests.
-    \item \textbf{Framework Analyzer:} Ensures compatibility with specific frameworks, such as Flutter, by analyzing framework-specific requirements.
+    \item \textbf{Project Manager:} Handles project data and source code submission.
+    \item \textbf{Business Logic Analyzer (BLA):} Splits source code into blocks and identifies relationships between them.
+    \item \textbf{Validator:} Ensures that generated test cases are syntactically correct and runnable.
+    \item \textbf{Test Generator:} Uses AI-based predictions to create test cases for each block.
+    \item \textbf{Framework Analyzer:} Ensures framework compatibility.
     \item \textbf{Vector Stores:}
         \begin{itemize}
-            \item \textit{Syntax Vector Store:} Stores syntax-related data to assist in test generation.
-            \item \textit{Test Technique Vector Store:} Stores testing techniques and best practices.
+            \item \textit{Syntax Vector Store:} Assists in parsing and understanding code syntax.
+            \item \textit{Test Technique Vector Store:} Stores best practices for test generation.
         \end{itemize}
 \end{itemize}
 
-\hspace{0.5cm}The backend modules communicate with the \textit{LLM} and vector stores to enhance the quality of generated tests.
+\paragraph{Database Management System (DBMS)}
 
-\subsubsection{Database Management System (DBMS)}
-
-\hspace{0.5cm}The system uses a relational database to store and manage data efficiently. Key entities include:
+The DBMS stores and manages data efficiently. Key entities include:
 \begin{itemize}
     \item \textbf{Block Entity:} Represents distinct units of the source code, such as files, classes, or functions.
-    \item \textbf{Connection Entity:} Defines relationships between blocks, forming a directed graph of the source code structure.
-    \item \textbf{BlockType and ConnectionType Entities:} Classify blocks and connections, respectively, enabling structured querying.
+    \item \textbf{Connection Entity:} Defines relationships between blocks, forming a directed graph.
+    \item \textbf{BlockType and ConnectionType Entities:} Classify blocks and connections to enable structured querying.
 \end{itemize}
-
-\hspace{0.5cm}The database design optimizes querying and retrieval for large-scale projects, ensuring scalability and performance.
 
 \subsubsection{Workflow and Interaction}
 
-\hspace{0.5cm}The end-to-end workflow of the system involves the following steps:
+The system workflow involves the following steps:
 \begin{enumerate}
     \item \textbf{Source Code Submission:} Users submit their project's source code via the UI.
-    \item \textbf{Business Logic Analysis:} The BLA module parses and splits the source code into blocks, storing them in the database along with their relationships.
-    \item \textbf{Test Generation:} The Test Generator consults the LLM, syntax, and test technique vector stores to generate test cases for each block.
-    \item \textbf{Validation:} Generated test cases are validated for syntax and compatibility by the Validator.
-    \item \textbf{User Feedback:} Users interact with the UI to inspect and refine the generated test cases.
+    \item \textbf{Business Logic Analysis:} The BLA module parses and splits the source code into blocks, which are stored in the database along with their relationships.
+    \item \textbf{Test Generation:} The Test Generator uses AI models to generate test cases for each block.
+    \item \textbf{Validation:} Generated tests are validated for syntax and functionality.
+    \item \textbf{User Feedback:} Users refine and approve the generated test cases.
 \end{enumerate}
 
 \subsubsection{Addressing Source Code Bias}
 
-\hspace{0.5cm}The modular design of the backend, combined with the use of independent blocks, ensures that the system mitigates source code bias. Each block is processed independently, preventing unrelated contexts from influencing test generation. This approach enhances the accuracy, reliability, and maintainability of the generated tests.
+The modular design of the backend, combined with the use of independent blocks, ensures that the system mitigates source code bias. Each block is processed independently, preventing unrelated contexts from influencing test generation. This approach enhances the accuracy, reliability, and maintainability of the generated tests.
 
 \subsubsection{Alignment with User Requirements}
 
-\hspace{0.5cm}The system design aligns with the requirements outlined in Table~\ref{tab:user-requirements}. By leveraging modular design, efficient database management, and AI-powered modules, Test Genie provides a robust solution for automated test generation.
+The system design aligns with the requirements outlined in Table~\ref{tab:user-requirements}. By leveraging modular design, efficient database management, and AI-powered modules, Test Genie provides a robust solution for automated test generation.
 
 \begin{figure}[H]
 	\centering
@@ -172,13 +172,13 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 	\label{fig:block-erd}
 \end{figure}
 
-\hspace{0.5cm}At the core of the diagram is the \textit{Block entity}, which represents distinct units of the source code identified during the project analysis. Each components stores attributes such as its type, content, prediction, and a reference to the project it belongs to. The block entity will not need to store the id of its project because it is stored as system files in the server and Backend can access it directly. This kind of design will reduce the size of the database and optimize the performance of the system.
+\subsubsection{Integration with AI Models}
 
-\hspace{0.5cm} The \textit{Connection entity} defines the relationships between blocks. It uses references to two distinct blocks: head and tail, forming a directional link between them. These connections are categorized by the ConnectType entity, which stores different types of connections that can exist between blocks, such as data flow, control flow, or dependency relationships. This architecture facilitates a comprehensive understanding of the project's code structure by mapping both the functional and logical connections between different blocks.
+The system integrates with AI models through the Test Generator and Business Logic Analyzer. The use of vector stores enhances the AI's ability to generate accurate predictions and test cases.
 
-\hspace{0.5cm}Furthermore, the \textit{BlockType entity} is used to define the classification of blocks, storing various block types such as files, classes or functions. This separation of component types allows for better categorization and analysis. The Project entity ensures that each component is tied to a specific source code directory, while ConnectType maintains clarity by classifying relationships between them. This ERD structure enables the BLA module to effectively visualize and analyze complex relationships within user projects, making it easier to identify patterns and dependencies for test generation.
+\subsection{Conclusion}
 
-\hspace{0.5cm} Just like \textit{BlockType entity}, the \textit{ConnectType entity} is used to define the classification of connections, storing various connection types such as Call, Contain, Use relationships, etc. This separation of connection types allows for better categorization and analysis. The Project entity ensures that each component is tied to a specific source code directory, while ConnectType maintains clarity by classifying relationships between them. This ERD structure enables the BLA module to effectively visualize and analyze complex relationships within user projects, making it easier to identify patterns and dependencies for test generation.
+The Test Genie system exemplifies a novel approach to automated test generation by addressing source code bias through modular design and AI integration. By splitting the source code into blocks and generating predictions for each block, the system achieves unbiased and efficient test generation, meeting the needs of modern software development workflows.
                                                                                                                                               
 % connection between  each module, how they interact with each other, why each module is needed => Why this design help complete user requirement
 
