@@ -1,5 +1,3 @@
-
-
 %% TODO: Make sure to use \textbf or \textit for highlighting keywords, and \cite{} to cite the corresponding quotations
 \section{Overview}
 
@@ -86,65 +84,205 @@ To achieve this, a Software Development Kit (SDK) is embedded for each supported
 
 \section{System Design}
 
-\subsubsection{Core Design Philosophy}
+\subsection{Core Design Philosophy}
 
-\hspace{0.5cm}The design of the Test Genie system is centered on addressing the issue of source code bias in AI-based test generation. By splitting the source code into smaller, independent blocks, the system ensures that each block can be analyzed and tested in isolation. This modular approach prevents unrelated contexts from influencing the AI's predictions, thereby improving the accuracy and reliability of the generated tests. This design philosophy is illustrated in Figure~\ref{fig:system-design}.
+\hspace{0.5cm}The fundamental challenge in AI-based test generation is source code bias, where the AI model's exposure to implementation details leads to tests that merely replicate code behavior rather than validating business requirements. Test Genie addresses this challenge through a novel architectural approach based on modular analysis and isolation of concerns.
 
-\subsubsection{System Architecture}
-The system is structured into three main layers: the \textbf{User Interface (UI)}, the \textbf{Request Handler} act as a bridge, and the \textbf{Application Service (Backend)}. Figure~\ref{fig:system-design} illustrates the overall module design of the system.
-% insert images/System design.drawio.png
+\hspace{0.5cm}Source code bias occurs when an AI model, given complete access to implementation details, generates tests that are essentially tautological—they validate that the code does what the code does, rather than what it should do according to business logic. This issue undermines the purpose of testing as an independent verification mechanism. Traditional approaches either restrict AI access to implementation details (limiting effectiveness) or accept this bias as inevitable.
+
+\hspace{0.5cm}Test Genie's approach is fundamentally different. By decomposing source code into discrete, semantically meaningful blocks and analyzing them in isolation, the system creates a separation between implementation and testing concerns. Each block represents a distinct functional unit with clear inputs, outputs, and business logic implications. This decomposition allows the system to:
+
+\begin{itemize}
+    \item Generate accurate predictions about each block's purpose without being overwhelmed by the complexity of the entire codebase
+    \item Focus on functional intent rather than implementation details
+    \item Isolate business logic from technical implementation
+    \item Enable effective human-in-the-loop correction at a manageable granularity
+\end{itemize}
+
+\hspace{0.5cm}This modular approach offers significant advantages over traditional methods. While conventional test generation might produce tests that trivially pass because they mirror the implementation logic, Test Genie's block-based analysis encourages tests that validate the expected behavior of each component according to its business purpose. Figure~\ref{fig:system-design} visualizes this architectural philosophy, showing how decomposition into blocks enables more effective analysis and test generation.
+
+\subsection{System Architecture}
+
+\hspace{0.5cm}The Test Genie system implements a three-tier architecture consisting of the \textbf{User Interface (UI)}, the \textbf{Request Handler} middleware, and the \textbf{Application Service (Backend)} layer. This architecture facilitates clear separation of concerns, enabling each component to fulfill its specific role in addressing the source code bias problem. Figure~\ref{fig:system-design} illustrates the overall module design of the system.
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1.0\textwidth]{images/System design.drawio.png}
-	\caption{Test Genie’s overall module design}
+	\caption{Test Genie's overall module design}
 	\label{fig:system-design}
 \end{figure}
 
-\paragraph{User Interface (UI)}
+\subsubsection{User Interface (UI) Layer}
 
-\hspace{0.5cm}The User Interface is web-based and designed to facilitate interaction between users and the system. Key features include:
+\hspace{0.5cm}The User Interface layer serves as the primary interaction point between users and the Test Genie system. Built as a web-based application, it combines visualization capabilities with interactive elements designed specifically to facilitate human-in-the-loop participation in the analysis and test generation process. Key components include:
+
 \begin{itemize}
-    \item \textbf{Diagram Visualization:} Displays graphical representations of the source code structure, including \textit{Nodes (Blocks)} and \textit{Edges (Connections)}.The \textit{Nodes (Blocks)} will contain information of a block data structure defined from backend: 
-		\begin{itemize}
-			\item Block ID
-			\item Block Type
-			\item Block Content (block's source code)
-			\item Block Prediction
-		\end{itemize}
-    \item \textbf{Interactive Elements:} Allows users zoom in, move blocks around and inspect the block's content. Further more, user can adjust the block's prediction directly. They can both adjust the block's prediction and test plan. With this human-in-the-loop approach, users can help the system correct the output of the BLA process, allow to-be-generated test closer to user's intention.
+    \item \textbf{Interactive Graph Visualization}: Renders the source code structure as a navigable graph of blocks and connections, allowing users to visually comprehend complex project architectures. The visualization employs force-directed graph algorithms to optimally arrange components based on their interconnections.
+    
+    \item \textbf{Block Inspector}: Provides detailed views of individual code blocks, including:
+    \begin{itemize}
+        \item \textbf{Source Code View}: Syntax-highlighted representation of the block's actual implementation
+        \item \textbf{Prediction Editor}: Interactive interface for viewing and refining the AI-generated predictions about the block's business purpose
+        \item \textbf{Test Preview}: Live preview of generated test cases with syntax highlighting
+    \end{itemize}
+    
+    \item \textbf{Human-in-the-Loop Controls}: Interface elements that enable users to:
+    \begin{itemize}
+        \item Navigate between related blocks and understand their connections
+        \item Modify AI-generated predictions when they misinterpret business logic
+        \item Trigger test regeneration after prediction updates
+        \item Download or copy generated test files
+    \end{itemize}
 \end{itemize}
 
-\hspace{0.5cm}The UI sends user inputs and requests to the backend via the \textit{Request Handler}.
+\hspace{0.5cm}The UI is designed with a focus on transparency and interpretability, allowing users to understand and influence the AI's reasoning process. This transparency directly addresses the source code bias problem by enabling users to identify and correct cases where the AI has focused too heavily on implementation details rather than business intent. By providing visual representation of blocks and their relationships, the UI helps users mentally separate implementation from specification, reinforcing the system's core philosophy.
 
-\paragraph{Request Handler}
+\subsubsection{Request Handler Layer}
 
-\hspace{0.5cm}The Request Handler serves as the intermediary between the UI and the backend services. It routes user requests to the appropriate backend modules, invoke necessary computations and database queries, and returns back to UI for user. The resolving time of each request depends on each module that it invoke. If the project already calculated, the Request Handler will only need to query the database to get the result, which normally neglectable. If the project has not been calculated yet, the Request Handler will invoke the BLA module to calculate the project and store it into the database. The time complexity of each calculation for a project will be discussed in \textit{Chapter 5}.
+\hspace{0.5cm}The Request Handler layer serves as the communication bridge between the UI and backend services, implementing a RESTful API architecture that processes user interactions and coordinates system responses. This layer implements several key functions:
 
-\paragraph{Application Service (Backend)}
-
-\hspace{0.5cm}The backend is the core of the system and comprises several interconnected modules:
 \begin{itemize}
-    \item \textbf{Project Manager:} Responsible for managing project data and handling source code cloning from git repositories.
-    \item \textbf{Business Logic Analyzer (BLA):} Splits the source code into blocks, identifies relationships between them, and generates initial predictions using AI models.
-    \item \textbf{Validator:} Embedded into \textit{Project Manager} module, this component use framework's SDK to validate the generated test files, ensures that generated test cases are syntactically correct and runnable.
-    \item \textbf{Test Generator:} Uses AI models to generate test cases for each block.
-    \item \textbf{Vector Stores:}
-        \begin{itemize}
-            \item \textit{Syntax Vector Store:} Stores syntax-related data to assist in understanding code.
-            \item \textit{Test Technique Vector Store:} Stores best practices for test generation.
-        \end{itemize}
+    \item \textbf{Request Routing and Validation}: Ensures that user requests are well-formed and directed to the appropriate backend services
+    
+    \item \textbf{Caching and Performance Optimization}: Maintains a cache of frequently accessed data to minimize redundant computation and database queries
+    
+    \item \textbf{Session Management}: Tracks user sessions and maintains contextual information about ongoing analysis tasks
+    
+    \item \textbf{Response Formatting}: Transforms backend results into structured data formats suitable for UI presentation
 \end{itemize}
 
-% NOTE: could explain more about BLA here
+\hspace{0.5cm}Table~\ref{tab:api-endpoints} outlines the primary API endpoints implemented by the Request Handler layer:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|p{3cm}|p{8cm}|}
+		\hline
+		\textbf{Endpoint} & \textbf{Method} & \textbf{Purpose} \\ \hline
+		/createProject & POST & Initialize project analysis by providing Git repository URL \\ \hline
+		/getDiagram & POST & Retrieve block and connection data for visualization \\ \hline
+		/getBlockContent & POST & Fetch source code and metadata for a specific block \\ \hline
+		/getBlockDetail & POST & Retrieve comprehensive information about a block, including predictions and tests \\ \hline
+		/getBlockPrediction & POST & Retrieve the current business logic prediction for a block \\ \hline
+		/updateBlockPrediction & POST & Update the business logic prediction for a block based on user input \\ \hline
+		/generateTest & POST & Generate test cases for a specified block using current predictions \\ \hline
+	\end{tabular}
+	\caption{Request Handler API Endpoints}
+	\label{tab:api-endpoints}
+\end{table}
+
+\hspace{0.5cm}The Request Handler's implementation of these endpoints ensures that user interactions with the UI efficiently translate to appropriate actions in the backend services. This layer's design is critical to maintaining the system's responsiveness during the iterative process of analysis, prediction refinement, and test generation.
+
+\subsubsection{Application Service (Backend) Layer}
+
+\hspace{0.5cm}The Backend layer contains the system's core functionality, implementing the computational processes that analyze source code, generate predictions, and create test cases. This layer comprises several specialized modules working in concert:
+
+\paragraph{Project Manager}
+\hspace{0.5cm}The Project Manager module serves as the gateway to source code analysis, with responsibilities including:
+
+\begin{itemize}
+    \item \textbf{Repository Handling}: Cloning Git repositories, managing local copies, and extracting relevant files
+    
+    \item \textbf{Framework Detection}: Identifying the programming framework (currently focusing on Flutter) by analyzing project structure and configuration files
+    
+    \item \textbf{Source File Extraction}: Identifying and extracting source files relevant for analysis while filtering out non-essential files
+    
+    \item \textbf{Test Environment Setup}: Creating and maintaining isolated environments for test execution and validation
+    
+    \item \textbf{Test Execution}: Running generated tests against the embedded framework SDK to validate correctness
+\end{itemize}
+
+\hspace{0.5cm}The Project Manager implements framework-specific adapters (currently Flutter) that encapsulate knowledge about project structures, file organizations, and testing conventions. This approach allows for future extensibility to additional frameworks while maintaining a consistent interface for other system components.
+
+\paragraph{Business Logic Analyzer (BLA)}
+\hspace{0.5cm}The Business Logic Analyzer represents the system's analytical core, implementing the block-based decomposition approach central to Test Genie's design philosophy. The BLA performs several critical functions:
+
+\begin{itemize}
+    \item \textbf{Source Code Parsing}: Converting raw source files into abstract syntax trees (ASTs) that can be analyzed programmatically
+    
+    \item \textbf{Block Identification}: Applying heuristic algorithms to identify semantically meaningful code blocks such as methods, functions, and classes
+    
+    \item \textbf{Connection Analysis}: Determining relationships between blocks based on method calls, inheritance, and other dependencies
+    
+    \item \textbf{Block Prediction Generation}: Applying AI analysis to each individual block to predict its business purpose
+\end{itemize}
+
+\hspace{0.5cm}The BLA's block identification process employs a specialized algorithm designed to identify code units that represent discrete functional components with well-defined inputs and outputs. This decomposition is central to addressing source code bias, as it allows the system to analyze each component's intended purpose without being overwhelmed by implementation details of the entire codebase.
+
+\hspace{0.5cm}Algorithm~\ref{alg:block-identification} outlines the block identification process:
+
+\begin{algorithm}[H]
+	\small
+	\caption{BlockIdentification(SourceFiles)}
+	\label{alg:block-identification}
+	\begin{algorithmic}[1]
+		\Require $SourceFiles$ is a list of source code files from the project
+		\State $Blocks \gets \emptyset$ \Comment{Initialize empty block collection}
+		\State $Connections \gets \emptyset$ \Comment{Initialize empty connections collection}
+		\For{each $file \in SourceFiles$}
+		    \State $ast \gets ParseSourceToAST(file)$
+		    \State $fileBlocks \gets ExtractBlocksFromAST(ast)$
+		    \For{each $block \in fileBlocks$}
+		        \State $block.id \gets GenerateUniqueIdentifier()$
+		        \State $block.name \gets ExtractBlockName(block)$
+		        \State $block.type \gets DetermineBlockType(block)$
+		        \State $block.content \gets ExtractSourceCode(block)$
+		        \State $block.originalFile \gets file.path$
+		        \State $Blocks \gets Blocks \cup \{block\}$
+		    \EndFor
+		    \State $fileConnections \gets IdentifyConnectionsInFile(fileBlocks)$
+		    \State $Connections \gets Connections \cup fileConnections$
+		\EndFor
+		\State $crossFileConnections \gets IdentifyCrossFileConnections(Blocks)$
+		\State $Connections \gets Connections \cup crossFileConnections$
+		\For{each $block \in Blocks$}
+		    \State $block.prediction \gets GeneratePrediction(block, Blocks, Connections)$
+		\EndFor
+		\State \Return $(Blocks, Connections)$
+	\end{algorithmic}
+\end{algorithm}
+
+\hspace{0.5cm}The prediction generation process employs an AI-based approach that combines contextual understanding with code analysis, leveraging language models enhanced with domain-specific knowledge of programming patterns and testing techniques.
+
+\paragraph{Test Generator}
+\hspace{0.5cm}The Test Generator module transforms business logic predictions into executable test cases tailored to the specific framework (currently Flutter/Dart). Key features include:
+
+\begin{itemize}
+    \item \textbf{Context-Aware Test Creation}: Generating tests that validate business requirements rather than implementation details
+    
+    \item \textbf{Test Framework Integration}: Producing tests compatible with the target framework's testing infrastructure
+    
+    \item \textbf{Dynamic Adjustment}: Adapting test generation based on user feedback and prediction refinements
+    
+    \item \textbf{Test Validation}: Verifying that generated tests are syntactically correct and executable
+\end{itemize}
+
+\hspace{0.5cm}The Test Generator addresses source code bias by focusing on testing the predicted business purpose rather than the implementation details. By generating tests based on predictions about what the code should do (which can be corrected by users if necessary) rather than what the code actually does, the system produces tests that provide genuine validation rather than tautological verification.
+
+\paragraph{Vector Stores}
+\hspace{0.5cm}The Vector Stores component implements a Retrieval-Augmented Generation (RAG) approach to enhance AI performance with domain-specific knowledge:
+
+\begin{itemize}
+    \item \textbf{Syntax Vector Store}: Contains embeddings of programming language syntax, patterns, and idioms
+    
+    \item \textbf{Test Technique Vector Store}: Maintains embeddings of testing best practices, patterns, and framework-specific approaches
+\end{itemize}
+
+\hspace{0.5cm}These vector stores enable the AI components to access relevant domain knowledge during analysis and generation tasks, producing more accurate and contextually appropriate outputs. By embedding knowledge about effective testing techniques, the system encourages tests that verify behavior against requirements rather than implementation.
 
 \paragraph{Database Management System (DBMS)}
+\hspace{0.5cm}The DBMS provides persistent storage and efficient retrieval mechanisms for the system's data structures:
 
-The DBMS stores and manages data efficiently. Key entities include:
 \begin{itemize}
-    \item \textbf{Block Entity:} Represents distinct units of the source code, such as files, classes, or functions.
-    \item \textbf{Connection Entity:} Defines relationships between blocks, forming a directed graph.
-    \item \textbf{BlockType and ConnectionType Entities:} Classify blocks and connections to enable structured querying.
+    \item \textbf{Block Storage}: Maintains records of identified code blocks, their content, and associated metadata
+    
+    \item \textbf{Connection Management}: Stores relationships between blocks, forming a navigable graph structure
+    
+    \item \textbf{Prediction Tracking}: Records and updates predictions for each block
+    
+    \item \textbf{Test Case Storage}: Stores generated test cases and their validation status
 \end{itemize}
+
+\hspace{0.5cm}The DBMS schema, illustrated in Figure~\ref{fig:block-erd}, supports the block-based decomposition central to the system's approach to mitigating source code bias.
 
 \begin{figure}[H]
 	\centering
@@ -153,53 +291,173 @@ The DBMS stores and manages data efficiently. Key entities include:
 	\label{fig:block-erd}
 \end{figure}
 
-\subsubsection{Workflow and Interaction}
+\subsection{System Workflow}
 
-The system workflow involves the following steps:
+\hspace{0.5cm}Test Genie's workflow implements a comprehensive process from source code intake to test generation, with specific mechanisms to address source code bias at each stage. The workflow proceeds through several distinct phases:
+
+\subsubsection{Project Initialization}
+
 \begin{enumerate}
-    \item \textbf{Source Code Submission:} Users submit their project's git repository via the website (UI layer) homepage.
-    \item \textbf{Business Logic Analysis:} The BLA module parses and splits the source code into blocks with \textit{Backtracking algorithm}, which then stored in the database along with their relationships.
-    \item \textbf{Test Generation:} The Test Generator uses AI models to generate test cases for each block.
-    \item \textbf{Validation:} Generated tests are validated for syntax and functionality.
-    \item \textbf{User Feedback:} Users refine and approve the generated test cases.
+    \item \textbf{Repository Acquisition}: The system clones the user-specified Git repository
+    \item \textbf{Framework Detection}: Project structure is analyzed to identify the programming framework
+    \item \textbf{Configuration Extraction}: Framework-specific configuration files are parsed to understand project organization
 \end{enumerate}
 
-\subsubsection{Addressing Source Code Bias Issue}
+\subsubsection{Source Code Analysis}
 
-% rewrite this part
+\begin{enumerate}
+    \item \textbf{File Filtering}: Non-essential files (e.g., assets, configurations) are excluded from analysis
+    \item \textbf{AST Generation}: Source files are parsed into abstract syntax trees
+    \item \textbf{Block Identification}: The BLA algorithm identifies discrete functional blocks
+    \item \textbf{Connection Mapping}: Relationships between blocks are discovered and cataloged
+\end{enumerate}
 
+\subsubsection{Business Logic Analysis}
 
-\subsubsection{Alignment with User Requirements}
+\begin{enumerate}
+    \item \textbf{Block-Level Analysis}: Each block is analyzed independently to focus on its specific purpose
+    \item \textbf{Contextual Enrichment}: Block analysis is enhanced with limited information about connected blocks
+    \item \textbf{Prediction Generation}: The system generates predictions about each block's business purpose
+    \item \textbf{Prediction Storage}: Predictions are stored in the database for future reference and refinement
+\end{enumerate}
 
-The system design aligns with the requirements outlined in Table~\ref{tab:user-requirements}. By leveraging modular design, efficient database management, and AI-powered modules, Test Genie provides a robust solution for automated test generation.
+\subsubsection{Human-in-the-Loop Refinement}
 
-\subsubsection{Integration with AI Models}
+\begin{enumerate}
+    \item \textbf{Visualization}: The block structure is visualized in the UI as a navigable graph
+    \item \textbf{Prediction Review}: Users can inspect and refine the AI-generated predictions
+    \item \textbf{Contextual Understanding}: The visualization helps users understand how blocks interact
+    \item \textbf{Feedback Integration}: User corrections are stored and used in subsequent analysis
+\end{enumerate}
 
-The system integrates with AI models through the Test Generator and Business Logic Analyzer. The use of vector stores enhances the AI's ability to generate accurate predictions and test cases.
+\subsubsection{Test Generation}
+
+\begin{enumerate}
+    \item \textbf{Block Selection}: Users select specific blocks for test generation
+    \item \textbf{Context Assembly}: The system gathers relevant information about the selected block and its connections
+    \item \textbf{Test Strategy Determination}: Based on block type and prediction, appropriate testing strategies are selected
+    \item \textbf{Test Case Generation}: The system generates test cases focused on validating the predicted business purpose
+    \item \textbf{Test Validation}: Generated tests are checked for syntax correctness and executability
+\end{enumerate}
+
+\subsubsection{Test Refinement}
+
+\begin{enumerate}
+    \item \textbf{Test Preview}: Users can preview generated tests in the UI
+    \item \textbf{Error Detection}: The system identifies and reports issues found during validation
+    \item \textbf{Automated Correction}: When possible, the system automatically corrects identified issues
+    \item \textbf{Test Finalization}: Users can download or copy the final test files for integration into their project
+\end{enumerate}
+
+\hspace{0.5cm}Throughout this workflow, the block-based approach systematically mitigates source code bias by:
+
+\begin{itemize}
+    \item Analyzing discrete functional units rather than entire codebases
+    \item Focusing on predicted business purpose rather than implementation details
+    \item Enabling human correction of predictions before test generation
+    \item Generating tests that validate intended behavior rather than actual implementation
+\end{itemize}
+
+\hspace{0.5cm}This workflow represents a significant advancement over traditional approaches that either accept source code bias as inevitable or attempt to avoid it by limiting access to implementation details. By decomposing the codebase into manageable units and enabling human oversight of the analysis process, Test Genie achieves a more effective balance between automation and human expertise.
+
+\subsection{Technical Implementation Details}
+
+\subsubsection{Block Decomposition Strategy}
+
+\hspace{0.5cm}Test Genie's approach to block decomposition balances granularity with semantic meaning. The system identifies blocks at several levels of abstraction:
+
+\begin{itemize}
+    \item \textbf{File-Level Blocks}: Represent entire source files, capturing overall purpose and structure
+    \item \textbf{Class-Level Blocks}: Represent individual classes, encapsulating state and behavior
+    \item \textbf{Method-Level Blocks}: Represent methods and functions, capturing specific behaviors
+    \item \textbf{Nested Blocks}: Represent significant nested structures like inner classes or complex control flows
+\end{itemize}
+
+\hspace{0.5cm}This multi-level approach ensures that blocks maintain semantic coherence while remaining manageable for analysis. The system employs framework-specific heuristics to identify meaningful blocks. For Flutter, this includes recognition of widget classes, state classes, and business logic components.
+
+\subsubsection{Prediction Generation Approach}
+
+\hspace{0.5cm}The prediction generation process employs a two-phase approach:
+
+\begin{enumerate}
+    \item \textbf{Initial Analysis}: Each block is analyzed in isolation to generate a preliminary understanding of its purpose
+    \item \textbf{Contextual Refinement}: Limited information about connected blocks is incorporated to refine the analysis
+\end{enumerate}
+
+\hspace{0.5cm}This approach balances the need for contextual understanding with the goal of avoiding source code bias. By limiting the contextual information to essential relationships rather than implementation details of connected blocks, the system maintains focus on business purpose over implementation mechanisms.
+
+\hspace{0.5cm}The AI model used for prediction generation is enhanced with domain-specific knowledge through the vector stores, enabling more accurate interpretation of programming patterns and idioms. This enhancement is particularly important for framework-specific constructs, such as Flutter's widget hierarchy and state management patterns.
+
+\subsubsection{Test Generation Strategy}
+
+\hspace{0.5cm}Test Genie's test generation strategy focuses on validating the predicted business purpose of each block, implementing a three-phase approach:
+
+\begin{enumerate}
+    \item \textbf{Test Planning}: Based on the block's predicted purpose, the system identifies appropriate test scenarios
+    \item \textbf{Test Structuring}: The system creates a framework-compliant test structure with appropriate setup and assertions
+    \item \textbf{Test Validation}: Generated tests are validated for syntax correctness and executability
+\end{enumerate}
+
+\hspace{0.5cm}The test generation process deliberately avoids direct examination of the block's implementation details beyond what is necessary to establish method signatures and input/output types. This approach ensures that tests validate the expected behavior rather than merely confirming the current implementation.
+
+\subsection{Addressing Source Code Bias Through System Design}
+
+\hspace{0.5cm}Test Genie's architecture directly addresses the challenge of source code bias in AI-based test generation through several key mechanisms:
+
+\begin{itemize}
+    \item \textbf{Block-Based Decomposition}: By analyzing discrete functional units rather than entire codebases, the system reduces the complexity of each analysis task and focuses on specific business purposes rather than implementation interactions.
+    
+    \item \textbf{Separation of Prediction and Testing}: The system maintains a clear separation between the prediction of business purpose and the generation of tests, allowing each process to focus on its specific objective without contamination.
+    
+    \item \textbf{Human-in-the-Loop Refinement}: By enabling users to review and correct AI-generated predictions, the system leverages human expertise to identify cases where the AI has focused too heavily on implementation details rather than business intent.
+    
+    \item \textbf{Context-Limited Analysis}: The system deliberately limits the contextual information used in analysis to prevent over-reliance on implementation details of related components.
+    
+    \item \textbf{Validation-Focused Testing}: Tests are designed to validate the predicted business purpose rather than to verify the current implementation, ensuring that they provide meaningful quality assurance rather than tautological confirmation.
+\end{itemize}
+
+\hspace{0.5cm}These design choices represent a fundamental shift from traditional approaches to AI-based test generation. Rather than attempting to generate tests directly from implementation details or avoiding implementation details entirely, Test Genie embraces a middle path that leverages the strengths of both approaches while mitigating their weaknesses.
+
+\hspace{0.5cm}By decomposing the codebase into manageable blocks, the system makes it feasible to analyze each component's intended purpose without being overwhelmed by implementation complexity. By enabling human oversight of the prediction process, the system leverages human expertise to correct cases where the AI has misinterpreted business intent. And by generating tests based on these refined predictions rather than implementation details, the system produces tests that provide genuine validation rather than merely confirming the current implementation.
+
+\hspace{0.5cm}This approach offers several advantages over traditional methods:
+
+\begin{enumerate}
+    \item \textbf{Improved Test Quality}: Tests validate business requirements rather than implementation details, providing more meaningful quality assurance.
+    
+    \item \textbf{Enhanced Maintainability}: Tests remain valid even as implementations change, as long as the business purpose remains consistent.
+    
+    \item \textbf{Greater Transparency}: The separation of prediction and testing makes the system's reasoning process more interpretable and correctable.
+    
+    \item \textbf{More Efficient Human Oversight}: By decomposing the codebase into manageable blocks, the system makes it feasible for humans to review and correct AI-generated predictions.
+\end{enumerate}
+
+\hspace{0.5cm}Through these mechanisms, Test Genie's architecture effectively addresses the challenge of source code bias in AI-based test generation, offering a more effective and efficient approach to automated testing that balances AI capabilities with human expertise.
+
+\subsection{Alignment with User Requirements}
+
+\hspace{0.5cm}Test Genie's system design directly addresses the user requirements outlined in Table~\ref{tab:user-requirements}:
+
+\begin{itemize}
+    \item \textbf{Requirement 001 - Read project's source code}: The Project Manager module implements robust Git repository handling capabilities, supporting major hosting platforms.
+    
+    \item \textbf{Requirement 002 - Download/copy unit test/integration test}: The UI provides intuitive mechanisms for downloading or copying generated test files.
+    
+    \item \textbf{Requirement 003 - Interactive business logic analyzation}: The block visualization and prediction editing features enable effective human-in-the-loop participation.
+    
+    \item \textbf{Requirement 004 - Performance}: The block-based decomposition approach and efficient caching mechanisms ensure reasonable performance even for larger projects.
+    
+    \item \textbf{Requirement 005 - Test file correctly reflect business model}: The separation of prediction and testing ensures that tests validate business requirements rather than implementation details.
+    
+    \item \textbf{Requirement 006 - Validate generated test}: The embedded SDK integration ensures that generated tests are syntactically correct and executable.
+\end{itemize}
+
+\hspace{0.5cm}This comprehensive alignment demonstrates the effectiveness of the system design in addressing the identified user needs while simultaneously tackling the challenge of source code bias.
 
 \subsection{Conclusion}
 
-The Test Genie system exemplifies a novel approach to automated test generation by addressing source code bias through modular design and AI integration. By splitting the source code into blocks and generating predictions for each block, the system achieves unbiased and efficient test generation, meeting the needs of modern software development workflows.
-                                                                                                                                              
-% connection between  each module, how they interact with each other, why each module is needed => Why this design help complete user requirement
+\hspace{0.5cm}Test Genie's system design represents a significant innovation in automated test generation, addressing the fundamental challenge of source code bias through a novel block-based decomposition approach. By analyzing discrete functional units, enabling human refinement of predictions, and generating tests based on business purpose rather than implementation details, the system produces more meaningful and effective tests than traditional approaches.
 
-% \begin{algorithm}[H]
-% 	\small
-% 	\caption{$(\text{Result}) \gets \texttt{Sample}(\text{Input1})$}
-% 	\label{alg:1}
-% 	\begin{algorithmic}[1]
-% 		\Require $\text{Input1}$ is a predefined parameter.
-% 		\State $\text{Set} \gets \emptyset$
-% 		\For{$\text{element} \in \text{Input1}$}
-% 		\If{$\text{Condition}(\text{element})$ is true}
-% 		\State $\text{Set} \gets \text{Set} \cup \{\text{Process}(\text{element})\}$
-% 		\Else
-% 		\State \textbf{continue}
-% 		\EndIf
-% 		\EndFor
-% 		\State $\text{Intermediate} \gets \texttt{Transform}(\text{Set})$
-% 		\State \Return $\text{Result}$
-% 	\end{algorithmic}
-% \end{algorithm}
+\hspace{0.5cm}The modular architecture, with its clear separation of concerns between UI, middleware, and backend services, provides a robust foundation for future enhancements and extensions. The current implementation, focused on the Flutter framework, demonstrates the viability of this approach while laying groundwork for expansion to additional programming environments.
 
-% Aenean arcu nulla, ornare sed arcu nec, mollis pharetra dolor. Maecenas rutrum efficitur dui nec rutrum. Sed suscipit, felis non malesuada ultrices, urna lorem porttitor mi, quis dignissim lectus mi a justo. Mauris erat ante, placerat eu sapien id, finibus maximus nisl. Nam cursus velit eu convallis molestie. Fusce eleifend fermentum elementum. Mauris congue non mauris a blandit. In vel ante mi. Etiam et consectetur quam, accumsan aliquam dolor. Aenean sed tristique massa.
+\hspace{0.5cm}Through its innovative design and implementation, Test Genie advances the state of the art in automated testing, offering a more effective balance between AI capabilities and human expertise that addresses the limitations of previous approaches.
