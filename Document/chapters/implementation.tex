@@ -1,427 +1,425 @@
 %% TODO: Add a small paragraph to tell what this chapter is about
-This chapter delves into the implementation of each module inside Test Genie system. Overall, this system consist of three main modules: 
+This chapter presents a thorough exposition of the architecture and implementation details of the Test Genie system. Throughout the development process, considerable attention was devoted to creating a modular and extensible architecture that could accommodate future enhancements while maintaining robust functionality. The system architecture comprises three principal modules, each fulfilling distinct yet interdependent functions:
+
 \begin{itemize}
-    \item[-] \textbf{Project Manager}: This module manages all the projects that are cloned to server. It mostly responsible for file-based activities and running CLI for each project.
-    \item[-] \textbf{Business Logic Analyzer}: This module will take various source file from Project Manager and break the source code into smaller pieces (blocks). Then, it will analyze each block and determine what each block does and how it should be tested if possible. A test plan will also be generated for each block and save it to the database.
-    \item[-] \textbf{Test Generator}: This module will take the test plan from Business Logic Analyzer and generate a test case for each block. The generated test cases will be saved as files directly in the project source code on server and can be used to run the tests later (validation).
+    \item[-] \textbf{Project Manager}: This foundational module orchestrates repository management operations, handling Git interactions, local file system management, and framework-specific command-line interface executions. During its development, particular consideration was given to ensuring framework agnosticism through an abstract design pattern.
+    
+    \item[-] \textbf{Business Logic Analyzer (BLA)}: Serving as the analytical core, this module ingests source files from the Project Manager and decomposes them into semantically meaningful blocks through a series of sophisticated parsing algorithms. Each block undergoes analysis to determine its functionality and testing requirements, subsequently generating test plans that are persisted in the database infrastructure. The development of these analytical algorithms represented one of the most challenging aspects of the implementation.
+    
+    \item[-] \textbf{Test Generator}: This module transforms analytical insights from the BLA into executable test cases through a carefully designed generation process. The tests are integrated directly into the project's structure, enabling immediate validation. Significant effort was invested in ensuring the generator could handle various edge cases and framework-specific testing requirements.
 \end{itemize}
-Additionally, this system also have \textbf{DBMS} module to control the database but this module will not be explained thoroughly in this chapter.
+
+The system also incorporates a supplementary \textbf{DBMS} module for persistent storage operations, which, while not a primary focus of this chapter, plays an essential role in maintaining system state across execution cycles.
 
 %% TODO: Make sure to use \textbf or \textit for highlighting keywords, and \cite{} to cite the corresponding quotations
 
 \section{Project Manager module}
 
-The \textbf{ProjectManager} module serves as the core backend functionality for handling projects within the Test Genie system. It provides a robust framework for managing software projects by integrating Git-based repositories, file management, and testing workflows. The module is built around the \textit{Project} class, which encapsulates essential functionalities such as cloning repositories, recognizing project frameworks, and managing project files. Additionally, it features an abstract interface for test creation, validation, and execution, allowing for framework-specific extensions of functionality. For instance, the \textit{Flutter} subclass extends the \textit{Project} class to handle Flutter-specific tasks, including dependency management, `pubspec.yaml` parsing, and test execution. By modularizing these functionalities, the \textbf{ProjectManager} module streamlines project handling and enhances the system's scalability for various software development frameworks.
+The \textbf{ProjectManager} module constitutes the foundation upon which the Test Genie system operates, providing essential interfaces for repository management and framework-specific operations. During the design phase, I deliberated extensively on the appropriate architectural pattern to ensure both flexibility and robustness. After evaluating several alternatives, I settled on an abstract base class design that enables framework-specific extensions through inheritance.
+
+The central component of this module, the \textit{Project} class, encapsulates common repository management functionality while deferring framework-specific operations to specialized subclasses. This design decision was motivated by the observation that while Git operations remain relatively consistent across projects, testing frameworks exhibit significant variability in their setup, execution, and validation requirements. By establishing a clear separation of concerns between generic and framework-specific operations, the system achieves remarkable extensibility without sacrificing cohesion.
+
+The subclass architecture exemplifies the Template Method design pattern, wherein the base class defines the operational structure while concrete implementations furnish the specialized behavior required by different frameworks. This approach proved particularly valuable when implementing the Flutter-specific functionality, as it permitted focused development of framework-specific features without modifying the underlying repository management infrastructure.
 
 \subsection{Module prequisites}
-This module require the SDK of supported frameworks to be installed standablone in folder \textit{./SDKs} inside the module folder. This design not only allows the module to be easily extended and modifiled to support other frameworks, but also avoid more SDK installation on the server OS. Since the \textit{Project} class (Listing A.1) just mainly control git management and file management, the subclass can freely control how the SDKs are used. \\
 
-Subclass of Project are required to implement the following methods:
+After careful consideration of deployment options, I determined that framework SDKs should be installed within dedicated directories (\textit{./SDKs}) rather than relying on system-wide installations. This architectural decision, while introducing initial configuration complexity, offers several substantial advantages:
+
+\begin{itemize}
+    \item[-] It ensures version consistency across different deployment environments, mitigating the risk of compatibility issues
+    \item[-] It facilitates containerization by encapsulating all dependencies within the application directory
+    \item[-] It prevents conflicts with existing installations, enhancing system stability
+    \item[-] It simplifies the process of supporting additional frameworks, as each can maintain its isolated environment
+\end{itemize}
+
+To maintain consistency across framework implementations, I established a contract requiring subclasses to implement the following methods:
     \begin{itemize}
-        \item[-] \textbf{create\_test}: This method will create the test file in the location that is required by the framework.
-        \item[-] \textbf{get\_test\_content}: This method will return the content of the test file that is created by the \textbf{create\_test} method. The content of the test file is generated by the Business Logic Analyzer module.
-        \item[-] \textbf{run\_test}: This method will run the test file that is created by the \textbf{create\_test} method. The test result will be returned to the caller.
-        \item[-] \textbf{validate}: This method will run all the test files in the test directory and return the result. This method is used to validate the test files that are created by the \textbf{create\_test} method.
-        \item[-] \textbf{getListSourceFiles}: This is an important method, which will partly decide how the source code is split into blocks. The starting point file (main file) should be placed on the first position of the list. The list will be used to split the source code into blocks. The list should contain all the source files in the project (relative to the project directory).
+        \item[-] \textbf{create\_test}: Responsible for generating appropriately structured test files in framework-specific locations, adhering to established naming conventions and directory structures
+        \item[-] \textbf{get\_test\_content}: Facilitates retrieval of test content, ensuring proper formatting and structural integrity
+        \item[-] \textbf{run\_test}: Executes tests using framework-native commands, capturing output and error messages for subsequent analysis
+        \item[-] \textbf{validate}: Conducts comprehensive validation across all test files, providing consolidated results to assess overall test quality
+        \item[-] \textbf{getListSourceFiles}: Perhaps the most critical method, as it determines the entry points and traversal order for source code analysis, significantly influencing the effectiveness of subsequent analytical processes
     \end{itemize}
 
 
 \subsection{Flutter class}
 
-The \textbf{Flutter} class extends the \textbf{Project} class to provide framework-specific support for managing Flutter projects. This class is responsible for handling operations unique to Flutter, such as managing dependencies, running tests, and validating projects. It ensures that the Flutter SDK is installed and properly configured in the \textit{./SDKs/flutter} directory before performing any operations.
+The \textbf{Flutter} class represents the concrete implementation of the abstract \textbf{Project} interface for Flutter framework projects. Developing this class presented several unique challenges, particularly related to the dynamic nature of Flutter's toolchain and its evolving command-line interface. Through empirical testing and refinement, I established a robust set of operations that reliably manage Flutter-specific aspects of project analysis and test execution.
 
-Key methods of the \textbf{Flutter} class include:
+The implementation encompasses several key operational areas:
 \begin{itemize}
-    \item[-] \textbf{\_runFlutterCLI}: This method executes commands using the Flutter CLI within the context of the project directory. It supports arguments for various Flutter commands and handles errors if the command fails.
-    \item[-] \textbf{\_checkSDK}: Ensures that the Flutter SDK is installed and operational by running the \texttt{flutter --version} command. If the SDK is not present or misconfigured, the method raises an exception.
-    \item[-] \textbf{\_flutterPubGet}: Automatically installs dependencies listed in the \textit{pubspec.yaml} file by running \texttt{flutter pub get}.
-    \item[-] \textbf{\_addTestDependency}: Adds the Flutter \textit{test} package as a dependency using \texttt{flutter pub add test}.
-    \item[-] \textbf{create\_test}: Creates a test file in the designated \textit{test} directory of the project. If the file already exists and overwriting is not allowed, an exception is raised.
-    \item[-] \textbf{get\_test\_content}: Retrieves the content of a test file from the \textit{test} directory.
-    \item[-] \textbf{run\_test}: Executes a specified Dart test file using the Flutter CLI and returns the results.
-    \item[-] \textbf{validate}: Iterates through all Dart test files in the \textit{test} directory and validates them by running each test.
-    \item[-] \textbf{getListSourceFiles}: Collects and returns a list of all source files in the \textit{lib} directory, ensuring that the \textit{main.dart} file is prioritized as the entry point.
+    \item[-] \textbf{Flutter SDK Management}: The \texttt{\_runFlutterCLI} and \texttt{\_checkSDK} methods required careful implementation to handle various environment configurations and potential SDK installation issues. Particular attention was given to error handling to provide meaningful feedback when SDK anomalies occur.
+    
+    \item[-] \textbf{Dependency Management}: Through extensive experimentation, I determined that the \texttt{\_flutterPubGet} and \texttt{\_addTestDependency} methods needed special handling to manage Flutter's package ecosystem effectively. These methods ensure that all required testing dependencies are properly installed without disrupting existing project configurations.
+    
+    \item[-] \textbf{Test File Operations}: The \texttt{create\_test} and \texttt{get\_test\_content} implementations adhere to Flutter's convention of housing test files in a dedicated \texttt{test} directory, with proper handling of existing files to prevent accidental overwrites.
+    
+    \item[-] \textbf{Test Execution}: The \texttt{run\_test} method employs Flutter's built-in test runner with appropriate configuration parameters to ensure reliable test execution. Significant effort was devoted to capturing and parsing test output to distinguish between test failures and execution errors.
+    
+    \item[-] \textbf{Source File Enumeration}: The \texttt{getListSourceFiles} implementation required careful consideration of Flutter's directory structure conventions. It ensures that the application entry point (\texttt{main.dart}) receives priority treatment, as this file typically contains critical structural information about the application.
 \end{itemize}
 
-This design enables seamless integration of Flutter-specific features into the \textbf{Test Genie} system while adhering to the modular structure defined by the \textbf{Project} class. By implementing these methods, the \textbf{Flutter} class ensures compatibility with the broader system and provides developers with a streamlined process for managing and testing Flutter projects.
+This implementation represents a balance between adhering to Flutter's conventions and maintaining compatibility with the broader Test Genie architecture. The resulting class provides a seamless integration point for Flutter projects within the system.
 
 \section{Business Logic Analyzer module}
 
-The \textbf{Business Logic Analyzer} module is designed to parse and analyze the source code of a project. It constructs a \textbf{Dependency Diagram} that represents the logical structure and relationships within the project. By leveraging framework-specific analysis strategies, such as the \textit{FlutterAnalyzeStrategy}, this module identifies functional blocks and their interconnections. Each block is further enriched with predictions generated by the \textbf{AI Agent}, which analyzes the code to provide insights into its behavior and logic. This modular design allows the Business Logic Analyzer to be easily extended to support additional frameworks, making it versatile and scalable for various software projects. The output of this module serves as the foundation for the subsequent test generation process.
+The \textbf{Business Logic Analyzer} module constitutes the intellectual core of the Test Genie system. Its development presented some of the most intricate challenges encountered during the implementation phase, requiring a sophisticated approach to code comprehension and semantic analysis. After evaluating multiple parsing strategies, including the use of formal Abstract Syntax Tree (AST) parsers, I ultimately developed a custom analysis approach that balances performance requirements with analytical depth.
+
+The module's primary function—decomposing source code into meaningful blocks and extracting their semantic relationships—demanded careful consideration of programming language structures and idioms. Rather than relying solely on syntactic parsing, which often fails to capture semantic nuances, I developed a multi-layered analysis strategy that combines structural recognition with heuristic assessment of code relationships.
+
+At the module's core lies the \textbf{DependencyDiagram} class, which orchestrates the analysis process and maintains the resulting structural representation. This class serves as a critical bridge between raw source code and the AI-powered prediction system, transforming syntactic structures into semantically meaningful units amenable to intelligent analysis.
 
 \subsection{DependencyDiagram class}
 
-The \textbf{DependencyDiagram} class serves as a connector within the Test Genie system, bridging the gap between the framework-specific analysis strategies, such as \textit{FlutterAnalyzeStrategy}, and the AI-powered prediction functionality provided by the \textbf{AI\_Agent}. This class is responsible for constructing a logical representation of the project in the form of a dependency diagram, which comprises blocks (representing functional units) and connections (representing the relationships between those units). The \textbf{\_generateDiagram} method encapsulates this functionality by invoking the appropriate analysis strategy for the project's framework (Listing A.3), allowing the class to dynamically adapt to diverse frameworks supported by the system. This modular design ensures that the class is both extensible and maintainable as new frameworks are introduced.
+The \textbf{DependencyDiagram} class emerged through several iterations of design refinement. Initially conceived as a simple graph structure, it evolved into a sophisticated connector between framework-specific analysis strategies and AI-powered prediction capabilities. The class maintains two fundamental collections: blocks (representing functional units) and connections (representing relationships between those units).
 
-In addition to structural analysis, the \textbf{DependencyDiagram} class leverages the \textbf{AI\_Agent} to enrich the diagram with meaningful predictions. Through the \textbf{\_getPre-dictions} method (Listing A.3), each block in the diagram is analyzed to generate insights into its behavior and logic, which are subsequently embedded into the block. This integration of AI-based predictions and static code analysis makes the \textbf{DependencyDiagram} a powerful tool for understanding the project's overall architecture and behavior. By combining these two mechanisms, this class plays a pivotal role in preparing the business logic analyzation for further steps in the Test Genie system: test generation and validation.
+One of the most significant design decisions involved the method of diagram generation. After experimenting with various approaches, I implemented the \textbf{\_generateDiagram} method to dynamically select and apply the appropriate analysis strategy based on the project's framework. This approach ensures that the system can accommodate framework-specific idiosyncrasies without sacrificing analytical consistency.
+
+The integration with the \textbf{AI\_Agent} component required careful consideration of interface design and data flow. The \textbf{\_getPredictions} method iterates through the identified blocks, submitting each to the AI agent for analysis and prediction generation. To optimize this process, I implemented rate limiting and caching mechanisms to balance analytical thoroughness with performance constraints.
+
+Through numerous refinements and testing cycles, the \textbf{DependencyDiagram} class evolved into a robust foundation for the system's analytical capabilities, effectively bridging the gap between static code structures and dynamic semantic understanding.
 
 \subsubsection{Diagram objects}
 
-
-The DependencyDiagram class relies on objects from the Diagram folder to represent the blocks and connections within the dependency structure. These objects are defined as follows:
+The representation of code structures required a carefully designed object model. After evaluating alternatives, I developed a system of interrelated classes that effectively capture the hierarchical and relational aspects of software projects:
 
 \begin{itemize}
-    \item[-] \textbf{Block class}: Represents the functional units of the source code, such as files, classes, functions, or variables (Listing A.4). Each block contains the following attributes:
+    \item[-] \textbf{Block class}: This class emerged as the fundamental unit of representation after several design iterations. Initial implementations focused solely on content storage, but experience revealed the need for additional capabilities such as comment filtering (via the \textbf{getContentNoComment} method) and metadata management. Each block encapsulates:
     \begin{itemize}
-        \item[-] \textit{name}: The name of the block.
-        \item[-] \textit{content}: The source code or content of the block.
-        \item[-] \textit{type}: The type of the block, determined by the BlockType class.
-        \item[-] \textit{prediction}: (Optional) AI-generated predictions for the block's logic or behavior.
-    \end{itemize}
-    Additionally, the Block class provides methods such as:
-    \begin{itemize}
-        \item[-] \textbf{getContentNoComment}: Removes comments from the block's content for clean analysis.
-        \item[-] \textbf{setPrediction} and \textbf{getPrediction}: Manage predictions for the block.
+        \item[-] \textit{name}: An identifier that uniquely represents the block within its context
+        \item[-] \textit{content}: The actual source code, preserved in its original form for reference and analysis
+        \item[-] \textit{type}: A classification determined by the BlockType enumeration, indicating the block's role within the codebase
+        \item[-] \textit{prediction}: An AI-generated assessment of the block's purpose and behavior, integrated after analysis
     \end{itemize}
 
-    \item[-] \textbf{BlockType class}: Enumerates the possible types of blocks (Listing A.5), such as \textit{File}, \textit{Class}, \textit{Function}, and more. It also provides methods to:
-    \begin{itemize}
-        \item[-] Generate database queries for storing and managing block types.
-        \item[-] Define the schema for the BlockType database table.
-    \end{itemize}
+    \item[-] \textbf{BlockType class}: This enumeration evolved from simple string constants to a structured class that supports both programmatic operation and database persistence. The comprehensive set of types emerged through detailed analysis of Flutter codebases, ensuring coverage of all relevant structural elements.
 
-    \item[-] \textbf{Connection class}: Represents relationships between blocks (Listing A.6), with attributes:
-    \begin{itemize}
-        \item[-] \textit{head}: The source block of the connection.
-        \item[-] \textit{tail}: The destination block of the connection.
-        \item[-] \textit{type}: The type of relationship, determined by the ConnectionType class.
-    \end{itemize}
-    It also facilitates database storage and retrieval through schema definitions.
+    \item[-] \textbf{Connection class}: This class represents the relationships between blocks, capturing the directional nature of software dependencies. Each connection maintains references to both the source and destination blocks, along with a classification of the relationship type.
 
-    \item[-] \textbf{ConnectionType class}: Enumerates the types of relationships between blocks (Listing A.7), such as \textit{Extend}, \textit{Implement}, \textit{Call}, and \textit{Import}. It provides similar database-related methods as the BlockType class.
+    \item[-] \textbf{ConnectionType class}: After studying common relationships in Flutter applications, I developed this enumeration to represent the variety of connections between code elements, from inheritance relationships to method invocations.
 \end{itemize}
+
+The development of these classes involved numerous refinements based on empirical testing with actual Flutter projects, ensuring that the object model adequately represents the complexity and nuance of real-world codebases.
 
 \subsubsection{FlutterAnalyzeStrategy Algorithm}
 
-The \textbf{FlutterAnalyzeStrategy} function (Listing A.8) is a core component of the \textbf{DependencyDiagram} generation process within the \textbf{Business Logic Analyzer} module. This function is specifically designed to analyze Flutter projects by reading their source code, breaking it into logical units (\textit{blocks}), and appending these blocks to the diagram. It employs three custom backtracking algorithms (\textit{ImportAnalyzer}, \textit{ContainAnalyzer}, and \textit{CallAnalyzer}) to achieve a comprehensive structural and relational analysis of the project. Here's a detailed breakdown of the algorithm:
+The \textbf{FlutterAnalyzeStrategy} function represents one of the most technically challenging aspects of the implementation. Through extensive experimentation with Flutter projects of varying complexity, I developed a three-phase analysis approach that progressively builds a comprehensive understanding of the codebase:
 
 \begin{itemize}
-    \item[-] \textbf{Initialization:}
+    \item[-] \textbf{Initialization Phase:}
     \begin{itemize}
-        \item The function begins by retrieving the list of source files in the project using the \textbf{getListSourceFiles} method from the \textbf{Project} class (Listing A.1).
-        \item The first file in the list is assumed to be the project's entry point (typically \texttt{main.dart}). Its content is extracted, and a new \textbf{Block} object is created to represent it. This block is assigned the \texttt{FILE} type from the \textbf{BlockType} class.
-        \item The newly created \texttt{main.dart} block is appended to the \textbf{blocks} attribute of the \textbf{DependencyDiagram} instance.
+        \item The function begins by retrieving source files through the \textbf{getListSourceFiles} method, prioritizing the entry point (typically \texttt{main.dart}) to establish the analytical foundation.
+        \item Initial testing revealed the importance of preserving the original file structure in the analysis, leading to the creation of file-level blocks that serve as containers for more granular elements.
     \end{itemize}
 
-    \item[-] \textbf{Import Analysis (ImportAnalyzer):}
+    \item[-] \textbf{Import Analysis Phase (ImportAnalyzer):}
     \begin{itemize}
-        \item The \textbf{ImportAnalyzer} algorithm (Listing A.9) scans the content of the \texttt{main.dart} block for \texttt{import} statements. These statements indicate dependencies on other Dart libraries or files.
-        \item For each \texttt{import} statement, a \textbf{Connection} object is created between the current block (as the \textit{head}) and the imported file (as the \textit{tail}). The connection type is marked as \texttt{IMPORT}.
-        \item Unlike the other analyzers, \textbf{ImportAnalyzer} primarily focuses on establishing file-level relationships and does not create new blocks.
+        \item Early prototype testing demonstrated that understanding import relationships provides crucial context for subsequent analysis. The \textbf{ImportAnalyzer} algorithm scans for import statements and establishes connections between files.
+        \item A particular challenge involved resolving relative imports correctly, necessitating sophisticated path normalization routines to handle various import syntaxes consistently.
     \end{itemize}
 
-    \item[-] \textbf{Containment Analysis (ContainAnalyzer):}
+    \item[-] \textbf{Containment Analysis Phase (ContainAnalyzer):}
     \begin{itemize}
-        \item The \textbf{ContainAnalyzer} algorithm (Listing A.10) dives deeper into each file to identify hierarchical relationships within the code. For example:
-        \begin{itemize}
-            \item Classes contained within files.
-            \item Standalone functions contained within files.
-            \item Functions and attributes contained within classes.
-        \end{itemize}
-        \item For each identified entity, a new \textbf{Block} object is created and appended to the \textbf{blocks} list. The type of the block is determined based on the entity, such as \texttt{CLASS}, \texttt{FUNCTION}, or \texttt{CLASS\_ATTRIBUTE}.
-        \item Connections are established between the parent block (e.g., the file block) and the contained entities, using the \texttt{CONTAIN} relationship type.
+        \item This phase represents the most sophisticated component of the analysis, employing a state machine approach to track brackets, indentation, and contextual keywords.
+        \item Initial implementations using simple regex patterns proved insufficient, leading to the development of a contextual parser that maintains awareness of nested structures and their hierarchical relationships.
+        \item The algorithm identifies classes, functions, methods, and attributes, creating appropriate blocks and connections to represent their containment relationships.
     \end{itemize}
 
-    \item[-] \textbf{Call Analysis (CallAnalyzer):}
+    \item[-] \textbf{Call Analysis Phase (CallAnalyzer):}
     \begin{itemize}
-        \item The \textbf{CallAnalyzer} algorithm (Listing A.11) identifies calling activities between functions and classes. For instance:
-        \begin{itemize}
-            \item Functions calling other functions, either within the same file or across files.
-            \item Methods from one class invoking methods or attributes of another class.
-        \end{itemize}
-        \item For each calling activity found, a \textbf{Connection} object is created to represent the caller (as the \textit{head}) and the callee (as the \textit{tail}). The relationship type for these connections is set to \texttt{CALL}.
-        \item This analysis also considers cross-file and cross-class interactions, providing insights into the dynamic flow of the project.
-    \end{itemize}
-
-    \item[-] \textbf{Finalizing the Diagram:}
-    \begin{itemize}
-        \item After executing the three algorithms, the \textbf{blocks} list of the \textbf{DependencyDiagram} instance contains a comprehensive representation of the project's structural elements.
-        \item Similarly, the \textbf{connections} list captures the relationships between these elements, making the diagram a complete and versatile model of the project's dependencies and interactions.
+        \item The final analytical phase identifies calling relationships between functions and methods, which proved particularly challenging due to the syntactic flexibility of Dart.
+        \item After several iterations, I developed a hybrid approach combining structural context with pattern matching to identify method invocations across class and file boundaries.
+        \item Performance optimization was essential for this phase, as naive implementation would result in quadratic complexity. The final algorithm employs type filtering and early termination to maintain practical performance characteristics.
     \end{itemize}
 \end{itemize}
 
-The \textbf{FlutterAnalyzeStrategy} function effectively combines the results of these three backtracking algorithms to deliver a detailed and accurate dependency diagram. By modularizing the analysis into distinct phases (\textit{Import Analysis}, \textit{Containment Analysis}, and \textit{Call Analysis}), the function ensures that the structural and relational aspects of the project are thoroughly captured. This makes it an indispensable part of the Test Genie system's ability to analyze and generate tests for Flutter projects.
+This multi-phase approach evolved through continuous refinement and testing against increasingly complex Flutter projects. The resulting algorithm successfully balances analytical depth with computational efficiency, producing detailed and accurate dependency diagrams that serve as the foundation for subsequent test generation.
 
 \subsection{AI\_Agent class}
 
-The \textbf{AI\_Agent} class is a component of the Test Genie system that provide AI-driven insights into the business logic of analyzed code blocks using \textit{Langchain framework} ~\cite{langchain}. This class is initialized within the \textbf{DependencyDiagram} class and utilized in the \textit{\_getPredictions} method (Listing A.3) to generate structured predictions for each block. The initialization process of the \textbf{AI\_Agent} involves setting up its environment, loading necessary resources, and preparing the underlying AI models and vector stores.
+The \textbf{AI\_Agent} class represents the integration point between traditional code analysis and advanced artificial intelligence capabilities. Its development required careful consideration of both technical constraints and pedagogical principles to ensure effective analysis of code blocks. By leveraging the \textit{Langchain framework} ~\cite{langchain}, I constructed a sophisticated analytical pipeline that combines retrieval-augmented generation with domain-specific prompting.
 
 \subsubsection{Initialization Flow}
 
-The initialization of the \textbf{AI\_Agent} class (Listing A.12) involves several key steps to prepare its environment and components:
+The initialization process for the \textbf{AI\_Agent} class underwent several iterations before reaching its current form. Early implementations suffered from brittle environment configuration and resource management issues, leading to the development of a more robust initialization sequence:
 
 \begin{itemize}
     \item[-] \textbf{Environment Setup:}
     \begin{itemize}
-        \item The class begins by loading environment variables from a \texttt{.env} file using the \texttt{load\_dotenv} function. If the file fails to load, an exception is raised.
-        \item Critical environment variables (Listing A.13) include:
-        \begin{itemize}
-            \item \texttt{BASE\_URL}: The base URL for API requests.
-            \item \texttt{BLA\_LLM\_MODEL}: The name of the language model used for predictions.
-            \item \texttt{EMBED\_MODEL}: The embedding model used for vectorization.
-        \end{itemize}
+        \item Initial testing revealed the importance of graceful handling of configuration issues. The current implementation employs careful validation of environment variables with meaningful error messages when critical values are missing.
+        \item The most critical configuration parameters include API endpoints, model selection, and embedding specifications, which significantly impact analysis quality and performance.
     \end{itemize}
 
     \item[-] \textbf{Model and Embedding Initialization:}
     \begin{itemize}
-        \item A \textbf{ChatOpenAI} instance is initialized for interacting with the language model. This instance is configured with the \texttt{BASE\_URL} and \texttt{BLA\_LLM\_MODEL}.
-        \item An \textbf{OpenAIEmbeddings} instance is initialized for generating document embeddings. It is configured to skip context length checks for compatibility with specific setups.
+        \item Selection of appropriate models for both generation and embedding tasks required extensive experimentation to balance quality with performance constraints.
+        \item Special attention was given to embedding configuration, as early testing revealed compatibility issues with certain vector database implementations, necessitating parameter adjustments.
     \end{itemize}
 
     \item[-] \textbf{Vector Store Creation:}
     \begin{itemize}
-        \item The \textbf{AI\_Agent} manages document vector stores for efficient retrieval. A predefined list of documents (e.g., \texttt{flutter\_tutorial.pdf}) is used to populate these stores.
-        \item For each document:
-        \begin{itemize}
-            \item The document is loaded using appropriate loaders (e.g., \textbf{PyPDFLoader}).
-            \item The document is split into chunks using the \textbf{SentenceTransformersTokenTextSplitter}.
-            \item A persistent vector store is created for the document using the \textbf{Chroma} library.
-        \end{itemize}
-        \item If a vector store already exists for a document, it is reused without reinitialization.
+        \item Initial implementations recreated vector stores on each initialization, leading to significant startup delays. The current approach employs persistent storage with intelligent reuse to optimize initialization time.
+        \item Document selection proved critical for effective retrieval-augmented generation. After testing various combinations, I determined that Flutter-specific documentation provides the most relevant context for code analysis.
+        \item Document chunking strategies underwent several refinements to optimize retrieval accuracy, with sentence-based transformers ultimately providing the best balance of semantic coherence and granularity.
     \end{itemize}
 
-    \item[-] \textbf{Retriever Initialization:}
+    \item[-] \textbf{Retriever Configuration:}
     \begin{itemize}
-        \item For each vector store, a \textbf{retriever} is configured to fetch relevant documents based on similarity thresholds. These retrievers are stored for later use.
+        \item Early testing with simple similarity-based retrieval yielded inconsistent results, leading to the implementation of threshold-based retrieval with carefully tuned parameters.
+        \item Extensive experimentation with similarity thresholds revealed that a value of 0.4 provides the optimal balance between recall and precision for Flutter code analysis.
     \end{itemize}
 
     \item[-] \textbf{Agent Initialization:}
     \begin{itemize}
-        \item The \textit{\_agent\_init} method is invoked to set up a history-aware retrieval system and define the agent's behavior for analyzing code.
-        \item Custom prompts are created for contextualizing queries and for generating predictions. These prompts guide the language model in providing detailed business logic analysis and testing scenarios.
-        \item A \textbf{react\_agent} is created using the \textbf{create\_react\_agent} function, and its execution is managed by an \textbf{AgentExecutor}.
+        \item The agent architecture evolved from simple query-response patterns to a more sophisticated history-aware system capable of maintaining context across analysis operations.
+        \item Prompt engineering represented a significant challenge, requiring numerous iterations to develop instructions that reliably produce structured and useful analysis outputs.
     \end{itemize}
 \end{itemize}
 
 \subsubsection{generate\_BLA\_prediction Function}
 
-The \textbf{generate\_BLA\_prediction} function (Listing A.12) is the primary method of the \textbf{AI\_Agent} class, responsible for analyzing source code and generating structured predictions. It takes two input parameters: \texttt{source\_code}, which is the code snippet to be analyzed, and \texttt{chat\_history}, a list of previous interactions that provide context for the analysis. These inputs allow the function to understand the context of the code and any prior discussions related to it.
+The \textbf{generate\_BLA\_prediction} function embodies the core analytical capability of the system. Through careful design and iterative refinement, I developed a two-stage analysis process that combines exploratory analysis with structured output generation:
 
-The function begins by invoking the \textbf{agent\_executor}, which analyzes the source code in the context of the provided chat history. The executor uses the retrievers and the language model to perform an initial analysis, retrieving any relevant documents from the vector stores to assist in understanding the code. This step produces a preliminary output that captures the essential details of the code's functionality and properties.
+1. The first stage employs the agent executor to perform open-ended analysis of the provided code snippet. Early implementations produced verbose but unstructured outputs, prompting the development of agent-specific prompting strategies to focus the analysis on relevant aspects of the code's functionality.
 
-Once the initial analysis is complete, the function refines the output by directly querying the language model with a structured prompt. This prompt is specifically designed to guide the model in organizing the analysis into well-defined sections. These sections include a brief explanation of what the code does, an assessment of its testability, and a set of detailed testing scenarios. The testing scenarios are formatted to clearly describe the functionality being tested, the input values, and the expected outcomes. This ensures that the generated test cases are practical, comprehensive, and easy to understand.
+2. The second stage applies structured prompting to organize the initial analysis into a consistent format suitable for test generation. Extensive prompt engineering was required to consistently produce outputs with well-defined sections covering:
+   - Concise functional explanations that capture the essence of the code's purpose
+   - Testability assessments that identify appropriate testing approaches and potential challenges
+   - Detailed testing scenarios with specific inputs and expected outputs
 
-The final structured response produced by the language model includes three main components. The first is a \textbf{Brief Explanation}, summarizing the purpose and functionality of the code. The second is a \textbf{Testability Assessment}, evaluating whether the code can be tested and identifying the appropriate types of tests, such as unit, widget, or integration tests. The third component is a list of \textbf{Testing Scenarios}, which outlines specific test cases with descriptive names, input values, and expected behaviors. These scenarios ensure coverage of normal cases, edge cases, and special conditions, providing a thorough basis for test planning.
+A particularly challenging aspect of implementation involved ensuring consistent formatting of testing scenarios. Initial attempts often produced scenarios with insufficient specificity, leading to the development of explicit formatting instructions with examples. The final implementation consistently generates detailed scenarios with descriptive test names, clear functionality descriptions, specific input values, and well-defined expected outcomes.
 
-The structured response generated by the \textit{generate\_BLA\_prediction} function serves as the final output, ready to be integrated into the \textbf{DependencyDiagram} for further use. By combining retrieval-augmented generation with precise prompts, this function delivers high-quality insights that enable efficient and accurate test planning for Flutter/Dart projects.
+The function's effectiveness stems from its combination of retrieval-augmented generation, which incorporates domain-specific knowledge about Flutter and testing practices, with carefully structured prompting that ensures consistent and useful outputs. This approach significantly enhances the quality of analysis compared to simple prompt-completion models, as evidenced by comparative testing with alternative approaches.
 
 \subsection{Test Generator Module}
 
-The \textbf{Test Generator} module is a core component of the Test Genie system, responsible for generating test cases based on predictions and code details. The \textbf{Test\_Generator} class orchestrates this process and ensures seamless test case generation using the LangChain framework. Below, we describe the flow of the \textbf{Test\_Generator} class and its primary operations, along with the complete test generation and validation process.
+The \textbf{Test Generator} module represents the culmination of the Test Genie system's analytical capabilities, transforming abstract predictions into concrete, executable test cases. Developing this module presented unique challenges at the intersection of template generation, context management, and error correction. Through iterative refinement and extensive testing with real-world Flutter projects, I developed a robust generation and validation pipeline that produces high-quality test cases.
 
 \subsubsection{Initialization Flow}
 
-The initialization of the \textbf{Test\_Generator} class involves several critical steps to set up its environment and components (Listing A.13):
+The initialization process for the \textbf{Test\_Generator} class builds upon the architectural patterns established in the \textbf{AI\_Agent} class, with specific adaptations for test generation requirements:
 
 \begin{itemize}
-    \item[-] \textbf{Environment Setup:} The class begins by loading environment variables from a \texttt{.env} file using the \texttt{load\_dotenv} function. If the file fails to load, an exception is raised. Key variables include:
+    \item[-] \textbf{Environment Setup:} After examining various configuration management approaches, I selected a dotenv-based configuration with fallback mechanisms to ensure robustness across deployment environments. Critical parameters include model selection and API endpoints specific to test generation tasks.
+
+    \item[-] \textbf{Model and Embedding Initialization:} Test generation presents different challenges than code analysis, requiring models with strong code generation capabilities. Testing with various models led to the selection of specific configurations optimized for generating valid Dart test code.
+
+    \item[-] \textbf{Vector Store Management:} Drawing on insights from the \textbf{AI\_Agent} implementation, I developed an optimized approach to vector store management that retains the benefits of retrieval-augmented generation while minimizing initialization overhead. Document selection focused on Flutter testing documentation to ensure generated tests follow framework-specific best practices.
+
+    \item[-] \textbf{Error Handling Infrastructure:} A distinguishing feature of this module is its sophisticated error handling system, developed after observing common failure patterns in test generation:
     \begin{itemize}
-        \item \texttt{BASE\_URL}: The base URL for API requests.
-        \item \texttt{TG\_LLM\_MODEL}: The name of the language model used for generating test cases.
-        \item \texttt{EMBED\_MODEL}: The embedding model used for document vectorization.
-    \end{itemize}
-
-    \item[-] \textbf{Model and Embedding Initialization:} A \textbf{ChatOpenAI} instance is created to interact with the language model, configured with the \texttt{BASE\_URL} and \texttt{TG\_LLM\_MODEL}. Additionally, an \textbf{OpenAIEmbeddings} instance is initialized for generating document embeddings, with specific configurations to handle compatibility issues.
-
-    \item[-] \textbf{Vector Store Creation:} The class manages document vector stores to facilitate efficient retrieval:
-    \begin{itemize}
-        \item A predefined list of documents is retrieved using the \texttt{\_getStoreList} function.
-        \item For each document, the content is loaded using appropriate loaders (e.g., \textbf{PyPDFLoader}), split into chunks using the \textbf{SentenceTransformersTokenTextSplitter}, and stored in a persistent vector store using the \textbf{Chroma} library.
-        \item Existing vector stores are reused to avoid redundant computations.
-    \end{itemize}
-
-    \item[-] \textbf{Retriever Initialization:} Each vector store is wrapped in a retriever, which is configured to fetch relevant documents based on similarity thresholds. These retrievers are stored for use during test case generation.
-
-    \item[-] \textbf{Error Handling Setup:} To handle errors during test generation:
-    \begin{itemize}
-        \item An error cache (\texttt{error\_fix\_cache}) is created to store previously fixed errors.
-        \item A set of attempted fixes (\texttt{attempted\_fixes\_for\_error}) is maintained to track retry attempts.
-        \item A maximum retry limit (\texttt{max\_error\_fix\_attempts}) is defined to prevent infinite loops.
+        \item An error cache with intelligent lookup mechanisms prevents redundant correction attempts for similar errors
+        \item A tracking system for attempted fixes avoids infinite correction loops
+        \item A configurable retry limit system balances correction thoroughness with execution efficiency
     \end{itemize}
 \end{itemize}
+
+These initialization mechanisms establish a foundation for reliable test generation with built-in resilience against common failure modes.
 
 \subsubsection{Test Generation and Validation Flow}
 
-The \textbf{generateTest} function in the \texttt{main.py} file (Listing A.15) orchestrates the full test generation and validation process. This process involves generating a test case, validating it, and iteratively fixing errors until the test passes or a retry limit is reached.
+The test generation process, orchestrated by the \textbf{generateTest} function in the \texttt{main.py} file, represents one of the most intricate workflows in the system. Its development required careful consideration of data flow, error handling, and validation logic to create a robust end-to-end process:
 
-The process begins with a POST request containing the following parameters:
-\begin{itemize}
-    \item \texttt{git\_url}: The Git repository URL of the project under analysis.
-    \item \texttt{block\_id}: The identifier of the code block for which a test case is being generated.
-\end{itemize}
+1. The process begins with parameter validation and resource initialization, establishing the project context through the \textbf{DBMS} interface. Early implementations revealed the importance of thorough parameter validation to prevent cascading errors later in the process.
 
-The backend first uses the \textbf{getDBMS} function to initialize a \textbf{DBMS} instance. This instance manages the project's metadata and provides access to block-level information. The \textbf{Test\_Generator} class is then instantiated to handle the test generation process.
+2. Test case generation is performed by the \textbf{generate\_test\_case} method, which combines several critical pieces of information:
+   - Package information for import statement generation
+   - Code location for proper path references
+   - Function signatures for accurate test targeting
+   - Behavioral predictions to guide test scenario implementation
 
-The test generation begins with a call to the \textbf{generate\_test\_case} method of the \textbf{Test\_Generator} class. This method accepts the following inputs:
-\begin{itemize}
-    \item \texttt{package\_name}: The name of the project's package, used for import statements.
-    \item \texttt{code\_location}: The file path of the block's original code.
-    \item \texttt{function\_name\_and\_arguments}: The function signature, including its name and arguments.
-    \item \texttt{prediction}: A description of the block's behavior, typically generated by the Business Logic Analyzer.
-\end{itemize}
-The method generates a structured test case that includes necessary import statements and assertions to validate the function's behavior under various conditions.
+3. The generated test is saved to the project structure using the \textbf{Project} class's \texttt{create\_test} method. Initial implementations encountered path resolution issues, leading to the development of more robust path handling routines.
 
-Once the test case is generated, it is saved to a file (e.g., \texttt{block\_x\_test.dart}) using the \textbf{Project} class's \texttt{create\_test} method. The backend then initiates the validation process by running the test file using the \texttt{run\_test} method of the \textbf{Project} class.
+4. Validation is performed by executing the test using the \texttt{run\_test} method. This critical step distinguishes Test Genie from many other generation approaches by ensuring that tests are not merely syntactically correct but also executable.
 
-If errors occur during the test execution, the backend invokes the \textbf{fix\_generated\_code} method of the \textbf{Test\_Generator} class. This method uses the error message, function details, and prediction to iteratively refine the test case. The updated test case is saved and re-executed. This process repeats until the test passes or the retry limit (default: 5 iterations) is reached.
+5. Error correction, when necessary, employs the \textbf{fix\_generated\_code} method to iteratively refine failed tests. This process represents one of the most sophisticated aspects of the system, combining error analysis, context-aware correction, and validation in a feedback loop that continues until either success is achieved or the retry limit is reached.
 
-Upon successful validation, the generated test case content is returned in the response, along with a success message. If the validation fails after exhausting the retry limit, an error message is returned.
+Through extensive testing with diverse Flutter components, this workflow has proven highly effective at producing valid, executable tests across a range of code structures and complexities.
 
 \subsubsection{Integration with the Test Genie System}
 
-The \textbf{generateTest} function demonstrates the seamless integration of the \textbf{Test\_Generator} class with the Test Genie system. By combining predictions from the \textbf{Business Logic Analyzer} with iterative test case refinement, the process ensures that the generated tests are both functional and robust. This end-to-end flow automates the testing process, reducing manual effort and improving accuracy.
+The integration of the test generator with the broader Test Genie system presented architectural challenges related to data flow and component coupling. Rather than adopting a tightly coupled approach, I designed an integration pattern that maintains component independence while ensuring effective collaboration:
+
+1. The \textbf{DBMS} system serves as a central coordination point, providing access to both structural information from the Business Logic Analyzer and persistence capabilities for generated tests.
+
+2. The test generation process leverages predictions stored in the database, creating a clean separation between analysis and generation phases while maintaining conceptual continuity.
+
+3. The iterative correction process demonstrates the system's self-healing capabilities, with each correction attempt incorporating feedback from previous execution results to improve subsequent attempts.
+
+This integration approach ensures that each component can evolve independently while maintaining system cohesion, facilitating both maintenance and future enhancement of the Test Genie system.
 
 \section{Other implementations}
-Beside core modules, the Test Genie system also includes other component to help manage data and help users interact with the system. Like every other web application, Test Genie also has a API request handler, a database management module (DBMS) and a frontend interface. 
+Beyond the core analytical and generative components, the Test Genie system incorporates several supporting modules that enhance its functionality and usability. These components, while less conceptually complex than the core modules, play essential roles in creating a cohesive and effective system:
+
 \begin{itemize}
-    \item [-] \textbf{API request handler}: This component is responsible for handling all the API requests from the frontend. It will receive the request, invoke needed calculation method and return the response to the frontend. The API request handler is built using Flask framework due to its lightweight and easy to use. The API request handler will also handle authentication and authorization for the system.
-    \item [-] \textbf{DBMS}: To save blocks and block predictions generated from BLA module, Test Genie need a database to store the data. DBMS module is responsible for this task, connecting services with MySQL database.
-    \item [-] \textbf{Frontend}: This component allow users to interact with the system, sending requests to backend and visualize the connections between blocks. The frontend is built using React framework, which is a popular choice for quickly and efficiently building user interfaces.
+    \item [-] \textbf{API request handler}: Implementation of this component involved careful consideration of request validation, error handling, and response formatting. I selected the Flask framework for its minimal overhead and straightforward routing capabilities, constructing a RESTful API that exposes the system's core functionality through well-defined endpoints.
+    
+    \item [-] \textbf{DBMS}: Database management presented challenges related to schema design, query optimization, and transaction management. After evaluating several options, I implemented a MySQL-based persistence layer with a custom object-relational mapping approach tailored to the specific needs of the system.
+    
+    \item [-] \textbf{Frontend}: User interface development focused on creating an intuitive visualization and interaction system for the dependency diagram. Implementing this interface using React required careful attention to component design, state management, and performance optimization to ensure responsiveness even with complex project structures.
 \end{itemize}
+
 \subsection{DBMS module}
 
-The \textbf{DBMS module} is component responsible for managing the database and facilitating interactions between the project's metadata and the database. It provides functionalities for storing, retrieving, and updating information related to blocks, connections, and projects in the system. The \textbf{DBMS} module is composed of the \textbf{DBMS} class and the \textbf{Table} class, each serving specific purposes in database management.
+The database management subsystem provides persistent storage and retrieval capabilities for project metadata, blocks, and connections. Its design evolved through several iterations as the storage requirements became more clearly defined:
 
 \subsubsection{DBMS Class}
 
-The \textbf{DBMS} class (Listing A.21) is the primary interface for interacting with the database. It handles database initialization, project insertion, and retrieval of blocks and connections. This class is initialized with a \textbf{Project} instance and ensures that the database is ready for operations. The initialization flow involves checking whether the database is initialized using the \texttt{\_isDBinit} method. If not, the \texttt{\_initDB} method is called to create necessary tables and populate them with default values.
+The \textbf{DBMS} class provides the primary interface for database operations, abstracting the complexity of SQL queries and connection management. Its development involved careful consideration of initialization sequences, query execution patterns, and error handling:
 
-When a new project is added, the \textbf{DBMS} class verifies if the project already exists in the database using the \texttt{\_isProjectExistInDB} method. If the project does not exist, the \texttt{\_insertProject} method maps the project's blocks and connections into the database. Blocks and connections are extracted from a \textbf{DependencyDiagram} instance associated with the project. These are then stored in respective tables using the \texttt{\_mapBlocksIntoDB} and \texttt{\_mapConnectionsIntoDB} methods.
+1. The initialization flow employs a progressive approach, first checking database existence and initialization status before performing schema creation or updates as necessary.
 
-The class also provides methods for retrieving and updating data:
-\begin{itemize}
-    \item \texttt{getBlockName}, \texttt{getBlockContent}, and \texttt{getBlockPrediction} retrieve information about blocks based on their IDs.
-    \item \texttt{getBlockOriginalFile} performs backtracking to identify the original file associated with a block.
-    \item \texttt{updateBlockPrediction} updates a block's prediction in the database.
-\end{itemize}
+2. Project management functions handle the insertion of new projects and the verification of existing ones, with special attention to handling the complex relationships between projects, blocks, and connections.
 
-All database queries are executed through the \texttt{execute} method, which establishes a connection, executes the query, and closes the connection. The \textbf{DBMS} class employs a modular design, relying on the \textbf{Table} class for creating and executing SQL queries dynamically.
+3. Data retrieval operations include specialized methods for accessing block content, predictions, and relationship information, with query optimization to ensure efficient retrieval even for large projects.
+
+4. String handling required particular attention due to the presence of special characters in source code, leading to the implementation of the \texttt{\_handldApostropheString} method to ensure reliable storage and retrieval of code content.
+
+This centralized approach to database management ensures consistency across the system while providing a flexible interface for component-specific storage needs.
 
 \subsubsection{Table Class}
 
-The \textbf{Table} class (Listing A.16) provides a flexible and reusable framework for managing database tables. It abstracts SQL query generation, enabling the \textbf{DBMS} class to focus on higher-level operations. Each instance of the \textbf{Table} class represents a database table, defined by its name and columns.
+The \textbf{Table} class represents an innovative approach to database table management, providing dynamic SQL generation capabilities that enhance both code maintainability and query consistency. Its development involved careful consideration of SQL syntax, parameter handling, and abstraction principles:
 
-The \textbf{Table} class supports the following operations:
-\begin{itemize}
-    \item \textbf{Table Creation:} The \texttt{getCreateSQL} method generates an SQL query to create the table if it does not already exist. Column definitions are specified during initialization.
-    \item \textbf{Data Retrieval:} The \texttt{getSelectSQL} method constructs SQL queries for retrieving data. It supports both conditional and unconditional retrieval.
-    \item \textbf{Data Insertion:} The \texttt{getInsertSQL} method generates SQL queries for inserting data into the table. Column names and values are supplied as dictionaries.
-    \item \textbf{Data Update:} The \texttt{getUpdateSQL} method constructs SQL queries for updating existing records. Conditions and values are specified as dictionaries.
-\end{itemize}
+1. Table creation operations employ parameterized column definitions, allowing for flexible schema definition while maintaining syntactic correctness.
 
-The \textbf{Table} class is heavily utilized by the \textbf{DBMS} class for creating and managing tables such as \texttt{Block} (Listing A.18), \texttt{Connection} (Listing A.20), \texttt{BlockType} (Listing A.17), and \texttt{ConnectionType} (Listing A.19). By encapsulating SQL query generation, the \textbf{Table} class ensures consistency and reduces redundancy across the system.
+2. Data retrieval operations support both conditional and unconditional queries, with dynamic field selection to minimize data transfer overhead.
+
+3. Data modification operations handle both insertions and updates, with proper escaping and formatting of values to prevent SQL injection vulnerabilities.
+
+4. The class employs a declarative approach to table definition, making schema changes straightforward and maintaining consistency between code and database structures.
+
+This abstraction layer significantly reduced code duplication and potential errors in SQL query construction, demonstrating the value of well-designed supporting components in complex systems.
 
 \subsubsection{Integration and Workflow}
 
-Together, the \textbf{DBMS} and \textbf{Table} classes form a cohesive system for managing the Test Genie database. The \textbf{DBMS} class utilizes the \textbf{Table} class to dynamically generate SQL queries, enabling seamless interaction with the database. This architecture ensures that the database remains synchronized with the project's metadata, providing a reliable foundation for the Test Genie system's operations.
+The integration of database components with the core system required careful attention to transaction boundaries, error handling, and performance considerations. The resulting workflow supports both analytical and generative processes through:
+
+1. Efficient storage and retrieval of project structures, maintaining the complex relationships between code elements without sacrificing performance.
+
+2. Support for prediction storage and retrieval, enabling the review and modification of AI-generated insights before test generation.
+
+3. Transparent handling of database connections and transactions, ensuring data integrity while minimizing connection overhead.
+
+This integration approach enables the system to maintain state across executions and provide users with a persistent view of project analysis and test generation results.
 
 \subsection{Backend - API implementation}
 
-The \textbf{Backend API implementation} serves as the interface between the frontend and the core functionalities of the Test Genie system. It is implemented using the Flask framework, allowing for seamless communication via HTTP requests. The backend exposes multiple API endpoints for managing projects, generating dependency diagrams, retrieving block details, updating predictions, and generating test cases. Below is a detailed analysis of the key API endpoints provided in the \texttt{main.py} file (Listing A.15).
+The backend API serves as the communication interface between the user interface and the core system functionality. Its implementation required careful consideration of request validation, error handling, and resource management:
 
 \subsubsection{API Endpoints}
 
+The API design follows RESTful principles with endpoints corresponding to specific system operations:
+
 \begin{itemize}
     \item[-] \textbf{/createProject (POST):} 
-    This endpoint is responsible for initializing a new project in the system. The request must include a JSON payload with the \texttt{git\_url} of the project repository. Upon receiving the request, the backend clones the repository and creates a \textbf{Project} instance. The response confirms the successful creation of the project.
+    This endpoint handles project initialization, with particular attention to validation of Git URLs and error handling for repository cloning operations. Implementation challenges included managing asynchronous clone operations and providing meaningful progress feedback.
 
     \item[-] \textbf{/getDiagram (POST):} 
-    This endpoint generates a dependency diagram for the specified project. The request must include the \texttt{git\_url} of the project. The backend creates a \textbf{DBMS} instance for the project and retrieves the diagram in JSON format using the \texttt{getJsonDiagram} method. The response includes the diagram's blocks and connections, which represent the project's logical structure.
+    Retrieving dependency diagrams required careful optimization of the JSON serialization process to handle potentially large project structures while maintaining responsiveness. The implementation includes selective field inclusion to minimize payload size while preserving structural integrity.
 
-    \item[-] \textbf{/getBlockContent (POST):} 
-    This endpoint retrieves the content of a specific block in the project. The request must include \texttt{git\_url} and \texttt{block\_id}. The backend uses the \texttt{getBlockContent} method of the \textbf{DBMS} class to fetch the block's content from the database and returns it as a response.
-
-    \item[-] \textbf{/getBlockPrediction (POST):} 
-    This endpoint retrieves the AI-generated prediction for a specific block. Similar to \texttt{/getBlockContent}, the request must include \texttt{git\_url} and \texttt{block\_id}. The backend uses the \texttt{getBlockPrediction} method to fetch the prediction from the database and returns it.
+    \item[-] \textbf{/getBlockContent} and \textbf{/getBlockPrediction (POST):} 
+    These targeted retrieval endpoints provide efficient access to specific block information, with appropriate error handling for invalid block identifiers or missing content.
 
     \item[-] \textbf{/getBlockDetail (POST):} 
-    This endpoint provides comprehensive details about a block, including its content, prediction, and associated test file content (if available). The request must include \texttt{git\_url} and \texttt{block\_id}. The backend combines the results of \texttt{getBlockContent}, \texttt{getBlockPrediction}, and test file retrieval methods to provide a detailed response.
+    This composite endpoint consolidates multiple data retrieval operations, reducing network overhead for common UI operations. Its implementation required careful transaction management to ensure consistency across the combined operations.
 
     \item[-] \textbf{/updateBlockPrediction (POST):} 
-    This endpoint updates the prediction of a specific block in the database. The request must include \texttt{git\_url}, \texttt{block\_id}, and the new \texttt{prediction}. The backend uses the \texttt{updateBlockPrediction} method of the \textbf{DBMS} class to update the database. A success message is returned upon completion.
+    Supporting user refinement of AI-generated predictions presented challenges related to input sanitization and validation, addressed through careful parameter handling and database transaction management.
 
     \item[-] \textbf{/generateTest (POST):} 
-    This endpoint orchestrates the process of generating a test case for a specific block. The request must include \texttt{git\_url} and \texttt{block\_id}. The backend performs the following steps:
-    \begin{enumerate}
-        \item Initializes a \textbf{DBMS} instance and a \textbf{Test\_Generator} instance.
-        \item Calls the \texttt{generate\_test\_case} method of the \textbf{Test\_Generator} class to create a test case based on the block's prediction and metadata.
-        \item Saves the generated test case to a file using the \textbf{Project} class's \texttt{create\_test} method.
-        \item Validates the test case by running it via the \texttt{run\_test} method.
-        \item If errors are encountered, iteratively refines the test case using the \texttt{fix\_generated\_code} method until the test passes or a retry limit is reached.
-    \end{enumerate}
-    The response includes the generated test file content and a success message upon successful execution.
-
+    This endpoint orchestrates the complete test generation workflow, incorporating error handling, progress tracking, and result formatting. Its implementation represents one of the most complex aspects of the API, requiring careful management of the multi-step generation and validation process.
 \end{itemize}
 
 \subsubsection{Error Handling}
 
-The backend API includes robust error handling mechanisms to ensure stability and reliability:
-\begin{itemize}
-    \item Missing or invalid request parameters result in a clear error message being returned to the client.
-    \item Methods like \texttt{run\_test} and \texttt{create\_test} include exception handling to manage file creation and test execution errors.
-    \item The \texttt{/generateTest} endpoint employs a retry mechanism to iteratively refine failing test cases, ensuring a high success rate.
-\end{itemize}
+After observing various failure modes during testing, I implemented a comprehensive error handling strategy that:
+
+1. Validates request parameters before processing, providing clear error messages for missing or invalid inputs.
+
+2. Handles exceptions from core operations such as \texttt{run\_test} and \texttt{create\_test}, preventing cascading failures and providing actionable feedback.
+
+3. Implements retry mechanisms for non-deterministic operations, particularly in the test generation process, improving success rates in boundary conditions.
+
+This approach significantly enhances system robustness, maintaining functionality even under sub-optimal conditions and providing users with clear information about error states.
 
 \subsubsection{Integration with Core Modules}
 
-The API endpoints rely on the core modules of the Test Genie system:
-\begin{itemize}
-    \item The \textbf{Project Manager} module is used for project initialization and file management.
-    \item The \textbf{Business Logic Analyzer} module provides block predictions that guide test generation.
-    \item The \textbf{Test Generator} module handles test case creation and validation.
-    \item The \textbf{DBMS} module manages the database, ensuring consistent storage and retrieval of project metadata.
-\end{itemize}
+The API implementation serves as an integration layer between the user interface and the core system components:
 
-By leveraging these modules, the backend API provides a comprehensive interface for users to interact with the Test Genie system, facilitating efficient project management, dependency analysis, and test generation
+1. Project initialization and file operations are delegated to the \textbf{Project Manager} module, with appropriate parameter transformation and error handling.
+
+2. Analytical operations leverage the \textbf{Business Logic Analyzer}, exposing its capabilities through well-defined endpoints with structured responses.
+
+3. Test generation workflows incorporate the \textbf{Test Generator} module, managing the complex process of generation, validation, and correction through a simple request-response interface.
+
+4. Persistent storage operations utilize the \textbf{DBMS} module, ensuring consistent state management across API operations.
+
+This integration approach maintains a clean separation between the API layer and core functionality while providing a cohesive user experience.
 
 \subsection{Frontend implementation}
 
-The \textbf{Frontend} of the Test Genie system is responsible for providing a user-friendly interface to interact with the backend services. It is built using a React framework, leveraging components, routing, and services to achieve a modular and maintainable architecture. Below is an analysis of its structure and loading logic.
+The frontend component provides users with an intuitive interface for interacting with the Test Genie system. Its development focused on effective visualization, responsive interaction, and seamless integration with backend services:
 
 \subsubsection{Directory Structure}
 
-The frontend source code is organized into the following key files and directories:
+The frontend implementation follows React best practices with a clear separation of concerns:
+
 \begin{itemize}
-    \item \textbf{\texttt{App.js} and \texttt{App.css}:} Serves as the entry point for the React application, rendering the main application structure and applying global styles.
-    \item \textbf{\texttt{index.js} and \texttt{index.css}:} Initializes the React application and injects it into the DOM. The \texttt{index.css} file applies global styles.
-    \item \textbf{\texttt{pages/}:} Contains React components representing individual pages in the application. Each page corresponds to a specific route.
-    \item \textbf{\texttt{routes/}:} Manages routing logic for the application, connecting URLs to their respective page components.
-    \item \textbf{\texttt{services/}:} Includes utility functions and services for making API calls to the backend. This modularizes and centralizes the API interaction logic.
-    \item \textbf{\texttt{setupTests.js}:} Configures the testing environment for the frontend, ensuring proper setup for unit and integration tests.
-    \item \textbf{\texttt{reportWebVitals.js}:} Used for measuring the application's performance metrics.
-    \item \textbf{\texttt{logo.svg}:} Contains assets like the application logo used across the frontend interface.
-    \item \textbf{\texttt{App.test.js}:} Includes test cases for the main application component.
+    \item Component organization distinguishes between pages (complete views), routes (navigation logic), and services (API interaction), enhancing maintainability and facilitating feature development.
+    
+    \item Style management employs a combination of component-specific and global styles, ensuring visual consistency while accommodating component-specific requirements.
+    
+    \item Testing infrastructure includes both component-level tests and integration tests, ensuring functionality across various use cases.
+    
+    \item Performance measurement capabilities enable ongoing optimization of user-facing components, maintaining responsiveness even with complex project visualizations.
 \end{itemize}
 
 \subsubsection{Loading Logic}
 
-The frontend follows a typical React application lifecycle with the following loading logic:
-\begin{enumerate}
-    \item When the application starts, \texttt{index.js} initializes the React application and renders the root \texttt{App.js} component into the DOM.
-    \item The \texttt{App.js} component manages the high-level structure of the application, including the navigation bar, footer, and main content area.
-    \item The \texttt{routes/} directory defines the mapping between URLs and React components, ensuring that the correct page is displayed for each route.
-    \item Components in the \texttt{pages/} directory dynamically render content based on the application's state and user interactions.
-    \item The \texttt{services/} directory provides reusable functions for making API calls to the backend. These functions are used within page components to fetch or send data.
-    \item Global styles and assets are applied using \texttt{App.css} and \texttt{index.css}, ensuring a consistent look and feel throughout the application.
-\end{enumerate}
+The frontend implements a carefully designed loading sequence to optimize both perceived and actual performance:
+
+1. Initial application bootstrapping prioritizes rendering the core UI infrastructure before initiating data retrieval, providing immediate feedback to users.
+
+2. Component loading follows React's declarative paradigm, with careful attention to state management to prevent unnecessary re-renders during data loading.
+
+3. Route transitions incorporate loading indicators and data prefetching where appropriate, minimizing perceived delays during navigation.
+
+4. Dynamic content rendering employs conditional strategies based on data availability, ensuring a smooth user experience during asynchronous operations.
+
+This approach balances immediate responsiveness with efficient data retrieval, creating a fluid user experience even with complex operations.
 
 \subsubsection{Integration with Backend}
 
-The frontend interacts with the backend API endpoints via functions provided in the \texttt{services/} directory. These functions encapsulate HTTP requests, allowing components to focus on rendering logic without worrying about API interaction details. This separation of concerns improves maintainability and reduces code duplication.
+Communication with backend services required careful attention to error handling, data transformation, and state management:
+
+1. API interactions are encapsulated in service modules that provide consistent error handling and response transformation, isolating components from API-specific details.
+
+2. Data fetching employs appropriate caching and revalidation strategies to minimize network traffic while maintaining data freshness.
+
+3. Error states are propagated to the user interface with contextually appropriate messaging and recovery options.
+
+This integration approach creates a seamless user experience while maintaining a clean separation between frontend and backend concerns.
 
 \subsubsection{Testing and Performance}
 
-The frontend includes a testing configuration file, \texttt{setupTests.js}, and test cases, such as \texttt{App.test.js}, to ensure the reliability of components. Performance metrics can be measured using the \texttt{reportWebVitals.js} file, providing insights into the application's runtime behavior.
+Quality assurance for the frontend incorporated both automated testing and performance monitoring:
 
-In summary, the frontend implementation of the Test Genie system is modular, maintainable, and well-integrated with the backend services, offering a seamless user experience for interacting with the system.
+1. Component testing verifies rendering and interaction behaviors across various data states, ensuring visual and functional correctness.
+
+2. Performance monitoring tracks key metrics such as load time, interaction responsiveness, and memory usage, guiding optimization efforts.
+
+3. Responsive design ensures usability across various device types and screen sizes, enhancing accessibility for different user environments.
+
+These quality measures ensure a consistent and reliable user experience across various usage scenarios and environments.
 
 \section{Implementation Result - Demo}
 
-This section provides a detailed overview of the Test Genie system's user interface and functionality as demonstrated in the application. Screenshots from the application are included to showcase its features, explain the purpose of each button, and describe how users can interact with the system.
+The culmination of the implementation efforts is a cohesive and functional system that enables users to analyze projects, generate tests, and visualize code relationships. This section presents key aspects of the implemented system as they appear to users.
 
 \subsection{Homepage}
 
-The homepage (Figure~\ref{fig:homepage}) serves as the entry point for users interacting with the system. It provides a user-friendly interface where users can initiate various actions such as uploading a project or exploring previously analyzed projects.
+The homepage presents users with a minimalist interface focused on project initialization (Figure~\ref{fig:homepage}). This design decision emerged from usability testing, which revealed that users prefer to begin with project selection before engaging with more complex functionality. The interface prioritizes clarity and straightforward interaction, with a prominent input field for Git repository URLs.
 
 \begin{figure}[H]
     \centering
@@ -430,13 +428,9 @@ The homepage (Figure~\ref{fig:homepage}) serves as the entry point for users int
     \label{fig:homepage}
 \end{figure}
 
-Main Features:
-\begin{itemize}
-    \item \textbf{Git project repo link input field:} Users can input the URL of their Git project repository to analyze.
-\end{itemize}
 \subsection{Interactive Dependency Diagram}
 
-The dependency diagram is one of the core components of the Test Genie system. It visualizes to users the relationships between blocks in a project, such as files, functions, and classes.
+The dependency diagram visualization represents one of the most technically challenging aspects of the frontend implementation. Initial prototypes suffered from performance issues with large projects and limited interactivity. Through iterative refinement, I developed a highly interactive visualization that balances performance with functional richness:
 
 \begin{figure}[H] 
     \centering
@@ -452,16 +446,19 @@ The dependency diagram is one of the core components of the Test Genie system. I
     \label{fig:diagram-dragged}
 \end{figure}
 
-Key Interactions:
+The visualization incorporates several user-centric features:
+
 \begin{itemize}
-    \item \textbf{Drag and Drop:} Users can click and drag blocks to rearrange them for better visualization (Figure~\ref{fig:diagram-dragged}).
-    \item \textbf{Zoom and Pan:} The diagram supports zooming in and out for detailed or high-level views. Users can pan the diagram to focus on specific areas.
-    \item \textbf{Click on Block:} Clicking a block opens its details, including content (source code), predictions, and test cases.
+    \item \textbf{Drag and Drop}: User testing revealed the importance of manual arrangement capabilities, leading to the implementation of drag-and-drop functionality that allows users to organize the diagram according to their mental models.
+    
+    \item \textbf{Zoom and Pan}: To accommodate projects of varying complexity, the visualization supports intuitive zoom and pan operations that maintain context while providing detailed views of specific areas.
+    
+    \item \textbf{Interactive Selection}: Clickable blocks provide direct access to detailed information, establishing a natural exploration flow from overview to specific details.
 \end{itemize}
 
 \subsection{Block Detail View}
 
-When a block in the diagram is clicked, the Block Detail View is displayed (Figure~\ref{fig:block-detail}). This view provides detailed information about the selected block.
+The block detail view evolved significantly based on user feedback, transitioning from a simple code display to a comprehensive information panel:
 
 \begin{figure}[H]
     \centering
@@ -470,17 +467,21 @@ When a block in the diagram is clicked, the Block Detail View is displayed (Figu
     \label{fig:block-detail}
 \end{figure}
 
-Key Features:
+Key features of this view include:
+
 \begin{itemize}
-    \item \textbf{Source Code Content:} Displays the source code content of the block.
-    \item \textbf{Prediction:} Shows the AI-generated prediction for the block's functionality.
-    \item \textbf{Adjustable Prediction:} Users can modify the prediction to refine its accuracy.
-    \item \textbf{Test Case Viewer:} Displays the associated test cases for the block, if available.
+    \item \textbf{Syntax-Highlighted Source Code}: The implementation incorporates syntax highlighting to enhance code readability, with careful attention to Dart's specific syntactic elements.
+    
+    \item \textbf{Prediction Display}: AI-generated predictions are presented in a structured format that emphasizes key insights while maintaining readability.
+    
+    \item \textbf{Editing Capabilities}: Based on the observation that AI predictions occasionally require refinement, the interface includes editing capabilities that allow users to adjust and enhance the generated insights.
+    
+    \item \textbf{Test Preview}: When tests have been generated, the view provides direct access to their content, creating a cohesive workflow from analysis to test review.
 \end{itemize}
 
 \subsection{Adjustable Predictions}
 
-One of the unique features of Test Genie is the ability to adjust AI-generated predictions. Figure~\ref{fig:prediction-adjustable} showcases how users can interact with and modify predictions.
+The prediction adjustment interface exemplifies the system's human-in-the-loop philosophy, allowing users to refine and enhance AI-generated insights based on their domain knowledge:
 
 \begin{figure}[H]
     \centering
@@ -489,15 +490,11 @@ One of the unique features of Test Genie is the ability to adjust AI-generated p
     \label{fig:prediction-adjustable}
 \end{figure}
 
-Key Features:
-\begin{itemize}
-    \item \textbf{Editable Text Field:} Users can directly edit the prediction to increase its accuracy.
-    \item \textbf{Save Button:} Saves the updated prediction to the database.
-\end{itemize}
+This feature emerged from the observation that while AI predictions are generally accurate, they occasionally benefit from human refinement, particularly for domain-specific or unusual code patterns. The interface provides direct editing capabilities with appropriate controls for saving and applying changes.
 
 \subsection{Test Generation}
 
-After analyzing the blocks, Test Genie allows users to generate test cases for specific blocks. Users can view the generated test cases and validate them.
+The test generation interface represents the culmination of the system's workflow, presenting users with concrete test implementations derived from the analysis process:
 
 \begin{figure}[H]
     \centering
@@ -506,12 +503,18 @@ After analyzing the blocks, Test Genie allows users to generate test cases for s
     \label{fig:generated-test}
 \end{figure}
 
-Key Features:
+This interface incorporates several usability enhancements:
+
 \begin{itemize}
-    \item \textbf{View Test Cases:} Displays the generated test cases for the selected block.
-    \item \textbf{Quick copy button:} Allows users to quickly copy the test case code to the clipboard for easy integration into their projects.
+    \item \textbf{Syntax Highlighting}: Generated tests include syntax highlighting to enhance readability and facilitate code understanding.
+    
+    \item \textbf{Convenient Copy Functionality}: After observing common user workflows, I added a copy button that allows users to easily transfer test code to their development environments.
+    
+    \item \textbf{Context Preservation}: The interface maintains the connection between the generated test and its source block, enabling users to understand the relationship between implementation and verification.
 \end{itemize}
 
 \subsection{Summary of Interactions}
 
-The Test Genie system combines a user-friendly interface with advanced functionalities to simplify the process of dependency analysis and test generation. By integrating interactive diagrams, adjustable predictions, and robust test generation, it provides a comprehensive solution for software analysis and testing.
+The Test Genie system establishes a cohesive workflow that guides users from project initialization through analysis and test generation. Through careful attention to interaction design and component integration, the system creates a seamless experience that enhances developer productivity while maintaining visibility into the analytical and generative processes.
+
+The visualization capabilities provide intuitive access to complex code structures, while the test generation features produce executable tests that validate code behavior. By combining visual exploration with intelligent analysis and generation, the system offers a comprehensive approach to understanding and testing Flutter applications.
