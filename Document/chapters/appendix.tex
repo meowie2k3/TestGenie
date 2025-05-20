@@ -38,10 +38,10 @@
           
       def getFramework(self) -> str:
           return self._framework
-      
+          
       def getName(self) -> str:
           return self._name
-      
+          
       def getPath(self) -> str:
           return projectDir + '/' + self._name
           
@@ -72,9 +72,10 @@ class Flutter(Project): # Inherit from Project class
         self._flutterPubGet()
         self._addTestDependency()
         self.yaml_name = self._getYamlName()
-        # self._createSampleProject('sample')
         
     def _runFlutterCLI(self, args, isRaiseException=False) -> tuple:
+        # Set up command execution environment
+        # Execute Flutter command and handle results
         prjDir = os.path.join(projectDir, self.getName())
         flutterBatDir = os.path.join(sdkDir, 'bin', 'flutter')
 
@@ -194,25 +195,22 @@ class Flutter(Project): # Inherit from Project class
         return ''
     
     def getListSourceFiles(self) -> list[str]:
-            """_summary_
-
-            Returns:
-                list[str]: list of source files in the project relative to project directory
-            """
-            prjDir = os.path.join(projectDir, self.getName())
-            libDir = os.path.join(prjDir, 'lib') 
-            sourceFiles = []
-            
-            # find main.dart first
-            if os.path.exists(os.path.join(libDir, 'main.dart')):
-                sourceFiles.append(os.path.relpath(os.path.join(libDir, 'main.dart'), prjDir))
-            
-            for root, dirs, files in os.walk(libDir):
-                for file in files:
-                    if file.endswith('.dart') and os.path.relpath(os.path.join(root, file), prjDir) not in sourceFiles:
-                        sourceFiles.append(os.path.relpath(os.path.join(root, file), prjDir))
-                        
-            return sourceFiles
+        """Returns list of source files in the project relative to project directory"""
+        prjDir = os.path.join(projectDir, self.getName())
+        libDir = os.path.join(prjDir, 'lib') 
+        sourceFiles = []
+        
+        # Find main.dart first
+        if os.path.exists(os.path.join(libDir, 'main.dart')):
+            sourceFiles.append(os.path.relpath(os.path.join(libDir, 'main.dart'), prjDir))
+        
+        # Walk through directory to find all Dart files
+        for root, dirs, files in os.walk(libDir):
+            for file in files:
+                if file.endswith('.dart') and os.path.relpath(os.path.join(root, file), prjDir) not in sourceFiles:
+                    sourceFiles.append(os.path.relpath(os.path.join(root, file), prjDir))
+                    
+        return sourceFiles
     
     def __str__(self) -> str:
         return f'Flutter project {self.getName()} created from {self._git_url}'
@@ -237,7 +235,6 @@ class Flutter(Project): # Inherit from Project class
             self._getPredictions()
         
         def _generateDiagram(self) -> None:
-            # Analyze project abstractly to project's framework
             framework = self.project.getFramework()
             functionName = framework + 'AnalyzeStrategy'
             if functionName in globals():
@@ -248,7 +245,6 @@ class Flutter(Project): # Inherit from Project class
         def _getPredictions(self) -> None:
             for block in self.blocks:
                 block.setPrediction(self.ai_agent.generate_BLA_prediction(source_code=block.getContentNoComment(), chat_history=[]))
-            
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{Block}$ class.}, label={lst:4}]
@@ -259,12 +255,15 @@ class Flutter(Project): # Inherit from Project class
         self.type = type
 
     def getContentNoComment(self) -> str:
-        # no split by line
+        # Remove single-line and multi-line comments from code
         content = self.content
         res = ''
         i = 0
         isCommentSingleLine = False
         isCommentMultiLine = False
+        
+        # Iterate through content character by character
+        # Track comment blocks and exclude them from result
         while i < len(self.content)-1:
             # if \n, reset isCommentSingleLine
             if content[i] == '\n':
@@ -326,47 +325,42 @@ class Flutter(Project): # Inherit from Project class
  
 \begin{lstlisting}[language=Python, caption={$\texttt{FlutterAnalyzeStrategy}$ function.}, label={lst:8}]
     def FlutterAnalyzeStrategy(diagram) -> None:
-    # print('Flutter analyze strategy')
-    # print(diagram)
+    # Get list of source files from the project
     fileList = diagram.project.getListSourceFiles()
-    # print(fileList)
-    # create a block for main first
+    
+    # Create a block for main.dart file first
     mainfileDir = fileList[0]
     mainFileContent = diagram.project.getFileContent(mainfileDir)
-    # turn \ into /
     mainfileDir = mainfileDir.replace('\\','/')
-    # print(mainfileDir)
     mainBlock = Block(mainfileDir, mainFileContent, BlockType.FILE)
-    # print(mainBlock)
-    
     diagram.blocks.append(mainBlock)
     
-    ImportAnalyzer(diagram, diagram.blocks[0])
-    
-    ContainAnalyzer(diagram, diagram.blocks[0])
-    
-    CallAnalyzer(diagram, diagram.blocks[0])
+    # Run the analysis phases in sequence
+    ImportAnalyzer(diagram, diagram.blocks[0])  # Analyze imports between files
+    ContainAnalyzer(diagram, diagram.blocks[0]) # Identify code blocks and containment
+    CallAnalyzer(diagram, diagram.blocks[0])    # Analyze call relationships
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{ImportAnalyzer}$ function.}, label={lst:9}]
 def ImportAnalyzer(diagram, block):
-    currContent = block.content
-    currType = block.type
-    # print("Current content: ", currentContent)
-    # print("Current type: ", currentType)
-    
-    # analyze imports
-    if (currType == 'File'):
-        importLines = [line.strip() for line in currContent.split('\n') if line.strip().startswith('import')]
-        # print(importLines)
+    # If current block is a File, analyze its import statements
+    if block.type == 'File':
+        # Extract import lines from the file content
+        importLines = [line.strip() for line in block.content.split('\n') 
+                      if line.strip().startswith('import')]
+        
         blocks = []
         for line in importLines:
-            # print(line)
+            # Extract directory path from import statement
             directory = line.split(' ')[1].replace(';', '')
-            # delete first and last character => delete quotes
-            directory = directory[1:-1]
-            # print(directory)
-            # 3 cases: import from other package, import from project, import as relative path
+            directory = directory[1:-1]  # Remove quotes
+            
+            # Handle different import types:
+            # 1. Package imports from dependencies
+            # 2. Package imports from project
+            # 3. Relative path imports
+            
+            # Create blocks for imported files and add connections
             if directory.startswith('package:'):
                 # import from other package, import from project
                 prjName = diagram.project.yaml_name
@@ -395,527 +389,189 @@ def ImportAnalyzer(diagram, block):
                     blocks.append(Block(combineDir, fileContent, BlockType.FILE))
                 else: diagram.connections.append(Connection(block, [b for b in diagram.blocks if b.name == combineDir][0], ConnectionType.IMPORT))
         
+        # Process each new imported file recursively
         for b in blocks:
-            # print(b)
             diagram.blocks.append(b)
             diagram.connections.append(Connection(block, b, ConnectionType.IMPORT))
             ImportAnalyzer(diagram, b)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={$\texttt{ContainAnalyzer}$ function.}, label={lst:10}]
-def ContainAnalyzer(diagram, block, visited = []):
-    visited.append(block)
-    currType = block.type
+\begin{lstlisting}[language=pseudocode, caption={$\texttt{ContainAnalyzer}$ function (Pseudocode).}, label={lst:10}]
+FUNCTION ContainAnalyzer(diagram, block, visited):
+    IF block IN visited THEN
+        RETURN
+    END IF
     
-    # print("Current content: ", currContent)
-    # print("Current type: ", currType)
+    ADD block TO visited
     
-    # keep analyze if type is file or class or abstract class
-    if (currType == BlockType.FILE 
-        or currType == BlockType.CLASS
-        or currType == BlockType.ABSTRACT_CLASS
-        ):
+    IF block.type IS FILE OR CLASS OR ABSTRACT_CLASS THEN
         content = block.getContentNoComment()
-        # print(content)
-        lines = content.split('\n')
-        # if type is file, analyze classes and functions (standalone functions)
-        # if type is class, analyze functions
         blocks = []
-        # File analyzing
-        if (currType == BlockType.FILE):
-            # two cases: class and abstract class
-            if 'class ' in content:
-                # this file have class(es)
-                isClassContent = False
-                openedBracket = 0
-                className = ''
-                classContent = []
-                # class or final class
-                for line in lines:
-                    if line.strip().startswith('class ') or line.strip().startswith('final class '):
-                        # first line of class
-                        # NOTE: there is no class inside class
-                        # get class name
-                        className = line.split('class ')[1].split('{')[0].strip()
-                        # print(className)
-                        isClassContent = True
-                        classContent.append(line)
-                    elif '}' in line and isClassContent:
-                        # two cases: class end or function end
-                        classContent.append(line)
-                        if '{' in line:
-                            continue
-                        if openedBracket > 0:
-                            openedBracket = openedBracket - 1
-                        else: 
-                            # class end
-                            isClassContent = False
-                            classContent = '\n'.join(classContent)
-                            blocks.append(Block(className, classContent, BlockType.CLASS))
-                            classContent = []
-                    elif '{' in line and isClassContent:
-                        openedBracket = openedBracket + 1
-                        classContent.append(line)
-                    elif isClassContent:
-                        classContent.append(line)
-                
-                # abstract class
-                if 'abstract class ' in content or 'abstract final class ' in content:
-                    isAbstractClassContent = False
-                    openedBracket = 0
-                    className = ''
-                    classContent = []
-                    for line in lines:
-                        if line.strip().startswith('abstract class ') or line.strip().startswith('abstract final class '):
-                            # first line of class
-                            # NOTE: there is no class inside class
-                            # get class name
-                            if line.strip().startswith('abstract class '):
-                                
-                                className = line.split('abstract class ')[1].split('{')[0].strip()
-                            # Check if it's an abstract final class
-                            if line.strip().startswith('abstract final class '):
-                                className = line.split('abstract final class ')[1].split('{')[0].strip()
-                            # print(className)
-                            isAbstractClassContent = True
-                            classContent.append(line)
-                        elif '}' in line and isAbstractClassContent:
-                            # two cases: class end or function end
-                            classContent.append(line)
-                            if '{' in line:
-                                continue
-                            if openedBracket > 0:
-                                openedBracket = openedBracket - 1
-                            else: 
-                                # class end
-                                isAbstractClassContent = False
-                                classContent = '\n'.join(classContent)
-                                blocks.append(Block(className, classContent, BlockType.ABSTRACT_CLASS))
-                                classContent = []
-                        elif '{' in line and isAbstractClassContent:
-                            openedBracket = openedBracket + 1
-                            classContent.append(line)
-                        elif isAbstractClassContent:
-                            classContent.append(line)
-                            
-            # enum
-            if 'enum ' in content:
-                # no {} in enum
-                # maybe () in enum
-                # once } is found, enum end
-                isEnumContent = False
-                enumName = ''
-                enumContent = []
-                for line in lines:
-                    if line.strip().startswith('enum '):
-                        # first line of enum
-                        enumName = line.split('enum ')[1].split('{')[0].strip()
-                        isEnumContent = True
-                        enumContent.append(line)
-                    elif '}' in line and isEnumContent:
-                        enumContent.append(line)
-                        isEnumContent = False
-                        enumContent = '\n'.join(enumContent)
-                        blocks.append(Block(enumName, enumContent, BlockType.ENUM))
-                        # print(enumContent)
-                    elif isEnumContent:
-                        enumContent.append(line)
-                
-            # function
-            # standalone function / GlobalVar only!
-            # strat: get rid of all analyzed class and enum first
-            leftoverContent = content
-            for b in blocks:
-                leftoverContent = leftoverContent.replace(b.content, '')
-            # get rid of import line
-            leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if not line.strip().startswith('import')])
-            # remove empty lines
-            leftoverContent = '\n'.join([line for line in leftoverContent.split('\n') if line.strip() != ''])
-            # print("========Leftover content========")
-            # print(block.name)
-            # print(leftoverContent)
-            
-            # two case of function: difined return type or not (dynamic)
-            # variable must have a type
-            # print("========Function and GlobalVar========")
-            funcAndVarBlocks = extract_functions_and_globals(leftoverContent)
-            blocks.extend(funcAndVarBlocks)
         
-        # Class analyzing
-        if (currType in (BlockType.CLASS)):
-            # two cases: class function and class attribute
-            content = block.getContentNoComment() # should be no difference between content and contentNoComment
-            # print(content)
-            classContentBlock = extract_class_content(content)
-            blocks.extend(classContentBlock)
+        IF block.type IS FILE THEN
+            # Analyze class declarations
+            FOR EACH line IN content.lines
+                IF line CONTAINS "class " OR "abstract class " THEN
+                    Extract class name and content
+                    Create appropriate Block object
+                    Add to blocks list
+                END IF
+            END FOR
             
-        # blocks recursive
-        for b in blocks:
-            # print(b)
-            # print(b.content)
+            # Analyze enum declarations
+            FOR EACH enum declaration IN content
+                Extract enum name and content
+                Create Block with type ENUM
+                Add to blocks list
+            END FOR
+            
+            # Analyze standalone functions and global variables
+            Extract functions and globals from remaining content
+            Add to blocks list
+        END IF
+        
+        IF block.type IS CLASS OR ABSTRACT_CLASS THEN
+            Extract class methods and attributes
+            Add to blocks list
+        END IF
+        
+        # Process each identified block
+        FOR EACH b IN blocks
             diagram.blocks.append(b)
             diagram.connections.append(Connection(block, b, ConnectionType.CONTAIN))
-            ContainAnalyzer(diagram, b, visited=visited)
-            
-    # find connection connected to this block and not visited
-    connectedBlocks = [c.tail for c in diagram.connections if c.head == block and c.tail not in visited]
-    for b in connectedBlocks:
-        ContainAnalyzer(diagram, b, visited=visited)    
+            ContainAnalyzer(diagram, b, visited)
+        END FOR
+    END IF
+    
+    # Continue analysis with connected blocks
+    connectedBlocks = [c.tail FOR EACH c IN diagram.connections 
+                      WHERE c.head IS block AND c.tail NOT IN visited]
+    
+    FOR EACH b IN connectedBlocks
+        ContainAnalyzer(diagram, b, visited)
+    END FOR
+END FUNCTION
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={$\texttt{CallAnalyzer}$ function.}, label={lst:11}]
-    def CallAnalyzer(diagram, block, visited = []):
-    if block in visited:
-        return
+\begin{lstlisting}[language=pseudocode, caption={$\texttt{CallAnalyzer}$ function (Pseudocode).}, label={lst:11}]
+FUNCTION CallAnalyzer(diagram, block, visited):
+    IF block IN visited THEN
+        RETURN
+    END IF
     
-    visited.append(block)
-    currType = block.type
+    ADD block TO visited
     
-    # NOTE strat: 2-layer recursive
-    if currType in (BlockType.FILE):
-        # find connected file (imported file)
-        connectedFiles = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.IMPORT]
+    IF block.type IS FILE THEN
+        # Find connected files (imported files)
+        connectedFiles = [conn.tail FOR EACH conn IN diagram.connections 
+                         WHERE conn.head IS block AND conn.type IS ConnectionType.IMPORT]
         
-        for file in connectedFiles:
-            # print("Imported file:")
-            # print(file)
-            # find all class/function/variable in file. Avoid BlockType.FILE
-            connectedBlocks = [conn.tail for conn in diagram.connections if conn.head == file and conn.type == ConnectionType.CONTAIN]
-            currentBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
-
-        
+        FOR EACH file IN connectedFiles
+            # Find blocks defined in both files
+            connectedBlocks = [blocks defined in file]
+            currentBlocks = [blocks defined in current file]
+            
+            # Analyze call relationships between blocks
             _CallAnalyzer(diagram, currentBlocks, connectedBlocks, visited)
-            # import based recursive call
+            
+            # Continue analysis with imported files
             CallAnalyzer(diagram, file, visited)
-        
-def _CallAnalyzer(diagram, thisFile, callables, visited=[]):
-    # thisFile: blocks of contains in current file
-    # callables: blocks of contains in imported file
+        END FOR
+    END IF
+END FUNCTION
+
+FUNCTION _CallAnalyzer(diagram, thisFile, callables, visited):
+    # Combine blocks from current file with callable blocks
     callables.extend(thisFile)
     
-    # printStuff(thisFile, callables)
-    
-    for block in thisFile:
-        if block in visited:
-            continue
+    FOR EACH block IN thisFile:
+        IF block IN visited THEN
+            CONTINUE
+        END IF
         
-        if block.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
-            # extend connection analyze
-            name = block.name
-            # print(name)
-            # first word is class name
-            classname = name.split()[0]
-            otherInfo = name[len(classname):]
-            for connBlock in callables:
-                if connBlock.type in (BlockType.ABSTRACT_CLASS, BlockType.CLASS):
-                    className = connBlock.name.split()[0]
-                    # if className found in otherInfo, create a connection ConnectionType.EXTEND
-                    if className in otherInfo:
-                        diagram.connections.append(Connection(block, connBlock, ConnectionType.EXTEND))
-                        # print(f"Extend connection: {block} --> {connBlock}")
-                
-            # split class, abstract class
-            innerBlocks = [conn.tail for conn in diagram.connections if conn.head == block and conn.type == ConnectionType.CONTAIN]
-            # magic recursive calls at 4 a.m
-            visited.append(block)
+        IF block.type IS CLASS OR ABSTRACT_CLASS THEN
+            # Analyze inheritance relationships
+            Identify parent classes and create EXTEND connections
+            
+            # Recursively process class contents
+            innerBlocks = [contained blocks]
             _CallAnalyzer(diagram, innerBlocks, callables, visited)
+        ELSE
+            # Extract relevant content (function body, attribute initializers)
+            content = [process content based on block type]
             
-            
-            continue
-        else:
-            visited.append(block)
-            # analyze calls in block
-            # If called, create a connection ConnectionType.CALL
-            
-            fullcontent = block.getContentNoComment()
-            # print("=====================================")
-            # print(block)
-            # print(fullcontent)
-            
-            content = ''
-            # Extract content only, exclude function name, params
-            if block.type in (BlockType.FUNCTION, BlockType.CLASS_FUNCTION):
-                if '=>' in fullcontent:
-                    # take content from => to ;
-                    # add a ; to the end of content
-                    fullcontent = fullcontent + ';'
-                    content = fullcontent[fullcontent.index('=>')+2:]
-                    content = content[:content.index(';') + 1]
-                
-                else:
-                    roundbracketOpened = 0
-                    initialRoundBracket = False
-                    curlybracketOpened = 0
-                    isContent = False
-                    for char in fullcontent:
-                        # params section
-                        if char == '(' and not isContent and not initialRoundBracket:
-                            initialRoundBracket = True
-                            roundbracketOpened += 1
-                        if char == ')' and not isContent:
-                            roundbracketOpened -= 1
-                            if roundbracketOpened == 0 and initialRoundBracket:
-                                initialRoundBracket = False
-                        if char == '{':
-                            if not isContent and not initialRoundBracket:
-                                isContent = True
-                            curlybracketOpened += 1
-                        if char == '}' and isContent:
-                            curlybracketOpened -= 1
-                            if curlybracketOpened == 0:
-                                isContent = False
-                                content += char
-                                break
-                        if isContent:
-                            content += char
-            if block.type in (BlockType.CLASS_ATTRIBUTE):
-                # extract content from = to ;
-                # add a ; to the end of content
-                fullcontent = fullcontent + ';'
-                content = fullcontent[fullcontent.index('=')+1:]
-                content = content[:content.index(';') + 1]
-            # print("====================Block=====================")
-            # print("Block name: ", block.name)
-            # print("====================Extracted content=====================")
-            # print(content)
-            # print("==========================================================")
-            # printStuff(thisFile, callables)
-            callablesName = getCallablesName(callables)
-            for name, connBlock in callablesName:
-                # print(f"Name: {name}, Block name: {connBlock.name}")
-                # find name in content
-                # name found can be next to any non-word character or start of line and end of line
-                regex = re.compile(r'(?<![a-zA-Z0-9_])' + re.escape(name) + r'(?![a-zA-Z0-9_])')
-                if regex.search(content):
-                    # check if connection already exists
-                    if not any(conn.head == block and conn.tail == connBlock and conn.type == ConnectionType.CALL for conn in diagram.connections):
-                        diagram.connections.append(Connection(block, connBlock, ConnectionType.CALL))
-                        # print(f"Call connection: {block} --> {connBlock}")
+            # Look for references to other blocks
+            FOR EACH callable name and block:
+                IF name appears in content THEN
+                    diagram.connections.append(Connection(block, callable, ConnectionType.CALL))
+                END IF
+            END FOR
+        END IF
+    END FOR
+END FUNCTION
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={$\texttt{AI\_Agent}$ class.}, label={lst:12}]
-class AI_Agent:
-    def __init__(self) -> None:
-        if load_dotenv(override=True) == False:
-            raise Exception("Failed to load .env file")
-        base_url = os.getenv('BASE_URL')
-        model_name = os.getenv('BLA_LLM_MODEL')
-        embed_model = os.getenv('EMBED_MODEL')
-        self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0)
-        self.embeddings = OpenAIEmbeddings(
-            base_url=base_url, 
-            model=embed_model,
-            # critical for LM studio mod
-            check_embedding_ctx_length=False
-        )
-        # load vector store
+\begin{lstlisting}[language=pseudocode, caption={$\texttt{AI\_Agent}$ class (Pseudocode).}, label={lst:12}]
+CLASS AI_Agent:
+    CONSTRUCTOR():
+        # Load environment variables and configuration
+        Load API credentials and model settings
+        
+        # Initialize LLM model and embeddings
+        self.model = Initialize ChatOpenAI with temperature=0
+        self.embeddings = Initialize OpenAIEmbeddings
+        
+        # Setup vector stores for document retrieval
         self.store_names = {
-            # "dart_programming_tutorial": "dart_programming_tutorial.pdf",
-            # "DartLangSpecDraft": "DartLangSpecDraft.pdf",
             "flutter_tutorial": "flutter_tutorial.pdf",
-        } 
-        for store_name, doc_name in self.store_names.items():
-            if not self._check_if_vector_store_exists(store_name):
-                docs = self._load_document(doc_name)
-                chunks = self._split_document(docs)
-                self._create_vector_store(chunks, store_name)
-                
-        dbs = []
-        for store_name in self.store_names:
-            dbs.append(
-                Chroma(persist_directory=os.path.join(db_dir, store_name),
-                       embedding_function=self.embeddings)
-            )
-        self.retrievers = []
-        for db in dbs:
-            self.retrievers.append(
-                db.as_retriever(
-                    # search_type="similarity",
-                    # search_kwargs={"k": docs_num},
-                    # search_type="mmr",
-                    # search_kwargs={"k": docs_num, "fetch_k": 20, "lambda_mult": 0.5}
-                    search_type="similarity_score_threshold",
-                    search_kwargs={
-                        'score_threshold': 0.4,
-                        'k': 1,
-                    }
-                )
-            )
+        }
+        
+        FOR EACH store_name, doc_name IN self.store_names:
+            IF vector store doesn't exist THEN
+                Load and split document
+                Create vector store
+            END IF
+        END FOR
+        
+        # Initialize retrievers for each vector store
+        Create similarity_score_threshold retrievers
+        
+        # Initialize agent
         self._agent_init()
-    def generate_BLA_prediction(
-        self, 
-        source_code: str, 
-        chat_history: list
-    ) -> str:
-        # First use the agent to analyze the code
-        response = self.agent_executor.invoke(
-            {
-                "input": source_code,
-                "chat_history": chat_history,
-            }
-        )
+    
+    METHOD generate_BLA_prediction(source_code, chat_history):
+        # First analyze code with the agent
+        response = self.agent_executor.invoke(source_code, chat_history)
         
-        # Then use a direct call to the LLM to structure the output properly
-        structured_prompt = (
-            "Based on the following analysis of code, create a structured response with the following sections:\n"
-            "1. Brief explanation of what the code does\n"
-            "2. Testability assessment\n"
-            "3. TESTING SCENARIOS in the exact format shown below:\n\n"
-            "TESTING SCENARIOS:\n"
-            "1. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-            "2. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-            "3. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
-            "For test names, use descriptive names that clearly indicate the purpose of the test, such as:\n"
-            "- 'ValidPalindromeCheck' instead of 'Scenario Name'\n"
-            "- 'EmptyStringHandling' instead of generic names\n"
-            "- 'BoundaryConditionTest' for edge cases\n"
-            "- 'SpecialCharactersTest' for specific input types\n\n"
-            "Include at least 4-5 different test scenarios covering normal cases, edge cases, and special conditions.\n"
-            "Analysis to structure: " + response["output"]
-        )
-        
+        # Structure the output with proper formatting
+        structured_prompt = Create prompt for formatting the analysis
         structured_response = self.model.invoke(structured_prompt)
-        return structured_response.content
-            
         
-        
-    def _agent_init(self) -> None:
-        contextualize_q_system_prompt = (
-            "Given a chat history, user request and the latest piece of user source code, "
-            "which might reference context in the chat history, "
-            "formulate a statement that can be used to query the model for useful reference."
-            "Do NOT include the user request in the query."
-            # "DO NOT add the sentence 'Without more context or specific questions about the code, I can't provide a more detailed explanation' in the answer."
-        )
-        contextualize_q_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", contextualize_q_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-        # Create a history-aware retriever
-        # This uses the LLM to help reformulate the question based on chat history
-        history_aware_retrievers = [] 
-        
-        for retriever in self.retrievers:
-            history_aware_retrievers.append(
-                create_history_aware_retriever(
-                    self.model, retriever, contextualize_q_prompt
-                )
-            )
-        
-        bla_system_prompt = (
-            "You are an AI assistant that analyzes Flutter/Dart source code to identify its business logic for test generation.\n"
-            "You can provide helpful answers using available tools.\n"
-            "For the given code snippet:\n\n"
-            "1. FUNCTION ANALYSIS:\n"
-            "   - What is the purpose of this function/class?\n"
-            "   - What are the inputs (parameters) and their types?\n"
-            "   - What is the expected output (return value) and its type?\n"
-            "   - What algorithm or logic does it implement?\n\n"
-            "2. TESTABILITY ASSESSMENT:\n"
-            "   - Can this code be tested? If yes, what type of test is appropriate (unit/widget/integration)?\n"
-            "   - Are there any dependencies that might complicate testing?\n\n"
-            "3. TESTING SCENARIOS:\n"
-            "   ALWAYS include at least 3-5 specific test scenarios using EXACTLY this format:\n\n"
-            "   TESTING SCENARIOS:\n"
-            "   1. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-            "   2. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-            "   3. [Scenario Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
-            "Keep your analysis concise but precise. DO NOT include the source code in your answer.\n"
-            "The TESTING SCENARIOS section MUST follow the exact format shown above, with specific input values and expected outputs.\n"
-            "If the code's purpose is unclear, make your best inference based on the implementation details.\n"
-            "{context}"
-        )
-        
-        bla_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", bla_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-        bla_chain = create_stuff_documents_chain(self.model, bla_prompt)
-        
-        rag_chains = []
-        for retriever in history_aware_retrievers:
-            rag_chains.append(create_retrieval_chain(retriever, bla_chain))
-            
-        react_docstore_prompt = hub.pull("hwchase17/react")
-        
-        tools = []
-        
-        store_names = []
-        for store_name, doc_name in self.store_names.items():
-            store_names.append(store_name)
-        
-        for i in range(len(store_names)):
-            # print(f"{store_names[i]}")
-            tools.append(
-                Tool(
-                    name=f"Get code explaination from {store_names[i]}",
-                    func=lambda input, **kwargs: rag_chains[i].invoke(
-                        {
-                            "input": input, 
-                            "chat_history": kwargs.get("chat_history", [])
-                        }
-                    ),
-                    description=f"Retrieve documents from the vector store {store_names[i]}",
-                )
-            )
-        agent = create_react_agent(
-            llm=self.model,
-            tools=tools,
-            prompt=react_docstore_prompt,
-        )
-        
-        self.agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=agent, 
-            tools=tools, 
-            handle_parsing_errors=True, 
-            verbose=True,
-        )
-        pass
-    # Function to create and persist vector store
-    def _create_vector_store(self, docs, store_name, is_overwrite=False) -> None:
-        persistent_directory = os.path.join(db_dir, store_name)
-        # delete the directory if it exists and needed
-        if is_overwrite and os.path.exists(persistent_directory):
-            shutil.rmtree(persistent_directory) # remove the directory
-            
-        if not os.path.exists(persistent_directory):
-            print(f"\n--- Creating vector store {store_name} ---")
-            db = Chroma.from_documents(
-                docs, self.embeddings, persist_directory=persistent_directory
-            )
-            print(f"--- Finished creating vector store {store_name} ---")
-        else:
-            print(
-                f"Vector store {store_name} already exists. No need to initialize.")
-    def _load_document(self, doc_name):
-        file_path = os.path.join(docs_dir, doc_name)
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(
-                f"_load_document: The file {file_path} does not exist. Please check the path."
-            )
-        file_extension = os.path.splitext(file_path)[1]
-        # check if the file extension is supported
-        if file_extension not in file_loader_map:
-            raise Exception(f"_load_document: Unsupported file extension: {file_extension} for file: {file_path}")
-        loader = PyPDFLoader(file_path=file_path)
-        return loader.load()
+        RETURN structured_response.content
     
-    def _split_document(self, documents, chunk_size=1000, chunk_overlap=100):
-        text_splitter = SentenceTransformersTokenTextSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap
-        )
-        return text_splitter.split_documents(documents)
-    
-    def _check_if_vector_store_exists(self, store_name) -> bool:
-        persistent_directory = os.path.join(db_dir, store_name)
-        return os.path.exists(persistent_directory)
-
+    METHOD _agent_init():
+        # Create context-aware prompt template
+        Create contextualize_q_system_prompt
+        
+        # Create history-aware retrievers
+        Create retrievers that incorporate chat history
+        
+        # Create system prompt for business logic analysis
+        Create detailed bla_system_prompt
+        
+        # Create chain for document processing
+        Create bla_chain for processing documents
+        
+        # Create RAG chains for each retriever
+        Create retrieval_chain for each retriever
+        
+        # Create tools for agent
+        Create tool for each store_name
+        
+        # Initialize agent
+        Create react agent with tools
+        Initialize agent_executor
+END CLASS
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{Sample .env}$ file.}, label={lst:13}]
@@ -930,182 +586,66 @@ class AI_Agent:
     EMBED_MODEL=
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={$\texttt{Test\_Generator}$ class.}, label={lst:14}]
-    class Test_Generator:
-    def __init__(self) -> None:
-        if load_dotenv(override=True) == False:
-            raise Exception("Failed to load .env file")
-        base_url = os.getenv('BASE_URL')
-        model_name = os.getenv('TG_LLM_MODEL')
-        embed_model = os.getenv('EMBED_MODEL')
-        self.model = ChatOpenAI(base_url=base_url, model=model_name, temperature=0) # type: ignore
-        self.embeddings = OpenAIEmbeddings(
-            base_url=base_url, 
-            model=embed_model, # type: ignore
-            # critical for LM studio mod
-            check_embedding_ctx_length=False
-        )
-        # load vector store process
-        self.store_names = self._getStoreList()
-        for store_name, doc_name in self.store_names.items():
-            if not self._check_if_vector_store_exists(store_name):
-                docs = self._load_document(doc_name)
-                chunks = self._split_document(docs)
-                self._create_vector_store(chunks, store_name)
+\begin{lstlisting}[language=pseudocode, caption={$\texttt{Test\_Generator}$ class (Pseudocode).}, label={lst:14}]
+CLASS Test_Generator:
+    CONSTRUCTOR():
+        # Load environment and initialize models
+        Load environment variables
+        Initialize LLM model and embeddings
         
-        self.dbs = []
-        for store_name in self.store_names.keys():
-            self.dbs.append(Chroma(persist_directory=os.path.join(db_dir, store_name), embedding_function=self.embeddings))
+        # Set up vector stores for retrieval
+        Load and initialize vector stores for testing documentation
+        Create similarity-based retrievers
         
-        self.retrievers = []
-        for db in self.dbs:
-            self.retrievers.append(
-                db.as_retriever(
-                    search_type="similarity_score_threshold",
-                    search_kwargs={
-                        'score_threshold': 0.2,
-                        'k': 1,
-                    }
-                )
-            )
-        
-        # Create error cache to avoid repeating fixes
+        # Initialize error handling infrastructure
         self.error_fix_cache = {}
-        
-        # Set of attempted fixes for error tracking
         self.attempted_fixes_for_error = {}
-        
-        # Maximum retries for a single error
         self.max_error_fix_attempts = 3
-        
-    def generate_test_case(
-        self,
-        package_name: str,
-        code_location: str,
-        function_name_and_arguments: str,
-        prediction: str,
-    ) -> str:
-        """
-        Generate a test case for a function based on the prediction and code details.
-        
-        Args:
-            package_name: Name of the package (for import statements)
-            code_location: Location of the code file to test (path within the package)
-            function_name_and_arguments: Function signature with arguments
-            prediction: Description of what the function does
-            
-        Returns:
-            Generated test case as a string (clean Dart source code only)
-        """
-        try:
-        # Extract the structured sections from prediction if needed
-        # Check if prediction contains the expected structure
-            if "TESTING SCENARIOS:" not in prediction and "Brief" not in prediction:
-                # If prediction isn't properly structured, try to structure it
-                structured_prompt = (
-                    "Structure this analysis into the following format:\n"
-                    "1. Brief explanation of what the code does\n"
-                    "2. Testability assessment\n"
-                    "3. TESTING SCENARIOS in this exact format:\n\n"
-                    "TESTING SCENARIOS:\n"
-                    "1. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-                    "2. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n"
-                    "3. [Descriptive Test Name]: Verify that [functionality]. Input: [specific input values]. Expected: [specific output/behavior].\n\n"
-                    "Analysis to structure: " + prediction
-                )
-                
-                structured_response = self.model.invoke(structured_prompt)
-                prediction = structured_response.content
-            
-            # Generate the test case with the structured prediction
-            raw_output = self._generate_clean_test(package_name, code_location, function_name_and_arguments, prediction)
-            
-            # Clean up any markdown formatting that might be present
-            cleaned_output = self._clean_code_output(raw_output)
-            
-            return cleaned_output
-        except Exception as e:
-            print(f"Error generating test case: {str(e)}")
-            return f"// Error generating test case: {str(e)}"
-        
-    def fix_generated_code(
-        self, 
-        error_message: str,
-        current_test_code: str,
-        prediction: str,
-    ) -> str:
-        """
-        Fix issues in generated test code based on error messages from the Dart SDK.
-        Enhanced with online search and error pattern learning capabilities.
-        
-        Args:
-            error_message: The error message from the Dart SDK
-            current_test_code: The current test code that has issues
-            prediction: The original prediction about what the function does
-            
-        Returns:
-            Fixed test code that addresses the errors
-        """
-        try:
-            # Create a unique identifier for this error+code combination to track fix attempts
-            error_hash = self._generate_error_hash(error_message, current_test_code)
-            
-            # Check if we've seen and fixed this exact error before
-            if error_hash in self.error_fix_cache:
-                print(f"Using cached fix for error: {error_hash[:10]}...")
-                return self.error_fix_cache[error_hash]
-            
-            # Track fix attempts to avoid infinite loops
-            if error_hash not in self.attempted_fixes_for_error:
-                self.attempted_fixes_for_error[error_hash] = 0
-            
-            self.attempted_fixes_for_error[error_hash] += 1
-            
-            # If we've tried too many times, use different strategies or bail out
-            if self.attempted_fixes_for_error[error_hash] > self.max_error_fix_attempts:
-                print(f"Maximum fix attempts reached for error {error_hash[:10]}. Applying emergency fix...")
-                # Apply emergency fix that attempts to produce at least a basic test case
-                emergency_fixed = self._emergency_fix(current_test_code, error_message)
-                self.error_fix_cache[error_hash] = emergency_fixed
-                return emergency_fixed
-            
-            # Extract unique errors from the potentially repetitive error message
-            unique_errors = self._extract_unique_errors(error_message)
-            
-            # 1. First try our standard approach
-            if self.attempted_fixes_for_error[error_hash] == 1:
-                fixed_code = self._standard_ai_fix(unique_errors, current_test_code)
-                
-            # 2. If that didn't work, search online for solutions
-            elif self.attempted_fixes_for_error[error_hash] == 2:
-                # Search for online solutions for this error
-                online_solutions = self._search_for_error_solutions(unique_errors)
-                
-                # Use online solutions to enhance fix prompt
-                fixed_code = self._ai_fix_with_online_knowledge(unique_errors, current_test_code, online_solutions)
-                
-            # 3. Final attempt with different approach
-            else:
-                fixed_code = self._comprehensive_repair_attempt(error_message, current_test_code, prediction)
-            
-            # Apply additional specific rule-based fixes
-            fixed_code = self._apply_specific_fixes(fixed_code, unique_errors)
-            
-            # Cache the successful fix for this error
-            self.error_fix_cache[error_hash] = fixed_code
-            
-            return fixed_code
-        
-        except Exception as e:
-            print(f"Error fixing test code: {str(e)}")
-            # Try a simpler approach with manual fixes for common errors
-            try:
-                manually_fixed = self._manual_fix_common_errors(current_test_code, error_message)
-                return manually_fixed
-            except:
-                # If all else fails, return the original with error comments
-                return f"// Error while trying to fix the code: {str(e)}\n// Original error message: {error_message}\n\n{current_test_code}"
     
+    METHOD generate_test_case(package_name, code_location, function_name_and_arguments, prediction):
+        # Structure prediction if needed
+        IF "TESTING SCENARIOS:" NOT IN prediction THEN
+            Create structured prediction
+        END IF
+        
+        # Generate clean test code
+        raw_output = self._generate_clean_test(parameters)
+        
+        # Clean up markdown or formatting
+        cleaned_output = self._clean_code_output(raw_output)
+        
+        RETURN cleaned_output
+    
+    METHOD fix_generated_code(error_message, current_test_code, prediction):
+        # Create unique hash for this error
+        error_hash = self._generate_error_hash(error_message, current_test_code)
+        
+        # Check cache for previously seen error
+        IF error_hash IN self.error_fix_cache THEN
+            RETURN cached fix
+        END IF
+        
+        # Track fix attempts
+        Increment attempt counter
+        
+        # Apply different strategies based on attempt number
+        IF first attempt THEN
+            fixed_code = self._standard_ai_fix(error_message, current_test_code)
+        ELSE IF second attempt THEN
+            online_solutions = self._search_for_error_solutions(error_message)
+            fixed_code = self._ai_fix_with_online_knowledge(error_message, current_test_code, online_solutions)
+        ELSE
+            fixed_code = self._comprehensive_repair_attempt(error_message, current_test_code, prediction)
+        END IF
+        
+        # Apply additional specific fixes
+        fixed_code = self._apply_specific_fixes(fixed_code, error_message)
+        
+        # Cache the fix
+        self.error_fix_cache[error_hash] = fixed_code
+        
+        RETURN fixed_code
+END CLASS
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{main.py}$ file.}, label={lst:15}]
@@ -1127,7 +667,7 @@ class AI_Agent:
     app = Flask(__name__)
     CORS(app)
     
-    # Post git project url
+    # API endpoints implementation
     @app.route('/createProject', methods=['POST'])
     def createProject():
         if not request.json or not 'git_url' in request.json:
@@ -1139,7 +679,6 @@ class AI_Agent:
     
     @app.route('/getDiagram', methods=['POST'])
     def getDiagram():
-        # print(request.json)
         if not request.json or not 'git_url' in request.json:
             return jsonify({'message': 'Invalid request'})
         git_url = request.json['git_url']
@@ -1264,8 +803,7 @@ class AI_Agent:
             while run_error != '' and iteration_limit > 0:
                 new_test_content = tg.fix_generated_code(
                     error_message=run_error,
-                    code_location=dbms.getBlockOriginalFile(blockId),
-                    function_name_and_arguments=dbms.getBlockName(blockId),
+                    current_test_code=testFileContent,
                     prediction=dbms.getBlockPrediction(blockId),
                 )
                 dbms.project.create_test(
@@ -1302,7 +840,6 @@ class Table:
     def __init__(self, name: str, columns: dict):
         self.name = name
         self.columns = columns
-        
         
     def getCreateSQL(self):
         sql = f'CREATE TABLE IF NOT EXISTS {self.name} ('
@@ -1394,7 +931,6 @@ class Table:
                 'name': 'VARCHAR(255)'
             }
         )
-    
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={$\texttt{getTable}$ function - Connection class.}, label={lst:20}]
@@ -1415,282 +951,80 @@ class Table:
         )
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={$\texttt{DBMS}$ class.}, label={lst:21}]
-class DBMS:
-    
-    _numberOfTables = 5
-    
-    def __init__(self, project) -> None:
+\begin{lstlisting}[language=pseudocode, caption={$\texttt{DBMS}$ class (Pseudocode).}, label={lst:21}]
+CLASS DBMS:
+    CONSTRUCTOR(project):
         self.project = project
-
-        # print(self._isDBinit())
-        if not self._isDBinit():
+        
+        # Initialize database if needed
+        IF NOT self._isDBinit() THEN
             self._initDB()
+        END IF
         
-        # print(self._isProjectExistInDB())
-        if not self._isProjectExistInDB():
+        # Insert project if not exists
+        IF NOT self._isProjectExistInDB() THEN
             self._insertProject()
-            
-        else:
-            # TODO: do something if project already exist
-            pass
+        END IF
     
-    def getJsonDiagram(self) -> dict:
-        """
-        Get the diagram in json format
-        Dict structure:
-        {
-            project: "project_name",
-            blocks: [
-                {
-                    id: 1,
-                    name: "block_name",
-                    content: "block_content",
-                    prediction: "block_prediction",
-                    type: "block_type"
-                }
-            ]
-            connections: [
-                {
-                    head: 1,
-                    tail: 2,
-                    type: "connection_type"
-                }
-            ]
-        }
-        """
-        # fetch diagram from db
-        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={})
-        blocks = self.execute(blockQuery)
+    METHOD getJsonDiagram():
+        # Retrieve diagram data from database
+        Query blocks and connections from DB
         
-        connectionQuery = Connection.getTable().getSelectSQL(fields=[], conditions={})
-        connections = self.execute(connectionQuery)
+        # Format data as JSON structure
+        Create project, blocks, and connections structure
+        Convert block and connection types to string names
         
-        # print(blocks)
-        # print(connections)
-        
-        res = {
-            'project': self.project.getName(),
-            'blocks': [],
-            'connections': []
-        }
-        for block in blocks:
-            res['blocks'].append({
-                'id': block[0],
-                'name': block[1],
-                'type': self._getEnumName('BlockType', block[2]),
-            })
-            
-        for connection in connections:
-            res['connections'].append({
-                'head': connection[1],
-                'tail': connection[2],
-                'type': self._getEnumName('ConnectionType', connection[3])
-            })
-            
-        return res
-        
-        pass
+        RETURN formatted diagram
     
-    def getBlockName(self, blockId: int) -> str:
-        query = Block.getTable().getSelectSQL(fields=['name'], conditions={
-            'id': blockId
-        })
-        res = self.execute(query)
-        return res[0][0]
+    METHOD getBlockName(blockId):
+        Query block name from database
+        RETURN result
     
-    def getBlockContent(self, blockId: int) -> str:
-        query = Block.getTable().getSelectSQL(fields=['content'], conditions={
-            'id': blockId
-        })
-        res = self.execute(query)
-        return res[0][0]
-
-    def getBlockPrediction(self, blockId: int) -> str:
-        query = Block.getTable().getSelectSQL(fields=['prediction'], conditions={
-            'id': blockId
-        })
-        res = self.execute(query)
-        return res[0][0]
+    METHOD getBlockContent(blockId):
+        Query block content from database
+        RETURN result
     
-    def getBlockOriginalFile(self, blockId: int) -> str:
-        # take blockId as tail, query connection table to get head
-        # backtracking until reach FILE block type and return the blockname
-        # print('blockId:', blockId)
-        query = Connection.getTable().getSelectSQL(fields=['head'], conditions={
-            'tail': blockId
-        })
-        res = self.execute(query)
-        if len(res) > 0:
-            headId = res[0][0]
-            query = Block.getTable().getSelectSQL(fields=['name', 'type'], conditions={
-                'id': headId
-            })
-            res = self.execute(query)
-            if len(res) > 0:
-                blockType = self._getEnumName('BlockType', res[0][1])
-                if blockType == 'File':
-                    originalFile = res[0][0]
-                    # exclude lib/
-                    originalFile = originalFile.split('lib/')[1]
-                    return originalFile
-                else:
-                    return self.getBlockOriginalFile(headId)
-        pass
+    METHOD getBlockPrediction(blockId):
+        Query block prediction from database
+        RETURN result
     
-    def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
-        query = Block.getTable().getUpdateSQL(
-            values={
-                'prediction': self._handldApostropheString(prediction)
-            },
-            conditions={
-                'id': blockId
-            }
-        )
-        self.execute(query)
+    METHOD getBlockOriginalFile(blockId):
+        # Backtrack through connections to find containing file
+        WHILE current block is not a File:
+            Query for parent block
+            Update current block
+        END WHILE
         
-        pass    
-        
-    def _connect(self):
-        self.connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234',
-            database='test_genie'
-        )
-        self.cursor = self.connection.cursor(buffered=True)
-        
-    def _close(self):
-        self.cursor.close()
-        self.connection.close()
-        
-    def _isDBinit(self):
-        query = 'SHOW TABLES'
-        res = self.execute(query)
-        return len(res) >= self._numberOfTables
+        Extract file path relative to project
+        RETURN path
     
-    def execute(self, query) -> list:
-        self._connect()
-        
-        if type(query) == str:
-            self.cursor.execute(query)
-        else:
-            for q in query:
-                self.cursor.execute(q)
-        self.connection.commit()
-        
-        self._close()
-        return self.cursor.fetchall() # type: ignore
+    METHOD updateBlockPrediction(blockId, prediction):
+        Escape special characters in prediction
+        Update prediction in database
     
-    def _initDB(self):
-        projectQuery = self.project.getTable().getCreateSQL()
-        self.execute(projectQuery)
-        
-        blockCreateQuery = Block.getTable().getCreateSQL()
-        self.execute(blockCreateQuery)
-        
-        connectionQuery = Connection.getTable().getCreateSQL()
-        self.execute(connectionQuery)
-        self._insertEnumDB()
-        
-    def _insertEnumDB(self):
-        
-        blockTypeCreateQuery = BlockType.getTable().getCreateSQL()
-        # print(blockTypeQuery)
-        self.execute(blockTypeCreateQuery)
-        
-        blockTypeInsertQuery = BlockType.getInsertQuery()
-        # print(blockTypeInsertQuery)
-        self.execute(blockTypeInsertQuery)
-        
-        connectionTypeCreateQuery = ConnectionType.getTable().getCreateSQL()
-        self.execute(connectionTypeCreateQuery)
-        
-        connectionTypeInsertQuery = ConnectionType.getInsertQuery()
-        # print(connectionTypeInsertQuery)
-        self.execute(connectionTypeInsertQuery)
+    METHOD _initDB():
+        # Create required tables
+        Create Project table
+        Create Block table
+        Create Connection table
+        Insert enum values
     
-    def _isProjectExistInDB(self):
-        query = self.project.getTable().getSelectSQL(fields=['name'], conditions={
-            'name': self.project.getName()
-        })
-        # print(query)
-        res = self.execute(query)
-        return len(res) > 0
+    METHOD _insertProject():
+        # Insert project record
+        Insert project into database
+        
+        # Create and store dependency diagram
+        Create DependencyDiagram
+        Convert blocks and connections to database records
     
-    def _insertProject(self):
-        # print('Inserting project')
-        # project table insert
-        query = self.project.getTable().getInsertSQL({
-            'name': self.project.getName(),
-            'directory': self.project.getPath()
-        })
-        # print(query)
-        self.execute(query)
-        # diagram insert
-        diagram = DependencyDiagram(self.project)
-        # not sure if this is needed
-        self.diagram = diagram
-        
-        blocks = diagram.blocks
-        connections = diagram.connections
-        self._mapBlocksIntoDB(blocks)
-        self._mapConnectionsIntoDB(connections)
-        
-    def _mapBlocksIntoDB(self, blocks: list):
-        for block in blocks:
-            # TODO: handle apostrophe in content
-            # map into block table
-            query = Block.getTable().getInsertSQL({
-                'name': self._handldApostropheString(block.name),
-                'content': self._handldApostropheString(block.content),
-                'prediction': self._handldApostropheString(block.prediction),
-                'type': self._getEnumId('BlockType', block.type)
-            })
-            self.execute(query)
-        pass
-    def _mapConnectionsIntoDB(self, connections: list):
-        for connection in connections:
-            # map into connection table
-            query = Connection.getTable().getInsertSQL({
-                'head': self._getBlockId(connection.head),
-                'tail': self._getBlockId(connection.tail),
-                'type': self._getEnumId('ConnectionType', connection.type)
-            })
-            self.execute(query)
-        pass
-    def _getBlockId(self, block) -> int:
-        table = Block.getTable()
-        query = table.getSelectSQL(fields=['id'], conditions={
-            'name': self._handldApostropheString(block.name),
-            'content': self._handldApostropheString(block.content),
-            'prediction': self._handldApostropheString(block.prediction),
-            'type': self._getEnumId('BlockType', block.type)
-        })
-        res = self.execute(query)
-        return res[0][0]
-    def _getEnumId(self, enum, enumName: str) -> int:
-        # base on enumname to get blocktype or connectiontype id
-        if enum in globals():
-            enumClass = globals()[enum]
-            table = enumClass.getTable()
-            query = table.getSelectSQL(fields=['id'], conditions={
-                'name': enumName
-            })
-            res = self.execute(query)
-            return res[0][0]
-        return 0
-    def _getEnumName(self, enum, enumId: int) -> str:
-        if enum in globals():
-            enumClass = globals()[enum]
-            table = enumClass.getTable()
-            query = table.getSelectSQL(fields=['name'], conditions={
-                'id': enumId
-            })
-            res = self.execute(query)
-            return res[0][0]
-        return ''
-    def _handldApostropheString(self, string: str) -> str:
-        return string.replace("'", "''")
-        pass
+    METHOD _mapBlocksIntoDB(blocks):
+        FOR EACH block IN blocks:
+            Insert block properties into database
+        END FOR
+    
+    METHOD _mapConnectionsIntoDB(connections):
+        FOR EACH connection IN connections:
+            Insert connection with block IDs into database
+        END FOR
+END CLASS
 \end{lstlisting}

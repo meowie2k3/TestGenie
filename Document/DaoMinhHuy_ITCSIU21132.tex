@@ -95,6 +95,26 @@
     morestring=[b]"
 }
 
+\lstdefinelanguage{pseudocode}{
+	keywords={if, then, else, elsif, endif, for, while, do, endfor, endwhile, return, 
+			  function, procedure, algorithm, begin, end, repeat, until, foreach, in, 
+			  input, output, print, call, exit, continue, break},
+	keywordstyle=\bfseries\color{blue},
+	ndkeywords={and, or, not, true, false, null, to, downto, step, mod, div},
+	ndkeywordstyle=\bfseries\color{purple},
+	identifierstyle=\color{black},
+	sensitive=false,
+	comment=[l]{//},
+	morecomment=[s]{/*}{*/},
+	commentstyle=\color{green!50!black}\itshape,
+	stringstyle=\color{red},
+	morestring=[b]',
+	morestring=[b]",
+	showstringspaces=false,
+	literate={←}{{$\leftarrow$}}1 {→}{{$\rightarrow$}}1 {≤}{{$\leq$}}1 {≥}{{$\geq$}}1
+			 {≠}{{$\neq$}}1 {∧}{{$\wedge$}}1 {∨}{{$\vee$}}1 {¬}{{$\neg$}}1
+}
+
 %% Customize chapter titles
 \titleformat{\chapter}[display]
   {\Huge\bfseries\centering}{\chaptername~\thechapter}
@@ -273,6 +293,18 @@ The results of this research aim to demonstrate how AI can transform the softwar
 \bibliography{bibliography.bib}
 
 \begin{thebibliography}{99}
+
+\bibitem{WQR2122}
+Capgemini - "World Quality Report 2021-22", Thirdteenth edition.
+
+\bibitem{QASalaries}
+Glassdoor - "Qa Tester Salaries", https://www.glassdoor.com/Salaries/qa-tester-salary-SRCH\_KO0,9.htm 
+
+\bibitem{CostPoorSoftware}
+Herb Krasner, Consortium for information \& Software quality - ``The Cost of Poor Software Quality in the US: A 2020 Report''.
+
+\bibitem{flask}
+Migual Gringerg - "Flask Web Development", 2014, Published by O'Reilly Media, Inc.
 
 \bibitem{langchain}
 "Langchain", https://python.langchain.com/docs/introduction/ 
