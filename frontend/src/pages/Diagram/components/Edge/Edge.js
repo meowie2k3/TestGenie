@@ -17,7 +17,7 @@ class Edge {
   
     getEdgeColor() {
       const typeColors = {
-        Call: "#FF5733", // Orange
+        Call: "#FF0000", // Orange
         Contain: "#33FF57", // Green
         Extend: "#3357FF", // Blue
         Implement: "#FF33F9", // Purple
