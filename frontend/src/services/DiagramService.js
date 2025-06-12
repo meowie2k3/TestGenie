@@ -1,4 +1,4 @@
-import Api from './Api';
+import Api from './api';
 
 export const fetchDiagramData = async (git_url) => {
     const response = await Api.post('/getDiagram', { git_url });
