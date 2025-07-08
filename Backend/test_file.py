@@ -62,10 +62,12 @@ def test_dbms():
         project = frameworkMap[framework](git_url)
         
     dbms = DBMS(project)
-    jsonDiagram = dbms.getJsonDiagram()
-    print(jsonDiagram)
-    # testOriginal = dbms.getBlockOriginalFile(118)
-    # print(testOriginal)
+    # jsonDiagram = dbms.getJsonDiagram()
+    # print(jsonDiagram)
+    connections = dbms.getBlockOriginal(245)
+    print("==========Connections==========")
+    for connection in connections:
+        print(dbms.getConnectionFromId(connection))
     
 def test_test_generation():
     from TestGenerator import Test_Generator
@@ -81,11 +83,11 @@ def test_test_generation():
     
     tg = Test_Generator()
     
-    testing_block_id = 183
+    testing_block_id = 245
     
     testFileContent = tg.generate_test_case(
         package_name= project.getName(),
-        code_location=dbms.getBlockOriginalFile(testing_block_id),
+        code_location=[dbms.getConnectionFromId(connection) for connection in dbms.getBlockOriginal(testing_block_id)],
         function_name_and_arguments=dbms.getBlockName(testing_block_id),
         prediction=dbms.getBlockPrediction(testing_block_id),
     )
@@ -140,6 +142,6 @@ if __name__ == '__main__':
     # testFiles()
     # testDiagram()
     # test_dbms()
-    # test_test_generation()
-    test_run_test()
+    test_test_generation()
+    # test_run_test()
     pass

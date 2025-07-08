@@ -59,6 +59,8 @@ import json
 from bs4 import BeautifulSoup
 import re
 import time
+from BusinessLogicAnalyzer.Diagram.Connection import Connection, ConnectionType
+from BusinessLogicAnalyzer.Diagram.Block import Block, BlockType
 
 currentDir = os.path.dirname(os.path.realpath(__file__))
 db_dir = os.path.join(currentDir, 'db')
@@ -116,29 +118,30 @@ class Test_Generator:
         
         # Maximum retries for a single error
         self.max_error_fix_attempts = 3
-        
+
     def generate_test_case(
         self,
         package_name: str,
-        code_location: str,
+        code_location: list[Connection],
         function_name_and_arguments: str,
         prediction: str,
     ) -> str:
         """
         Generate a test case for a function based on the prediction and code details.
-        
+
         Args:
             package_name: Name of the package (for import statements)
-            code_location: Location of the code file to test (path within the package)
+            code_location: List of Connection objects representing the code path
             function_name_and_arguments: Function signature with arguments
             prediction: Description of what the function does
-            
+
         Returns:
             Generated test case as a string (clean Dart source code only)
         """
         try:
-        # Extract the structured sections from prediction if needed
-        # Check if prediction contains the expected structure
+            # Convert code_location (list[Connection]) to a string for prompt context
+            # Extract the structured sections from prediction if needed
+            # Check if prediction contains the expected structure
             if "TESTING SCENARIOS:" not in prediction and "Brief" not in prediction:
                 # If prediction isn't properly structured, try to structure it
                 structured_prompt = (
@@ -155,18 +158,18 @@ class Test_Generator:
                 
                 structured_response = self.model.invoke(structured_prompt)
                 prediction = structured_response.content
-            
+
             # Generate the test case with the structured prediction
-            raw_output = self._generate_clean_test(package_name, code_location, function_name_and_arguments, prediction)
-            
-            # Clean up any markdown formatting that might be present
+            raw_output = self._generate_clean_test(
+                package_name, code_location, function_name_and_arguments, prediction
+            )
+
             cleaned_output = self._clean_code_output(raw_output)
-            
             return cleaned_output
         except Exception as e:
             print(f"Error generating test case: {str(e)}")
             return f"// Error generating test case: {str(e)}"
-        
+
     def fix_generated_code(
         self, 
         error_message: str,
@@ -837,66 +840,79 @@ class Test_Generator:
         return clean_code.strip()
         
     def _generate_clean_test(
-        self, 
-        package_name: str, 
-        code_location: str, 
-        function_name_and_arguments: str, 
+        self,
+        package_name: str,
+        code_location: list[Connection],
+        function_name_and_arguments: str,
         prediction: str
-        ) -> str:
+    ) -> str:
         """
         Generate a clean test case with just the Dart source code and coverage evaluation comment.
-        
+
         Args:
             package_name: Name of the package (for import statements)
-            code_location: Location of the code file to test (path within the package)
+            code_location: List of Connection objects representing the code path
             function_name_and_arguments: Function signature with arguments
             prediction: Description of what the function does in structured format
-            
+
         Returns:
             Clean Dart source code with coverage evaluation comment
         """
-        # Parse the prediction to extract test scenarios
-        # The prediction follows a structure with "TESTING SCENARIOS:" section
-        
-        # Extract function name for test naming
+        code_location_str = self._connections_to_string(code_location)
         function_name = function_name_and_arguments.split('(')[0].strip()
-        
+        file_path_from_File_Block = self._extract_file_path_from_connections(code_location)
+        # print(f"Extracted file path from connections: {file_path_from_File_Block}")
         clean_prompt = ChatPromptTemplate.from_messages([
-            ("system", 
+            ("system",
             "You are a Test Generator specialized in writing Dart test cases.\n\n"
-            "Generate a complete Dart test file based on the provided function details and test scenarios.\n\n"
-            "FORMAT AND REQUIREMENTS:\n"
-            "1. Start with proper import statements:\n"
-            "   - import 'package:{package_name}/{code_location}';\n"
-            "   - import 'package:test/test.dart';\n"
-            "2. Create a main() function with test groups organized by function\n"
-            "3. Implement EACH test scenario from the prediction\n"
-            "4. Follow Arrange-Act-Assert pattern with clear comments\n"
-            "5. Include edge cases and error handling tests when appropriate\n"
-            "6. End with test coverage evaluation as comments\n\n"
+            "You are given a list of code connections that describe the path from the function under test to its file location. "
+            "Each connection is in the format: [BlockName] - [BlockType] --> [BlockName] - [BlockType] --- [ConnectionType].\n"
+            "From these connections, ALWAYS extract the file path from the Block with type 'File' (e.g., 'lib/widgets/app.dart - File').\n"
+            "Generate the import statement for the test file as:\n"
+            "import 'package:{package_name}/{file_path_from_File_Block}';\n"
+            "where {file_path_from_File_Block} is the path from the File block (e.g., 'widgets/app.dart' for 'lib/widgets/app.dart').\n"
+            "DO NOT guess or invent import paths. Only use the file path from the File block in the connections.\n"
+            "ALWAYS use the correct relative path after 'lib/' for the import.\n"
+            "ALSO include: import 'package:test/test.dart';\n"
+            "Then, create a main() function with test groups organized by function.\n"
+            "Implement EACH test scenario from the prediction, following Arrange-Act-Assert pattern with clear comments.\n"
+            "Include edge cases and error handling tests when appropriate.\n"
+            "End with test coverage evaluation as comments.\n\n"
             "Function details:\n"
             "- Package: {package_name}\n"
-            "- Location: {code_location}\n"
-            "- Function signature: {function_name_and_arguments}\n\n"
+            "- Function signature: {function_name_and_arguments}\n"
+            "- Code location connections:\n{code_location_str}\n\n"
             "IMPORTANT: Your output must be PURE Dart code with NO markdown formatting.\n"
             "DO NOT include ```dart, ```, or any other markdown. Return only valid Dart code.\n"
             "Structure your tests to specifically validate each scenario detailed in the prediction."
             ),
-            ("human", 
+            ("human",
             "Generate a test file for this function based on the following analysis:\n\n{prediction}")
         ])
-        
+
         chain = clean_prompt | self.model
-        
+
         response = chain.invoke({
             "package_name": package_name,
-            "code_location": code_location,
+            "code_location_str": code_location_str,
             "function_name_and_arguments": function_name_and_arguments,
-            "prediction": prediction
+            "prediction": prediction,
+            "file_path_from_File_Block": file_path_from_File_Block
         })
-        
+
         return response.content
-            
+
+    def _extract_file_path_from_connections(self, connections: list[Connection]) -> str:
+        """
+        Extract the file path from the Block with type 'File' in the connections.
+        Returns the path relative to 'lib/' (e.g., 'widgets/app.dart' for 'lib/widgets/app.dart').
+        """
+        for conn in connections:
+            # print(f"Connection: {conn}")
+            if conn.head.type == BlockType.FILE:
+                return conn.head.name.replace('lib/', '', 1)  # Remove 'lib/' prefix
+        raise ValueError("No File block found in the connections to extract file path.")
+
     def _getStoreList(self) -> dict:
         """
         This function read all files in docs_dir then return a dict:
@@ -970,6 +986,20 @@ class Test_Generator:
     def _check_if_vector_store_exists(self, store_name) -> bool:
         persistent_directory = os.path.join(db_dir, store_name)
         return os.path.exists(persistent_directory)
+
+    def _connections_to_string(self, connections: list[Connection]) -> str:
+        """
+        Convert a list of Connection objects to a string representation for prompt context.
+
+        Args:
+            connections: List of Connection objects
+
+        Returns:
+            String representation of the connection path
+        """
+        if not connections:
+            return ""
+        return "\n".join(str(conn) for conn in connections)
 
 if __name__ == "__main__":
     tg = Test_Generator()

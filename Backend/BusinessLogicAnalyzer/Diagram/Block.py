@@ -93,6 +93,43 @@ class Block:
             }
         )
     
+    @staticmethod
+    def from_map(BlockMap: dict) -> 'Block':
+        """
+        Create a Block instance from a dictionary.
+        :param BlockMap: Dictionary containing block attributes.
+        :return: Block instance.
+        """
+        return Block(
+            name=BlockMap['name'],
+            content=BlockMap['content'],
+            type=BlockMap['type']
+        )
+        
+    @staticmethod
+    def from_tuple(BlockTuple: tuple) -> 'Block':
+        """
+        Create a Block instance from a tuple.
+        :param BlockTuple: Tuple containing block attributes.
+        :return: Block instance.
+        """
+        return Block(
+            name=BlockTuple[1],
+            content=BlockTuple[2],
+            type=BlockTuple[3]
+        )
+        
+    def to_map(self) -> dict:
+        """
+        Convert the Block instance to a dictionary.
+        :return: Dictionary representation of the Block instance.
+        """
+        return {
+            'name': self.name,
+            'content': self.content,
+            'type': self.type
+        }
+    
     def __str__(self):
         return f'{self.name} - {self.type}'
     

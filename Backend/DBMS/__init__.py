@@ -100,30 +100,58 @@ class DBMS:
         res = self.execute(query)
         return res[0][0]
     
-    def getBlockOriginalFile(self, blockId: int) -> str:
+    def getBlockOriginal(self, blockId: int, connectionIds = []) -> list[int]:
         # take blockId as tail, query connection table to get head
         # backtracking until reach FILE block type and return the blockname
         # print('blockId:', blockId)
-        query = Connection.getTable().getSelectSQL(fields=['head'], conditions={
+        query = Connection.getTable().getSelectSQL(fields=['id', 'head', 'type'], conditions={
             'tail': blockId
         })
         res = self.execute(query)
-        if len(res) > 0:
-            headId = res[0][0]
-            query = Block.getTable().getSelectSQL(fields=['name', 'type'], conditions={
-                'id': headId
+        for row in res:
+            connectionType = self._getEnumName('ConnectionType', row[2])
+            if connectionType == ConnectionType.CALL or connectionType == ConnectionType.USE:
+                continue
+            
+            connectionId = row[0]
+            connectionIds.append(connectionId)
+            
+            headBlockId = row[1]
+            
+            headblockQuery = Block.getTable().getSelectSQL(fields=['type'], conditions={
+                'id': headBlockId
             })
-            res = self.execute(query)
-            if len(res) > 0:
-                blockType = self._getEnumName('BlockType', res[0][1])
-                if blockType == 'File':
-                    originalFile = res[0][0]
-                    # exclude lib/
-                    originalFile = originalFile.split('lib/')[1]
-                    return originalFile
-                else:
-                    return self.getBlockOriginalFile(headId)
-        pass
+            headblock = self.execute(headblockQuery)
+            # print(headblock)
+            headBlockType = self._getEnumName('BlockType', headblock[0][0])
+            if headBlockType == BlockType.FILE:
+                return connectionIds
+            return self.getBlockOriginal(headBlockId,  connectionIds)
+        return connectionIds
+            
+    def getBlockFromId(self, blockId: int) -> Block:
+        query = Block.getTable().getSelectSQL(fields=['name', 'content', 'type'], conditions={
+            'id': blockId
+        })
+        res = self.execute(query)
+        if len(res) == 0:
+            return None
+        row = res[0]
+        blockType = self._getEnumName('BlockType', row[2])
+        return Block(row[0], row[1], blockType)
+    
+    def getConnectionFromId(self, connectionId: int) -> Connection:
+        query = Connection.getTable().getSelectSQL(fields=['head', 'tail', 'type'], conditions={
+            'id': connectionId
+        })
+        res = self.execute(query)
+        if len(res) == 0:
+            return None
+        row = res[0]
+        headBlock = self.getBlockFromId(row[0])
+        tailBlock = self.getBlockFromId(row[1])
+        connectionType = self._getEnumName('ConnectionType', row[2])
+        return Connection(headBlock, tailBlock, connectionType)
     
     def updateBlockPrediction(self, blockId: int, prediction: str) -> None:
         query = Block.getTable().getUpdateSQL(

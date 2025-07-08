@@ -143,7 +143,7 @@ def generateTest():
         
         testFileContent = tg.generate_test_case(
             package_name= dbms.project.getName(),
-            code_location=dbms.getBlockOriginalFile(blockId),
+            code_location=[dbms.getConnectionFromId(connection) for connection in dbms.getBlockOriginal(blockId)],
             function_name_and_arguments=dbms.getBlockName(blockId),
             prediction=dbms.getBlockPrediction(blockId),
         )
@@ -181,7 +181,13 @@ def generateTest():
             }
         )
     except Exception as e:
-        return jsonify({'message': str(e)})
+        return jsonify(
+            {
+                'message': str(e),
+                'code': 500,
+                'success': False,
+            }
+        )
 
 @app.route('/generateTest', methods=['OPTIONS'])
 def generateTestOptions():

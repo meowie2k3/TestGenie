@@ -52,6 +52,16 @@ class Connection:
                 '': 'FOREIGN KEY (type) REFERENCES ConnectionType(id)'
             }
         )
+        
+    @staticmethod
+    def from_map(map_data: dict) -> 'Connection':
+        """
+        Create a Connection instance from a dictionary.
+        """
+        head = Block.from_map(map_data['head'])
+        tail = Block.from_map(map_data['tail'])
+        type = map_data['type']
+        return Connection(head, tail, type)
     
     def __str__(self):
         return f'{self.head} --> {self.tail} --- {self.type}'
