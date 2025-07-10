@@ -207,9 +207,9 @@ Our accuracy evaluation employed a mixed-methods approach combining quantitative
     
     \item \textbf{Test Execution Success}: We measured the proportion of tests that executed successfully by running each generated test through Flutter's test runner and capturing exit codes and error logs. Tests that compiled and ran without errors were counted as successful, regardless of whether they passed or failed their assertions.
     
-    \item \textbf{Coverage Analysis}: We used Flutter's built-in coverage tools to generate coverage reports for each test suite, then parsed these reports to extract line and branch coverage percentages. This process was automated through custom scripts that integrated with the Flutter testing workflow.
+    \item \textbf{Coverage Analysis}: We used Flutter's built-in coverage tools \textit{flutter test -\-coverage} to generate coverage reports for each test suite, then parsed these reports to extract line and branch coverage percentages. This process was automated through custom scripts that integrated with during the evaluation flow.
 
-    \item \textbf{Human Evaluation}: A panel of five experienced Flutter developers with at least three years of professional experience each reviewed a subset of generated tests. Each developer evaluated 20 randomly selected tests against standardized criteria using a structured assessment form. Their ratings were aggregated and analyzed for inter-rater reliability using Cohen's kappa coefficient to ensure evaluation consistency.
+    \item \textbf{Human Evaluation}: A small panel consisting of three fellow computer science students with approximately one year of Flutter development experience (primarily from course projects and internships) reviewed a subset of generated tests. Each evaluator assessed 8 randomly selected tests using a simple rating form I developed. While this evaluation approach lacks the statistical rigor of a larger study with professional developers, it provided valuable initial feedback from the perspective of novice-to-intermediate Flutter developers. Due to resource constraints, we focused on qualitative insights rather than formal inter-rater reliability metrics.
 \end{itemize}
 
 \subsection{Quantitative Results}
@@ -231,15 +231,38 @@ Our quantitative evaluation revealed a correlation between project complexity an
     \end{tabular}
 \end{table}
 
+Each metric provides specific insight into the system's test generation capabilities:
+
 \begin{itemize}
-    \item \textbf{First-attempt syntax success} showed an inverse relationship with project complexity. This relationship was analyzed using regression analysis, revealing that each doubling of project size corresponded to approximately a 5-percentage-point decrease in first-attempt success rate.
+    \item \textbf{First-attempt syntax success} represents the percentage of generated test files that compiled without errors on the first attempt, before any error correction was applied. This metric was calculated as:
+     
+     \[
+     \text{First-attempt syntax success} = \frac{\text{Tests compiled on first attempt}}{\text{Total tests generated}} \times 100\%
+     \]
+     
+     It serves as a direct measure of the model's ability to generate syntactically valid Dart code without additional correction steps.
     
-    \item \textbf{Error correction effectiveness} demonstrated consistent improvement across project sizes, with the auto-correction mechanism resolving approximately 70\% of initial failures. The correction rate was calculated as:
-    \[ \text{Correction Rate} = \frac{\text{Final Success Count} - \text{First Attempt Success Count}}{\text{Total Tests} - \text{First Attempt Success Count}} \]
+    \item \textbf{Final execution success} indicates the percentage of tests that successfully compiled and executed after applying the auto-correction mechanism (limited to a maximum of 5 correction iterations). This was calculated as:
     
-    \item \textbf{Iteration requirements} increased with project complexity, with the Qwen2.5 7B model requiring fewer iterations on average (approximately 1.9) compared to earlier tests with other models that averaged 2.7 iterations per successful correction.
+    \[
+    \text{Final execution success} = \frac{\text{Tests executed without errors}}{\text{Total tests generated}} \times 100\%
+    \]
     
-    \item \textbf{Code coverage} achieved by the generated tests averaged in the low-to-mid 70\% range for line coverage and upper-60\% range for branch coverage. Coverage was calculated using Flutter's built-in coverage tools, which instrument the code during test execution and report the proportion of code lines and branches executed at least once.
+    This metric demonstrates the overall effectiveness of the system including its error correction capabilities.
+    
+    \item \textbf{Average iterations required} quantifies the mean number of correction cycles needed to fix initially failing tests that were eventually successful. This was calculated by averaging the number of correction iterations across all tests that initially failed but ultimately succeeded. Lower values indicate more efficient error correction.
+    
+    \item \textbf{Line coverage} measures the percentage of code lines in the target functions that were executed by the generated tests. This was measured using Flutter's built-in coverage tools (\texttt{flutter test --coverage}), which instrument the code during test execution and record which lines were executed at least once. The resulting \texttt{lcov.info} files were parsed to calculate:
+    
+    \[ \text{Line coverage} = \frac{\text{Lines executed}}{\text{Total executable lines}} \times 100\% \]
+    
+    This metric indicates how thoroughly the generated tests exercise the code.
+    
+    \item \textbf{Branch coverage} reflects the percentage of decision branches (if/else statements, ternary operations, etc.) that were evaluated in both directions by the tests. This was also extracted from the coverage reports, calculated as:
+    
+    \[ \text{Branch coverage} = \frac{\text{Branches executed}}{\text{Total branches}} \times 100\]
+    
+    Branch coverage is generally considered a more stringent metric than line coverage, as it ensures that conditional paths are fully tested.
 \end{itemize}
 
 \subsection{Qualitative Assessment}
