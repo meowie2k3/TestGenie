@@ -40,7 +40,7 @@ Each component of the Test Genie system exhibits distinct performance characteri
         \hline
         \textbf{Component} & \textbf{Small} & \textbf{Medium} & \textbf{Large} & \textbf{Very Large} \\ \hline
         Project Initialization (8\%) & 1x & 2.91x & 8.32x & 19.73x \\
-        Business Logic Analysis (15\%) & 1x & 4.12x & 15.9x & 48.69x \\
+        Business Logic Analysis (15\%) & 1x & 4.12x & 15.90x & 48.69x \\
         AI Prediction (Qwen2.5) (65\%) & 1x & 4.31x & 7.60x & 12.93x \\
         Test Generation (5\%) & 1x & 1.04x & 1.21x & 1.35x \\
         Test Validation (5\%) & 1x & 1.03x & 2.67x & 5.70x \\
@@ -321,9 +321,9 @@ Our comparison evaluated solutions across six dimensions selected to represent c
         \begin{tabular}{lccccc}
             \hline
             \textbf{Metric} & \textbf{Test Genie} & \textbf{Traditional} & \textbf{GitHub} & \textbf{Diffblue} & \textbf{Random} \\
-            & \textbf{(Qwen2.5 7B)} & \textbf{Search-based} & \textbf{Copilot} & \textbf{Cover} & \textbf{Testing} \\ \hline
-            Line Coverage & 73\% & 75\% & 70\% & 68\% & 58\% \\
-            Branch Coverage & 67\% & 68\% & 65\% & 63\% & 45\% \\
+            & \textbf{(Qwen2.5 7B)} & \textbf{Search-based\cite{SearchBasedSurvey}} & \textbf{Copilot} & \textbf{Cover} & \textbf{Testing} \\ \hline
+            Line Coverage & 67\% & 75\% & 70\% & 68\% & 58\% \\
+            Branch Coverage & 61\% & 68\% & 65\% & 63\% & 45\% \\
             Framework Adaptability & High & Low & Medium & Low & Medium \\
             Test Readability & High & Low & Medium & Medium & Very Low \\
             Edge Case Detection & Medium & Medium & Low & High & Medium-High \\
@@ -343,9 +343,11 @@ Key insights from our comparative analysis include:
 \begin{itemize}
     \item Traditional algorithmic approaches typically achieve higher coverage metrics through exhaustive generation techniques but produce less maintainable tests that often focus on implementation rather than behavior.
     
+    \item While Test Genie shows lower coverage metrics compared to some alternatives, it's important to note that these figures reflect performance with the lightweight Qwen2.5 7B model chosen due to resource constraints. The system's architecture is completely model-agnostic, meaning any LLM or specialized coding model could be substituted to increase line coverage and test quality. This modularity represents one of the system's core strengths.
+    
     \item Generic AI coding assistants like GitHub Copilot can generate plausible-looking tests but lack Test Genie's specialized understanding of Flutter testing patterns and business logic analysis capabilities.
     
-    \item Test Genie with the Qwen2.5 7B model demonstrated superior balance between coverage, quality, and framework adaptation compared to other solutions, particularly for Flutter-specific testing.
+    \item Test Genie with the Qwen2.5 7B model demonstrated superior balance between coverage, quality, and framework adaptation compared to other solutions, particularly for Flutter-specific testing. This adaptation capability would be further enhanced with more powerful foundation models.
     
     \item The human-in-the-loop capability of Test Genie represents a significant advantage over fully automated approaches, allowing developers to refine test generation based on domain knowledge not captured in the code.
 \end{itemize}
