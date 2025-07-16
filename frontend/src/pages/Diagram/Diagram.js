@@ -195,18 +195,24 @@ const Diagram = () => {
         <Graph
           graph={graphData}
           options={options}
-          events={{ selectNode: handleNodeClick }}
-          style={{ width: "75vw", height: "100vh" }}
+          events={{ selectNode: handleNodeClick, }}
+          style={{ 
+            width: selectedNode ? "75vw" : "100vw", 
+            height: "100vh",
+            transition: "width 0.3s ease"
+          }}
         />
       </div>
 
       {/* Side Panel for Block Details */}
-      <SidePanel 
-        selectedNode={selectedNode} 
-        setSelectedNode={setSelectedNode} 
-        onSavePrediction={handleSavePrediction} 
-        handleGenerateTest ={handleGenerateTest}
-      />
+      {selectedNode && (
+        <SidePanel 
+          selectedNode={selectedNode} 
+          setSelectedNode={setSelectedNode} 
+          onSavePrediction={handleSavePrediction} 
+          handleGenerateTest={handleGenerateTest}
+        />
+      )}
     </div>
   );
 };

@@ -1,12 +1,13 @@
-  .diagram-container {
+.diagram-container {
     display: flex;
     width: 100vw;
     height: 100vh;
+    overflow: hidden;
   }
 
   .graph-section {
     /* position: fixed; */
-    flex: 3;
+    flex: 1;
     top: 0;
     left: 0;
     /* width: 100vw;
@@ -16,9 +17,28 @@
     background-size: 10px 10px;
     /* Adjust polka dot size */
     overflow: hidden;
+    transition: width 0.3s ease;
   }
 
   /* Side Panel Container */
+  .side-panel {
+    width: 25vw;
+    min-width: 300px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    background: white;
+    border-left: 1px solid #ddd;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .side-panel.visible {
+    transform: translateX(0);
+  }
+
   .side-panel {
     flex: 1;
     background-color: #f8f9fa;
