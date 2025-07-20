@@ -87,25 +87,6 @@ These baseline measurements provided the foundation for calculating relative per
 
 Each component of the Test Genie system exhibits distinct performance characteristics that contribute to the overall system efficiency. Our analysis revealed significant variations in processing time across different project sizes, with certain components scaling more linearly than others.
 
-\begin{table}[ht]
-    \centering
-    \caption{Component Processing Time by Project Size (relative to small project)}
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccc}
-        \hline
-        \textbf{Component} & \textbf{Small} & \textbf{Medium} & \textbf{Large} & \textbf{Very Large} \\ \hline
-        Project Initialization (3\%) & 1x & 3.53x & 9.63x & 22.21x \\
-        Business Logic Analysis (12\%) & 1x & 3.78x & 11.72x & 27.82x \\
-        AI Prediction (Qwen2.5) (75\%) & 1x & 4.95x & 10.21x & 20.64x \\
-        Test Generation (4\%) & 1x & 1.16x & 1.48x & 1.92x \\
-        Test Validation (1\%) & 1x & 1.83x & 3.83x & 9.33x \\
-        Error Correction (per iteration) (5\%) & 1x & 1.47x & 2.09x & 2.78x \\
-        \hline
-        \textbf{Total Processing} & \textbf{1x} & \textbf{4.41x} & \textbf{9.55x} & \textbf{19.80x} \\ \hline
-    \end{tabular}%
-    }
-\end{table}
-
 \subsubsection{Project Initialization}
 
 The project initialization phase demonstrates nearly linear scaling with repository size. This component's execution time is calculated by measuring the elapsed time from the initial system command to clone the repository until the completion of the environment setup process. For very large projects, the execution time increases due to:
