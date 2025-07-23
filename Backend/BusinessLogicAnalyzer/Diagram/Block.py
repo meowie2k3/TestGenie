@@ -85,10 +85,12 @@ class Block:
             'Block',
             {
                 'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'project_id': 'INT',
                 'name': 'VARCHAR(255)',
                 'content': 'TEXT',
                 'prediction': 'TEXT',
                 'type': 'INT',
+                '': 'FOREIGN KEY (project_id) REFERENCES Project(id)',
                 '': 'FOREIGN KEY (type) REFERENCES BlockType(id)'
             }
         )

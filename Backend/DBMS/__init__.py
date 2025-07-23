@@ -20,7 +20,9 @@ class DBMS:
             
         else:
             # TODO: do something if project already exist
+            self.projectId = self.getProjectId()
             pass
+        
     
     def getJsonDiagram(self) -> dict:
         """
@@ -47,10 +49,14 @@ class DBMS:
         }
         """
         # fetch diagram from db
-        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={})
+        blockQuery = Block.getTable().getSelectSQL(fields=['id','name','type'],conditions={
+            'project_id': self.projectId
+        })
         blocks = self.execute(blockQuery)
-        
-        connectionQuery = Connection.getTable().getSelectSQL(fields=[], conditions={})
+
+        connectionQuery = Connection.getTable().getSelectSQL(fields=['id','head','tail','type'], conditions={
+            'project_id': self.projectId
+        })
         connections = self.execute(connectionQuery)
         
         # print(blocks)
@@ -78,6 +84,15 @@ class DBMS:
         return res
         
         pass
+    
+    def getProjectId(self) -> int:
+        query = self.project.getTable().getSelectSQL(fields=['id'], conditions={
+            'name': self.project.getName()
+        })
+        res = self.execute(query)
+        if len(res) == 0:
+            return -1
+        return res[0][0]
     
     def getBlockName(self, blockId: int) -> str:
         query = Block.getTable().getSelectSQL(fields=['name'], conditions={
@@ -167,11 +182,15 @@ class DBMS:
         pass    
         
     def _connect(self):
+        from dotenv import load_dotenv
+        import os
+        if load_dotenv(override=True) == False:
+            raise Exception("Failed to load .env file")
         self.connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='1234',
-            database='test_genie'
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
         )
         self.cursor = self.connection.cursor(buffered=True)
         
@@ -246,6 +265,7 @@ class DBMS:
         diagram = DependencyDiagram(self.project)
         # not sure if this is needed
         self.diagram = diagram
+        self.projectId = self.getProjectId()
         
         blocks = diagram.blocks
         connections = diagram.connections
@@ -259,6 +279,7 @@ class DBMS:
             # map into block table
             query = Block.getTable().getInsertSQL({
                 'name': self._handldApostropheString(block.name),
+                'project_id': self.projectId,
                 'content': self._handldApostropheString(block.content),
                 'prediction': self._handldApostropheString(block.prediction),
                 'type': self._getEnumId('BlockType', block.type)
@@ -272,7 +293,8 @@ class DBMS:
             query = Connection.getTable().getInsertSQL({
                 'head': self._getBlockId(connection.head),
                 'tail': self._getBlockId(connection.tail),
-                'type': self._getEnumId('ConnectionType', connection.type)
+                'type': self._getEnumId('ConnectionType', connection.type),
+                'project_id': self.projectId
             })
             self.execute(query)
         pass
@@ -281,6 +303,7 @@ class DBMS:
         table = Block.getTable()
         query = table.getSelectSQL(fields=['id'], conditions={
             'name': self._handldApostropheString(block.name),
+            'project_id': self.projectId,
             'content': self._handldApostropheString(block.content),
             'prediction': self._handldApostropheString(block.prediction),
             'type': self._getEnumId('BlockType', block.type)

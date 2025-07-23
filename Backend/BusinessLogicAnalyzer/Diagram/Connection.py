@@ -44,12 +44,14 @@ class Connection:
             'Connection',
             {
                 'id': 'INT AUTO_INCREMENT PRIMARY KEY',
+                'project_id': 'INT',
                 'head': 'INT',
                 'tail': 'INT',
                 'type': 'INT',
                 '': 'FOREIGN KEY (head) REFERENCES Block(id)',
-                '':'FOREIGN KEY (tail) REFERENCES Block(id)',
-                '': 'FOREIGN KEY (type) REFERENCES ConnectionType(id)'
+                '': 'FOREIGN KEY (tail) REFERENCES Block(id)',
+                '': 'FOREIGN KEY (type) REFERENCES ConnectionType(id)',
+                '': 'FOREIGN KEY (project_id) REFERENCES Project(id)'
             }
         )
         

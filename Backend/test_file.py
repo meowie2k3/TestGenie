@@ -54,7 +54,8 @@ def testDiagram():
     
 def test_dbms():
     from DBMS import DBMS
-    git_url = 'https://github.com/meowie2k3/sample'
+    git_url = 'https://github.com/theakhinabraham/doable-todo-list-app'
+    # git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
     framework = project.recognizeProjectFramework()
     
@@ -62,12 +63,12 @@ def test_dbms():
         project = frameworkMap[framework](git_url)
         
     dbms = DBMS(project)
-    # jsonDiagram = dbms.getJsonDiagram()
-    # print(jsonDiagram)
-    connections = dbms.getBlockOriginal(245)
-    print("==========Connections==========")
-    for connection in connections:
-        print(dbms.getConnectionFromId(connection))
+    jsonDiagram = dbms.getJsonDiagram()
+    print(jsonDiagram)
+    # connections = dbms.getBlockOriginal(245)
+    # print("==========Connections==========")
+    # for connection in connections:
+    #     print(dbms.getConnectionFromId(connection))
     
 def test_test_generation():
     from TestGenerator import Test_Generator
@@ -117,7 +118,7 @@ def test_test_generation():
         print(run_error)
         # safe guard, avoid infinite loop
         iteration_limit -= 1
-    
+        
 def test_run_test():
     git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     # testFramework()
     # testFiles()
     # testDiagram()
-    # test_dbms()
-    test_test_generation()
+    test_dbms()
+    # test_test_generation()
     # test_run_test()
     pass
