@@ -54,8 +54,8 @@ def testDiagram():
     
 def test_dbms():
     from DBMS import DBMS
-    git_url = 'https://github.com/theakhinabraham/doable-todo-list-app'
-    # git_url = 'https://github.com/meowie2k3/sample'
+    # git_url = 'https://github.com/theakhinabraham/doable-todo-list-app'
+    git_url = 'https://github.com/meowie2k3/sample'
     project = Project(git_url)
     framework = project.recognizeProjectFramework()
     

@@ -217,6 +217,8 @@ class DBMS:
         return self.cursor.fetchall() # type: ignore
     
     def _initDB(self):
+        self._insertEnumDB()
+        
         projectQuery = self.project.getTable().getCreateSQL()
         self.execute(projectQuery)
         
@@ -225,7 +227,6 @@ class DBMS:
         
         connectionQuery = Connection.getTable().getCreateSQL()
         self.execute(connectionQuery)
-        self._insertEnumDB()
         
     def _insertEnumDB(self):
         

@@ -28,11 +28,10 @@ const Diagram = () => {
     if (gitUrl) {
       fetchDiagramData(gitUrl)
         .then((response) => {
-          // console.log(response);
+          console.log("Response from fetchDiagramData:", response);
           if (response && runOnce === false) {
             runOnce = true;
             handleGraphDataMap(response);
-            // setGraphData(graphDataMap);
           }
         })
         .catch((err) => setError(err.message))
@@ -103,8 +102,8 @@ const Diagram = () => {
   };
 
   const handleGraphDataMap = (graphData) => {
-
     // check for duplicate ids
+    console.log("Handle graph data map");
     const idSet = new Set();
     for (const block of graphData.blocks) {
       if (idSet.has(block.id)) {
@@ -120,7 +119,7 @@ const Diagram = () => {
         console.error(`Invalid tail id found: ${connection.tail}`);
       }
     }
-    console.log(graphData);
+    // console.log(graphData);
     var nodes = [];
     var edges = [];
     // create nodes
@@ -148,6 +147,7 @@ const Diagram = () => {
       nodes: nodes.map((node) => node.toGraphNode()),
       edges: edges.map((edge) => edge.toGraphEdge()),
     };
+    console.log("setGraphData", graphDataMap);
     setGraphData(graphDataMap);
     
   };
