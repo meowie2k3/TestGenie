@@ -1,6 +1,12 @@
-# Getting Started with Create React App
+# How to run TestGenie frontend
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Install dependencies
+In the project directory, you need to run:
+
+### `npm install`
+This will install all the necessary dependencies required to run the application.
 
 ## Available Scripts
 
