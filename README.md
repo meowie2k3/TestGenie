@@ -52,6 +52,10 @@ To use TestGenie, ensure the following:
 - Your project follows standard Flutter/Dart conventions.
 - Sufficient comments and clear function names in the codebase for effective analysis.
 
+**Setup Instructions**: Detailed setup requirements and installation steps for each component can be found in the respective README.md files:
+- Backend setup: `Backend/README.md`
+- Frontend setup: `frontend/README.md`
+
 ---
 
 ## Usage
