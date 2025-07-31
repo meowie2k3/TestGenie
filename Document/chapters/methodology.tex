@@ -1,4 +1,3 @@
-%% TODO: Make sure to use \textbf or \textit for highlighting keywords, and \cite{} to cite the corresponding quotations
 \section{Overview}
 
 \hspace{0.5cm}The methodology chapter provides a comprehensive overview of the approach taken in this research. It outlines the key components of the system, including the Business Logic Analyzer module (BLA), the AI-integrated test generation module, and the AI test validation module. Each component is designed to work seamlessly together, leveraging Python, Flask, and Langchain to create an efficient and effective solution for automating test case generation. The chapter also discusses the methods implemented for each module and the plan to validate the generated tests from AI, ensuring that the proposed solution meets its objectives and addresses the identified challenges in software testing.
@@ -6,20 +5,21 @@
 
 \hspace{0.5cm}Understanding user requirements is a critical step in ensuring that the proposed system aligns with the needs and expectations of its target audience. This phase involves identifying and analyzing the specific functionalities, constraints, and preferences that users demand from the system. A thorough understanding of user requirements not only guides the development process but also ensures the system delivers value by addressing real-world challenges effectively. This section outlines the key user requirements identified for the proposed test generation service.
 
+\clearpage
+
 % table of 4 columns: Req.ID, Requirement Name, Detailed Description, Type
 \begin{table}[H]
-	% margin right a little
-	% \hspace{-1cm}
 	\centering
-	\begin{tabular}{|c|p{110pt}|p{8cm}|p{62pt}|}
+	\small
+	\begin{tabular}{|c|p{2.5cm}|p{7.5cm}|p{2cm}|}
 		\hline
 		\textbf{Req.ID} & \textbf{Requirement Name} & \textbf{Detailed Description} & \textbf{Type} \\ \hline
-		001 & Read project's source code & Users can send all project's source code at once via web-based Git repositories (e.g github, gitlab) & Functional requirement \\ \hline
-		002 & Download/copy unit test/integration test & Users can download tests files or copy the file's content. & Functional requirement \\ \hline
-		003 & Interactive business logic analyzation (Human-inner-loop) & Users can help AI correct the result of BLA process & Functional requirement \\ \hline
-		004 & Performance & The system should generate test cases within a reasonable time frame, ideally under 5 minutes for a medium-sized project (e.g., 10,000 lines of code). & Non-functional requirement \\ \hline
-		005 & Test file correctly reflect the given business model & The system should be able to generate test cases accurately reflect the business logic embedded in the source code. & Non-functional requirement \\ \hline
-		006 & Validate generated test & A validation mechanism must be included to the system to ensure the syntax and logic is runnable & Non-functional requirement \\ \hline
+		001 & Read project's source code & Users can send all project's source code at once via web-based Git repositories (e.g github, gitlab) & Functional \\ \hline
+		002 & Download/copy unit test/integration test & Users can download tests files or copy the file's content. & Functional \\ \hline
+		003 & Interactive business logic analyzation (Human-inner-loop) & Users can help AI correct the result of BLA process & Functional \\ \hline
+		004 & Performance & The system should generate test cases within a reasonable time frame, ideally under 5 minutes for a medium-sized project (e.g., 10,000 lines of code). & Non-functional \\ \hline
+		005 & Test file correctly reflect the given business model & The system should be able to generate test cases accurately reflect the business logic embedded in the source code. & Non-functional \\ \hline
+		006 & Validate generated test & A validation mechanism must be included to the system to ensure the syntax and logic is runnable & Non-functional \\ \hline
 	\end{tabular}
 	\caption{User requirements}
 	\label{tab:user-requirements}
